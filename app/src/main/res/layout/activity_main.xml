@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" android:id="@+id/main"
+    android:background="@color/bg_gray">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="أهلاً بك، أيها الطموح!"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_dark" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="استعد للتفوق في أولى بكالوريا"
+            android:textSize="14sp"
+            android:textColor="@color/text_gray" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:text="المواد الدراسية"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_dark" />
+
+    <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="8dp"
+            android:text="المواد المضافة للمجموع"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/teal_primary"/>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+            <include layout="@layout/item_subject" android:id="@+id/cardArabic" />
+            <include layout="@layout/item_subject" android:id="@+id/cardEnglish" />
+            <include layout="@layout/item_subject" android:id="@+id/cardMath" />
+            <include layout="@layout/item_subject" android:id="@+id/cardScience" />
+            <include layout="@layout/item_subject" android:id="@+id/cardPhilosophy" />
+            <include layout="@layout/item_subject" android:id="@+id/cardHistory" />
+
+</LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="16dp"
+            android:text="المواد الغير مضافة للمجموع"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/red_accent" />
+
+        <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+            <include layout="@layout/item_subject" android:id="@+id/cardProgramming" />
+            <include layout="@layout/item_subject" android:id="@+id/cardIslamic" />
+            <include layout="@layout/item_subject" android:id="@+id/cardFrench" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/bottom_nav_menu" />
+
+</LinearLayout>
