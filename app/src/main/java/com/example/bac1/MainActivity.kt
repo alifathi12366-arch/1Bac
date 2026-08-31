@@ -126,7 +126,7 @@ android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, t
             </html>
         """.trimIndent()
 
-        webView.loadDataWithBaseURL("https://www.highrevenueformat.com", adHtml, "text/html", "UTF-8", null)
+        webView.loadDataWithBaseURL("https://bac1app.blogspot.com", adHtml, "text/html", "UTF-8", null)
     }
 }
 
