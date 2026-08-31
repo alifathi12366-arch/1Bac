@@ -99,15 +99,13 @@ class MainActivity : AppCompatActivity() {
         queue.add(request)
     }
 
-    private fun loadAd() {
-        val webView = findViewById<android.webkit.WebView>(R.id.adWebView)
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        webView.webViewClient = android.webkit.WebViewClient()
-        webView.settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
-        webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
-    }
+    
+    
+private fun loadAd() {
+    val webView = findViewById<android.webkit.WebView>(R.id.adWebView)
+    webView.settings.javaScriptEnabled = true
+    webView.webViewClient = android.webkit.WebViewClient()
+    webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
 }
 
 
