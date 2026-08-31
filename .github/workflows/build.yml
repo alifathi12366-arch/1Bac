@@ -1,32 +1,26 @@
-name: Build APK
+name: Generate Keystore
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Generate keystore
+        run: |
+          keytool -genkeypair -v -keystore release.keystore -alias bac1key \
+          -keyalg RSA -keysize 2048 -validity 10000 \
+          -storepass bac1pass123 -keypass bac1pass123 \
+          -dname "CN=1Bac, OU=1Bac, O=1Bac, L=Cairo, S=Cairo, C=EG"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+      - name: Convert to base64
+        run: base64 release.keystore > keystore_base64.txt
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build APK
-        run: ./gradlew assembleDebug
-
-      - name: Upload APK
+      - name: Upload keystore
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: keystore-files
+          path: |
+            release.keystore
+            keystore_base64.txt
