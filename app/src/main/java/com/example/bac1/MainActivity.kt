@@ -105,7 +105,6 @@ class MainActivity : AppCompatActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         webView.webViewClient = android.webkit.WebViewClient()
-        webView.setBackgroundColor(android.graphics.Color.RED)
 
         val adHtml = """
             <html>
