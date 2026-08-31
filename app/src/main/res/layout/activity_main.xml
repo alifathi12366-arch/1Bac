@@ -40,63 +40,64 @@
         android:textColor="@color/text_dark" />
 
     <ScrollView
-        <WebView android:id="@+id/adWebView" android:layout_width="match_parent" android:layout_height="250dp" />
-        
-    android:layout_width="match_parent"
-    android:layout_height="0dp"
-    android:layout_weight="1">
-
-    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="8dp"
-            android:text="المواد المضافة للمجموع"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/teal_primary"/>
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-            <include layout="@layout/item_subject" android:id="@+id/cardArabic" />
-            <include layout="@layout/item_subject" android:id="@+id/cardEnglish" />
-            <include layout="@layout/item_subject" android:id="@+id/cardMath" />
-            <include layout="@layout/item_subject" android:id="@+id/cardScience" />
-            <include layout="@layout/item_subject" android:id="@+id/cardPhilosophy" />
-            <include layout="@layout/item_subject" android:id="@+id/cardHistory" />
-
-</LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="16dp"
-            android:text="المواد الغير مضافة للمجموع"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/red_accent" />
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
 
-            <include layout="@layout/item_subject" android:id="@+id/cardProgramming" />
-            <include layout="@layout/item_subject" android:id="@+id/cardIslamic" />
-            <include layout="@layout/item_subject" android:id="@+id/cardFrench" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="8dp"
+                android:text="المواد المضافة للمجموع"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/teal_primary"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <include layout="@layout/item_subject" android:id="@+id/cardArabic" />
+                <include layout="@layout/item_subject" android:id="@+id/cardEnglish" />
+                <include layout="@layout/item_subject" android:id="@+id/cardMath" />
+                <include layout="@layout/item_subject" android:id="@+id/cardScience" />
+                <include layout="@layout/item_subject" android:id="@+id/cardPhilosophy" />
+                <include layout="@layout/item_subject" android:id="@+id/cardHistory" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="16dp"
+                android:text="المواد الغير مضافة للمجموع"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/red_accent" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <include layout="@layout/item_subject" android:id="@+id/cardProgramming" />
+                <include layout="@layout/item_subject" android:id="@+id/cardIslamic" />
+                <include layout="@layout/item_subject" android:id="@+id/cardFrench" />
+            </LinearLayout>
 
         </LinearLayout>
+    </ScrollView>
 
-    </LinearLayout>
-</ScrollView>
+    <WebView
+        android:id="@+id/adWebView"
+        android:layout_width="match_parent"
+        android:layout_height="250dp" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
