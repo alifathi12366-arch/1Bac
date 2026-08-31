@@ -103,37 +103,11 @@ class MainActivity : AppCompatActivity() {
         val webView = findViewById<android.webkit.WebView>(R.id.adWebView)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.settings.userAgentString = "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         webView.webViewClient = android.webkit.WebViewClient()
-        android.webkit.WebView.setWebContentsDebuggingEnabled(true)
-android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
-
-        val adHtml = """
-            <html>
-            <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;">
-            <script type="text/javascript">
-                atOptions = {
-                    'key' : 'd8a2e335c11bba62c31b4f6036b3e4c9',
-                    'format' : 'iframe',
-                    'height' : 250,
-                    'width' : 300,
-                    'params' : {}
-                };
-            </script>
-            <script type="text/javascript" src="https://www.highrevenueformat.com/d8a2e335c11bba62c31b4f6036b3e4c9/invoke.js"></script>
-            </body>
-            </html>
-        """.trimIndent()
-
-        webView.loadDataWithBaseURL("https://bac1app.blogspot.com", adHtml, "text/html", "UTF-8", null)
+        webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
     }
 }
-
-
-
-
-
 
 
 
