@@ -106,6 +106,7 @@ private fun loadAd() {
     webView.settings.javaScriptEnabled = true
     webView.webViewClient = android.webkit.WebViewClient()
     webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
+    }
 }
 
 
