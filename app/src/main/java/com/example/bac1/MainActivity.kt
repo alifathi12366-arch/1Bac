@@ -124,6 +124,7 @@ private fun loadAd() {
 
     webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
 }
+}
 
 
 
