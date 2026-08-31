@@ -1,7 +1,11 @@
-name: Generate Keystore
+
+  name: Generate Keystore
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   generate:
@@ -23,5 +27,4 @@ jobs:
           name: keystore-files
           path: |
             release.keystore
-            keystore_base64.txt
-            
+            keystore_base64.txt          
