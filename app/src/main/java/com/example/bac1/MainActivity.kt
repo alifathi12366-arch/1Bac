@@ -105,6 +105,7 @@ class MainActivity : AppCompatActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         webView.webViewClient = android.webkit.WebViewClient()
+        webView.settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
         webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
     }
 }
