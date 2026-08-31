@@ -1,4 +1,4 @@
-name: Generate Keystore
+name: Convert Keystore
 
 on:
   workflow_dispatch:
@@ -7,15 +7,15 @@ on:
       - main
 
 jobs:
-  generate:
+  convert:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate keystore
-        run: keytool -genkeypair -v -keystore release.keystore -alias bac1key -keyalg RSA -keysize 2048 -validity 10000 -storepass bac1pass123 -keypass bac1pass123 -dname "CN=1Bac, OU=1Bac, O=1Bac, L=Cairo, S=Cairo, C=EG"
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Convert to base64
         run: base64 release.keystore > keystore_base64.txt
-      - name: Upload keystore
+      - name: Upload base64
         uses: actions/upload-artifact@v4
         with:
-          name: keystore-files
-          path: release.keystore
+          name: keystore-base64
+          path: keystore_base64.txt
