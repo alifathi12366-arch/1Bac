@@ -104,9 +104,25 @@ class MainActivity : AppCompatActivity() {
 private fun loadAd() {
     val webView = findViewById<android.webkit.WebView>(R.id.adWebView)
     webView.settings.javaScriptEnabled = true
-    webView.webViewClient = android.webkit.WebViewClient()
-    webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
+    webView.settings.domStorageEnabled = true
+    webView.settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
+
+    webView.webViewClient = object : android.webkit.WebViewClient() {
+        override fun onReceivedError(
+            view: android.webkit.WebView?,
+            request: android.webkit.WebResourceRequest?,
+            error: android.webkit.WebResourceError?
+        ) {
+            super.onReceivedError(view, request, error)
+            android.widget.Toast.makeText(
+                this@MainActivity,
+                "خطأ: ${error?.description}",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
     }
+
+    webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
 }
 
 
