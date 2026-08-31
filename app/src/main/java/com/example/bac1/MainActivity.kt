@@ -105,7 +105,9 @@ private fun loadAd() {
     val webView = findViewById<android.webkit.WebView>(R.id.adWebView)
     webView.settings.javaScriptEnabled = true
     webView.settings.domStorageEnabled = true
-    webView.settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
+    webView.settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
+webView.clearCache(true)
+webView.clearHistory()
 
     webView.webViewClient = object : android.webkit.WebViewClient() {
         override fun onReceivedError(
