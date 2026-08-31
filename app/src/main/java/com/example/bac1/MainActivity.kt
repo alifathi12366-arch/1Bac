@@ -105,6 +105,8 @@ class MainActivity : AppCompatActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         webView.webViewClient = android.webkit.WebViewClient()
+        android.webkit.WebView.setWebContentsDebuggingEnabled(true)
+android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
 
         val adHtml = """
             <html>
