@@ -45,5 +45,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
    implementation("androidx.recyclerview:recyclerview:1.3.2")
-implementation("androidx.cardview:cardview:1.0.0") 
+implementation("androidx.cardview:cardview:1.0.0")
+implementation("com.android.volley:volley:1.2.1")
 }
