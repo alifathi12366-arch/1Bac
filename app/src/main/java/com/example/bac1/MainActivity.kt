@@ -2,17 +2,22 @@ package com.example.bac1
 
 import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        
         checkForUpdate()
         loadAd()
 
@@ -99,46 +104,34 @@ class MainActivity : AppCompatActivity() {
         queue.add(request)
     }
 
-
-private fun loadAd() {
-    val webView = findViewById<android.webkit.WebView>(R.id.adWebView)
-    webView.settings.javaScriptEnabled = true
-    webView.settings.domStorageEnabled = true
-    webView.settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
-
-    webView.webViewClient = object : android.webkit.WebViewClient() {
-        override fun shouldOverrideUrlLoading(
-            view: android.webkit.WebView?,
-            request: android.webkit.WebResourceRequest?
-        ): Boolean {
-            return false
+    private fun loadAd() {
+        val webView = findViewById<WebView>(R.id.adWebView)
+        
+        // إعدادات الـ WebView الممتازة لإعلانات Adsterra
+        val settings = webView.settings
+        settings.javaScriptEnabled = true
+        settings.domStorageEnabled = true
+        settings.databaseEnabled = true
+        
+        // حل مشكلة ERR_CACHE_MISS نهائياً
+        settings.cacheMode = WebSettings.LOAD_DEFAULT
+        
+        // السماح بتحميل الإعلانات المشفرة وغير المشفرة
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?
+            ): Boolean {
+                return false
+            }
+        }
+
+        // مسح الكاش القديم قبل التحميل لضمان إزالة الخطأ
+        webView.clearCache(true)
+        webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
     }
-
-    webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
 }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
