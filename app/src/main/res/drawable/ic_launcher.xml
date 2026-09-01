@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- هنخلي الصورة المربعة بتاعتك هي الخلفية والشعار في نفس الوقت عشان تملأ الإطار -->
-    <background android:drawable="@drawable/app_icon" />
-    <foreground android:drawable="@drawable/app_icon" />
-</adaptive-icon>
