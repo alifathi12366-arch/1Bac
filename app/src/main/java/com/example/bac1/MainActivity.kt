@@ -104,39 +104,20 @@ private fun loadAd() {
     val webView = findViewById<android.webkit.WebView>(R.id.adWebView)
     webView.settings.javaScriptEnabled = true
     webView.settings.domStorageEnabled = true
-    webView.settings.allowFileAccess = true
-    webView.settings.allowContentAccess = true
-    webView.settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-    webView.webViewClient = android.webkit.WebViewClient()
+    webView.settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
 
-    val adHtml = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin:0;padding:0;">
-        <script type="text/javascript">
-            atOptions = {
-                'key' : 'd8a2e335c11bba62c31b4f6036b3e4c9',
-                'format' : 'iframe',
-                'height' : 250,
-                'width' : 300,
-                'params' : {}
-            };
-        </script>
-        <script type="text/javascript" src="//www.highrevenueformat.com/d8a2e335c11bba62c31b4f6036b3e4c9/invoke.js"></script>
-        </body>
-        </html>
-    """.trimIndent()
+    webView.webViewClient = object : android.webkit.WebViewClient() {
+        override fun shouldOverrideUrlLoading(
+            view: android.webkit.WebView?,
+            request: android.webkit.WebResourceRequest?
+        ): Boolean {
+            return false
+        }
+    }
 
-    webView.loadDataWithBaseURL("https://www.highrevenueformat.com/", adHtml, "text/html", "utf-8", null)
+    webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
 }
 }
-
-
-
-
 
 
 
