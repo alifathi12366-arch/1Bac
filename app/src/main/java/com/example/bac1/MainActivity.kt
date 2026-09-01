@@ -132,6 +132,7 @@ private fun loadAd() {
 
     webView.loadDataWithBaseURL("https://www.highrevenueformat.com/", adHtml, "text/html", "utf-8", null)
 }
+}
 
 
 
