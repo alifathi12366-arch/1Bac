@@ -31,15 +31,20 @@ class MainActivity : AppCompatActivity() {
         setupSubject(R.id.cardIslamic, "التربية الإسلامية", "العقيدة، الفقه، والسيرة النبوية", "#7B7FE0", "", "")
         setupSubject(R.id.cardFrench, "اللغة الفرنسية", "القواعد والتعبير الكتابي والفهم", "#B58ED6", "", "")
 
-        val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
-        bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_schedule -> {
-                    startActivity(Intent(this, ScheduleActivity::class.java))
-                    true
-                }
-                else -> true
-            }
+         val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
+bottomNav.setOnItemSelectedListener { item ->
+    when (item.itemId) {
+        R.id.nav_schedule -> {
+            startActivity(Intent(this, ScheduleActivity::class.java))
+            true
+        }
+        R.id.nav_library -> {
+            startActivity(Intent(this, LibraryActivity::class.java))
+            true
+        }
+        else -> true
+    }
+}          }
         }
     }
 
