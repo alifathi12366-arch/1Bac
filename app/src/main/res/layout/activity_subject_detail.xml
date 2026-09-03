@@ -25,6 +25,24 @@
         android:backgroundTint="@color/teal_primary" />
 
     <Button
+        android:id="@+id/openBookButton2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="فتح كتاب المادة"
+        android:visibility="gone"
+        android:backgroundTint="@color/teal_primary" />
+
+    <Button
+        android:id="@+id/openBookButton3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="فتح كتاب المادة"
+        android:visibility="gone"
+        android:backgroundTint="@color/teal_primary" />
+
+    <Button
         android:id="@+id/openTeacherButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -33,4 +51,3 @@
         android:backgroundTint="@color/red_accent" />
 
 </LinearLayout>
-
