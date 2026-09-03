@@ -21,15 +21,23 @@ class MainActivity : AppCompatActivity() {
         checkForUpdate()
         loadAd()
 
-        setupSubject(R.id.cardArabic, "اللغة العربية", "القراءة، النصوص، الأدب، النحو", "#F5C518", "", "")
+        setupSubject(R.id.cardArabic, "اللغة العربية", "القراءة، النصوص، الأدب، النحو", "#F5C518",
+            "https://drive.google.com/file/d/1_wabND8G53RlCFxyIeIP4NYOAJSesBT7/view?usp=drivesdk", "",
+            "https://youtube.com/@mohamedsalah.bassthalk?si=BMSSudooCyUUFvoo",
+            bookLink2 = "https://drive.google.com/file/d/12c_-S5uAy-foYtb42oROwS_fq6QOLo9J/view?usp=drivesdk",
+            bookLink3 = "https://drive.google.com/file/d/1oH-1lxOgCIbED17eBBvfTIHTi0EZrua1/view?usp=drivesdk",
+            bookLabel1 = "كتاب القراءة والنصوص",
+            bookLabel2 = "كتاب النحو",
+            bookLabel3 = "كتاب القصة"
+        )
         setupSubject(R.id.cardEnglish, "اللغة الإنجليزية", "Reading Comprehension & Writing", "#4FA3E3", "https://drive.google.com/file/d/1Z39u9VOs8SH6nrHxZ3IE3SznDxbQPu5V/view?usp=drivesdk", "https://youtube.com/@mahmoudradwan.englishawy?si=IG4D6QJ7oUNo8nVA")
-        setupSubject(R.id.cardMath, "الرياضيات", "الحساب، الدوال، الهندسة", "#3DBFA0", "", "")
-        setupSubject(R.id.cardScience, "العلوم المتكاملة", "الفيزياء والكيمياء وعلوم الحياة", "#5C7CFA", "", "")
+        setupSubject(R.id.cardMath, "الرياضيات", "الحساب، الدوال، الهندسة", "#3DBFA0", "https://drive.google.com/file/d/1oxls3xtQ4D6UgsXchYI4jB_YU2tedCET/view?usp=drivesdk", "https://youtube.com/@-mrlotfyzahran4469?si=PbZcVrEKd7o8DJYG")
+        setupSubject(R.id.cardScience, "العلوم المتكاملة", "الفيزياء والكيمياء وعلوم الحياة", "#5C7CFA", "https://drive.google.com/file/d/1KtD56ULXsVh1imQaN4JIIwjPoFtjdhdr/view?usp=drivesdk", "https://youtube.com/@khaledsakr8181?si=P8oIi5tGmj45y08L")
         setupSubject(R.id.cardPhilosophy, "الفلسفة والمنطق", "المفاهيم الفلسفية والاستدلال", "#9ACD32", "https://drive.google.com/file/d/1WO_PYfE_j5SIOKMpX0UMah85cbkuM1k1/view?usp=drivesdk", "https://youtube.com/@filasofmasr?si=_DUPM-YnU_foOrud")
         setupSubject(R.id.cardHistory, "التاريخ", "الحضارات القديمة والتاريخ المعاصر", "#E06B9E", "https://drive.google.com/file/d/1bZgJHy_363Ic1J4csuEUOsK3h0VzB0rn/view?usp=drivesdk", "https://youtube.com/@-mostafaarafa4617?si=qrWg04WNl9jGYVdu")
-        setupSubject(R.id.cardProgramming, "البرمجة", "أساسيات البرمجة والذكاء الاصطناعي", "#8E9BAE", "", "")
-        setupSubject(R.id.cardIslamic, "التربية الإسلامية", "العقيدة، الفقه، والسيرة النبوية", "#7B7FE0", "", "")
-        setupSubject(R.id.cardFrench, "اللغة الفرنسية", "القواعد والتعبير الكتابي والفهم", "#B58ED6", "", "")
+        setupSubject(R.id.cardProgramming, "البرمجة", "أساسيات البرمجة والذكاء الاصطناعي", "#8E9BAE", "https://drive.google.com/file/d/1AtcPFcl7ZNciYnFwSfFLv3mdX5T9tq7z/view?usp=drivesdk", "")
+        setupSubject(R.id.cardIslamic, "التربية الإسلامية", "العقيدة، الفقه، والسيرة النبوية", "#7B7FE0", "https://drive.google.com/file/d/1adHx4kesuOnn965bqjGIp-iUrpBDNc1b/view?usp=drivesdk", "")
+        setupSubject(R.id.cardFrench, "اللغة الفرنسية", "القواعد والتعبير الكتابي والفهم", "#B58ED6", "https://drive.google.com/file/d/1SWQm7elUNKIM9mEBzogFnbi9ld6UGfbn/view?usp=drivesdk", "")
 
         val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
         bottomNav.setOnItemSelectedListener { item ->
@@ -42,6 +50,46 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, LibraryActivity::class.java))
                     true
                 }
+                else -> true
+            }
+        }
+    }
+
+    private fun setupSubject(
+        cardId: Int,
+        subjectName: String,
+        desc: String,
+        colorHex: String,
+        bookLink: String,
+        teacherLink: String,
+        bookLink2: String = "",
+        bookLink3: String = "",
+        bookLabel1: String = "فتح كتاب المادة",
+        bookLabel2: String = "فتح كتاب المادة",
+        bookLabel3: String = "فتح كتاب المادة"
+    ) {
+        val card = findViewById<android.view.View>(cardId)
+        val nameView = card.findViewById<TextView>(R.id.subjectName)
+        val descView = card.findViewById<TextView>(R.id.subjectDesc)
+        val iconBox = card.findViewById<LinearLayout>(R.id.iconBox)
+
+        nameView.text = subjectName
+        descView.text = desc
+        iconBox.setBackgroundColor(Color.parseColor(colorHex))
+
+        card.setOnClickListener {
+            val intent = Intent(this, SubjectDetailActivity::class.java)
+            intent.putExtra("subjectName", subjectName)
+            intent.putExtra("bookLink", bookLink)
+            intent.putExtra("bookLink2", bookLink2)
+            intent.putExtra("bookLink3", bookLink3)
+            intent.putExtra("bookLabel1", bookLabel1)
+            intent.putExtra("bookLabel2", bookLabel2)
+            intent.putExtra("bookLabel3", bookLabel3)
+            intent.putExtra("teacherLink", teacherLink)
+            startActivity(intent)
+        }
+    }
                 else -> true
             }
         }
