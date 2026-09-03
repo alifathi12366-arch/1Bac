@@ -21,9 +21,13 @@ class MainActivity : AppCompatActivity() {
         checkForUpdate()
         loadAd()
 
-        setupSubject(R.id.cardArabic, "اللغة العربية", "القراءة، النصوص، الأدب، النحو", "#F5C518",
-            "https://drive.google.com/file/d/1_wabND8G53RlCFxyIeIP4NYOAJSesBT7/view?usp=drivesdk", "",
-            "https://youtube.com/@mohamedsalah.bassthalk?si=BMSSudooCyUUFvoo",
+    setupSubject(
+            cardId = R.id.cardArabic,
+            subjectName = "اللغة العربية",
+            desc = "القراءة، النصوص، الأدب، النحو",
+            colorHex = "#F5C518",
+            bookLink = "https://drive.google.com/file/d/1_wabND8G53RlCFxyIeIP4NYOAJSesBT7/view?usp=drivesdk",
+            teacherLink = "https://youtube.com/@mohamedsalah.bassthalk?si=BMSSudooCyUUFvoo",
             bookLink2 = "https://drive.google.com/file/d/12c_-S5uAy-foYtb42oROwS_fq6QOLo9J/view?usp=drivesdk",
             bookLink3 = "https://drive.google.com/file/d/1oH-1lxOgCIbED17eBBvfTIHTi0EZrua1/view?usp=drivesdk",
             bookLabel1 = "كتاب القراءة والنصوص",
