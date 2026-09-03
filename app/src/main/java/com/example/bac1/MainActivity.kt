@@ -90,36 +90,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
-                else -> true
-            }
-        }
-    }
-
-    private fun setupSubject(
-        cardId: Int,
-        subjectName: String,
-        desc: String,
-        colorHex: String,
-        bookLink: String,
-        teacherLink: String
-    ) {
-        val card = findViewById<android.view.View>(cardId)
-        val nameView = card.findViewById<TextView>(R.id.subjectName)
-        val descView = card.findViewById<TextView>(R.id.subjectDesc)
-        val iconBox = card.findViewById<LinearLayout>(R.id.iconBox)
-
-        nameView.text = subjectName
-        descView.text = desc
-        iconBox.setBackgroundColor(Color.parseColor(colorHex))
-
-        card.setOnClickListener {
-            val intent = Intent(this, SubjectDetailActivity::class.java)
-            intent.putExtra("subjectName", subjectName)
-            intent.putExtra("bookLink", bookLink)
-            intent.putExtra("teacherLink", teacherLink)
-            startActivity(intent)
-        }
-    }
 
     private fun checkForUpdate() {
         val queue = com.android.volley.toolbox.Volley.newRequestQueue(this)
