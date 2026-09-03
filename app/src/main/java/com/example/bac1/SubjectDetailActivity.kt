@@ -36,13 +36,3 @@ class SubjectDetailActivity : AppCompatActivity() {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
