@@ -13,6 +13,7 @@ class SubjectDetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_subject_detail)
 
         val subjectName = intent.getStringExtra("subjectName") ?: ""
+        val subjectKey = intent.getStringExtra("subjectKey") ?: ""
         val bookLink = intent.getStringExtra("bookLink") ?: ""
         val bookLink2 = intent.getStringExtra("bookLink2") ?: ""
         val bookLink3 = intent.getStringExtra("bookLink3") ?: ""
@@ -29,6 +30,7 @@ class SubjectDetailActivity : AppCompatActivity() {
         val bookButton2 = findViewById<Button>(R.id.openBookButton2)
         val bookButton3 = findViewById<Button>(R.id.openBookButton3)
         val teacherButton = findViewById<Button>(R.id.openTeacherButton)
+        val lessonsButton = findViewById<Button>(R.id.lessonsButton)
 
         if (bookLink.isNotEmpty()) {
             bookButton.text = bookLabel1
@@ -61,6 +63,17 @@ class SubjectDetailActivity : AppCompatActivity() {
             }
         } else {
             teacherButton.visibility = android.view.View.GONE
+        }
+
+        if (subjectKey.isNotEmpty()) {
+            lessonsButton.setOnClickListener {
+                val intent = Intent(this, LessonsActivity::class.java)
+                intent.putExtra("subjectKey", subjectKey)
+                intent.putExtra("subjectName", subjectName)
+                startActivity(intent)
+            }
+        } else {
+            lessonsButton.visibility = android.view.View.GONE
         }
     }
 }
