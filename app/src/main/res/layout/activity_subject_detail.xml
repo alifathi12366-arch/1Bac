@@ -49,5 +49,12 @@
         android:layout_marginTop="16dp"
         android:text="قناة المدرس"
         android:backgroundTint="@color/red_accent" />
+    <Button
+        android:id="@+id/lessonsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="دروس المادة"
+        android:backgroundTint="#3DBFA0" />
 
 </LinearLayout>
