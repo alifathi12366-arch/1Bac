@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         
         checkForUpdate()
         loadAd()
+        checkDailyLogin()
 
         setupSubject(
             cardId = R.id.cardArabic,
