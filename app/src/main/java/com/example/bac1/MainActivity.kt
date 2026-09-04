@@ -21,21 +21,6 @@ class MainActivity : AppCompatActivity() {
         checkForUpdate()
         loadAd()
         checkDailyLogin()
-        private fun checkDailyLogin() {
-        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-            .format(java.util.Date())
-
-        val lastLoginDate = prefs.getString("last_login_date", "")
-
-        if (lastLoginDate != today) {
-            val currentPoints = prefs.getInt("student_points", 0)
-            prefs.edit()
-                .putInt("student_points", currentPoints + 1)
-                .putString("last_login_date", today)
-                .apply()
-        }
-        }
 
         setupSubject(
             cardId = R.id.cardArabic,
@@ -112,6 +97,22 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("bookLabel3", bookLabel3)
             intent.putExtra("teacherLink", teacherLink)
             startActivity(intent)
+        }
+    }
+
+    private fun checkDailyLogin() {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            .format(java.util.Date())
+
+        val lastLoginDate = prefs.getString("last_login_date", "")
+
+        if (lastLoginDate != today) {
+            val currentPoints = prefs.getInt("student_points", 0)
+            prefs.edit()
+                .putInt("student_points", currentPoints + 1)
+                .putString("last_login_date", today)
+                .apply()
         }
     }
 
