@@ -153,11 +153,4 @@ class MainActivity : AppCompatActivity() {
                 request: android.webkit.WebResourceRequest?
             ): Boolean {
                 return false
-            }
-        }
-
-        // مسح الكاش القديم قبل التحميل لضمان إزالة الخطأ
-        webView.clearCache(true)
-        webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
-    }
-}
+                
