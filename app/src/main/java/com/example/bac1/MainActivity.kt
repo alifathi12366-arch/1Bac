@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         )
         setupSubject(R.id.cardEnglish, "اللغة الإنجليزية", "Reading Comprehension & Writing", "#4FA3E3", "https://drive.google.com/file/d/1Z39u9VOs8SH6nrHxZ3IE3SznDxbQPu5V/view?usp=drivesdk", "https://youtube.com/@mahmoudradwan.englishawy?si=IG4D6QJ7oUNo8nVA")
         setupSubject(R.id.cardMath, "الرياضيات", "الحساب، الدوال، الهندسة", "#3DBFA0", "https://drive.google.com/file/d/1oxls3xtQ4D6UgsXchYI4jB_YU2tedCET/view?usp=drivesdk", "https://youtube.com/@-mrlotfyzahran4469?si=PbZcVrEKd7o8DJYG")
-        setupSubject(R.id.cardScience, "العلوم المتكاملة", "الفيزياء والكيمياء وعلوم الحياة", "#5C7CFA", "https://drive.google.com/file/d/1KtD56ULXsVh1imQaN4JIIwjPoFtjdhdr/view?usp=drivesdk", "https://youtube.com/@khaledsakr8181?si=P8oIi5tGmj45y08L")
+        setupSubject(R.id.cardScience, "العلوم المتكاملة", "الفيزياء والكيمياء وعلوم الحياة", "#5C7CFA", "https://drive.google.com/file/d/1KtD56ULXsVh1imQaN4JIIwjPoFtjdhdr/view?usp=drivesdk", "https://youtube.com/@gohary?si=Gq5uRgIbQWSCmOnu")
         setupSubject(R.id.cardPhilosophy, "الفلسفة والمنطق", "المفاهيم الفلسفية والاستدلال", "#9ACD32", "https://drive.google.com/file/d/1WO_PYfE_j5SIOKMpX0UMah85cbkuM1k1/view?usp=drivesdk", "https://youtube.com/@filasofmasr?si=_DUPM-YnU_foOrud")
         setupSubject(R.id.cardHistory, "التاريخ", "الحضارات القديمة والتاريخ المعاصر", "#E06B9E", "https://drive.google.com/file/d/1bZgJHy_363Ic1J4csuEUOsK3h0VzB0rn/view?usp=drivesdk", "https://youtube.com/@-mostafaarafa4617?si=qrWg04WNl9jGYVdu")
         setupSubject(R.id.cardProgramming, "البرمجة", "أساسيات البرمجة والذكاء الاصطناعي", "#8E9BAE", "https://drive.google.com/file/d/1AtcPFcl7ZNciYnFwSfFLv3mdX5T9tq7z/view?usp=drivesdk", "")
