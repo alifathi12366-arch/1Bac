@@ -28,6 +28,7 @@ android:roundIcon="@mipmap/ic_launcher"
         <activity android:name=".SubjectDetailActivity" />
         <activity android:name=".ScheduleActivity" />
         <activity android:name=".LibraryActivity" />
+        <activity android:name=".AccountActivity" />
 
 <provider
     android:name="androidx.core.content.FileProvider"
