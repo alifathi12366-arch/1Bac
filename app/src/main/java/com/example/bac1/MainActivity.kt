@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         checkForUpdate()
         loadAd()
 
-    setupSubject(
+        setupSubject(
             cardId = R.id.cardArabic,
             subjectName = "اللغة العربية",
             desc = "القراءة، النصوص، الأدب، النحو",
@@ -52,6 +52,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.nav_library -> {
                     startActivity(Intent(this, LibraryActivity::class.java))
+                    true
+                }
+                R.id.nav_account -> {
+                    startActivity(Intent(this, AccountActivity::class.java))
                     true
                 }
                 else -> true
@@ -153,4 +157,11 @@ class MainActivity : AppCompatActivity() {
                 request: android.webkit.WebResourceRequest?
             ): Boolean {
                 return false
-                
+            }
+        }
+
+        // مسح الكاش القديم قبل التحميل لضمان إزالة الخطأ
+        webView.clearCache(true)
+        webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
+    }
+}
