@@ -18,7 +18,8 @@ class AccountActivity : AppCompatActivity() {
         val nameInput = findViewById<EditText>(R.id.nameInput)
         val saveNameButton = findViewById<Button>(R.id.saveNameButton)
         val welcomeText = findViewById<TextView>(R.id.welcomeText)
-        val pointsText = findViewById<TextView>(R.id.pointsText)val lastLoginText = findViewById<TextView>(R.id.lastLoginText)
+        val pointsText = findViewById<TextView>(R.id.pointsText)
+        val lastLoginText = findViewById<TextView>(R.id.lastLoginText)
         val facebookButton = findViewById<Button>(R.id.facebookButton)
 
         // استرجاع الاسم المحفوظ لو موجود
