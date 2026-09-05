@@ -110,11 +110,6 @@ class MainActivity : AppCompatActivity() {
 
         val lastLoginDate = prefs.getString("last_login_date", "")
 
-        android.widget.Toast.makeText(
-            this,
-            "اليوم: $today | آخر دخول محفوظ: $lastLoginDate",
-            android.widget.Toast.LENGTH_LONG
-        ).show()
 
         if (lastLoginDate != today) {
             val currentPoints = prefs.getInt("student_points", 0)
