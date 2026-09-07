@@ -109,7 +109,7 @@ class LibraryActivity : AppCompatActivity() {
         val destFile = File(filesDir, fileName)
         currentPhotoPath = destFile.absolutePath
         currentPhotoUri = FileProvider.getUriForFile(this, "$packageName.fileprovider", destFile)
-        takePhotoLauncher.launch(currentPhotoUri)
+        takePhotoLauncher.launch(currentPhotoUri!!)
     }
 
     private fun askForSubjectThenSavePhoto() {
