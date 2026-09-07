@@ -27,6 +27,8 @@ class LibraryActivity : AppCompatActivity() {
     private var mediaRecorder: MediaRecorder? = null
     private var isRecording = false
     private var currentAudioPath: String = ""
+    private var currentPhotoPath: String = ""
+    private var currentPhotoUri: Uri? = null
 
     private val subjects = arrayOf(
         "اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "العلوم المتكاملة",
@@ -38,6 +40,14 @@ class LibraryActivity : AppCompatActivity() {
     ) { uri: Uri? ->
         if (uri != null) {
             askForSubjectThenSave(uri)
+        }
+    }
+
+    private val takePhotoLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success && currentPhotoUri != null) {
+            askForSubjectThenSavePhoto()
         }
     }
 
@@ -61,6 +71,10 @@ class LibraryActivity : AppCompatActivity() {
             pickFileLauncher.launch("*/*")
         }
 
+        findViewById<android.widget.Button>(R.id.btnTakePhoto).setOnClickListener {
+            checkCameraPermissionAndOpen()
+        }
+
         findViewById<android.widget.Button>(R.id.btnRecordAudio).setOnClickListener {
             toggleRecording()
         }
@@ -76,6 +90,47 @@ class LibraryActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
+    }
+
+    private fun checkCameraPermissionAndOpen() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(android.Manifest.permission.CAMERA), 200
+            )
+            return
+        }
+        openCamera()
+    }
+
+    private fun openCamera() {
+        val fileName = "${UUID.randomUUID()}_photo.jpg"
+        val destFile = File(filesDir, fileName)
+        currentPhotoPath = destFile.absolutePath
+        currentPhotoUri = FileProvider.getUriForFile(this, "$packageName.fileprovider", destFile)
+        takePhotoLauncher.launch(currentPhotoUri)
+    }
+
+    private fun askForSubjectThenSavePhoto() {
+        AlertDialog.Builder(this)
+            .setTitle("اختر المادة")
+            .setItems(subjects) { _, which ->
+                val item = LibraryItem(
+                    id = UUID.randomUUID().toString(),
+                    fileName = "صورة",
+                    filePath = currentPhotoPath,
+                    fileType = "image",
+                    subject = subjects[which],
+                    noteText = "",
+                    dateAdded = System.currentTimeMillis()
+                )
+                LibraryStorage.addItem(this, item)
+                allItems = LibraryStorage.loadItems(this)
+                adapter.updateList(allItems)
+                Toast.makeText(this, "تم حفظ الصورة", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
 
     private fun filterList(query: String) {
