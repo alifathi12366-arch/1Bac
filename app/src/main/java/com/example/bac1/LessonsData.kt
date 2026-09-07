@@ -94,12 +94,12 @@ object LessonsData {
             )
 
             "french" -> listOf(
-                Lesson("Se présenter", 0),
-                Lesson("Présenter et identifier ses copains", 0),
-                Lesson("Parler du caractère", 0),
-                Lesson("Identifier et décrire des objets", 0),
-                Lesson("Demander et dire l'âge et la date d'anniversaire", 0),
-                Lesson("Exprimer ses goûts", 0)
+                Lesson("Se présenter", 16),
+                Lesson("Présenter et identifier ses copains", 35),
+                Lesson("Parler du caractère", 51),
+                Lesson("Identifier et décrire des objets", 70),
+                Lesson("Demander et dire l'âge et la date d'anniversaire", 89),
+                Lesson("Exprimer ses goûts", 106)
             )
 
             else -> emptyList()
