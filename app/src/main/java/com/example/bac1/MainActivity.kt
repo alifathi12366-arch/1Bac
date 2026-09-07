@@ -29,12 +29,10 @@ class MainActivity : AppCompatActivity() {
             colorHex = "#F5C518",
             bookLink = "https://drive.google.com/file/d/1_wabND8G53RlCFxyIeIP4NYOAJSesBT7/view?usp=drivesdk",
             teacherLink = "https://youtube.com/@mohamedsalah.bassthalk?si=BMSSudooCyUUFvoo",
-            bookLink2 = "https://drive.google.com/file/d/12c_-S5uAy-foYtb42oROwS_fq6QOLo9J/view?usp=drivesdk",
             bookLink3 = "https://drive.google.com/file/d/1oH-1lxOgCIbED17eBBvfTIHTi0EZrua1/view?usp=drivesdk",
             bookLabel1 = "كتاب القراءة والنصوص",
-            bookLabel2 = "كتاب النحو",
             bookLabel3 = "كتاب القصة",
-            subjectKey = ""
+            subjectKey = "arabic"
         )
         setupSubject(R.id.cardEnglish, "اللغة الإنجليزية", "Reading Comprehension & Writing", "#4FA3E3", "https://drive.google.com/file/d/1Z39u9VOs8SH6nrHxZ3IE3SznDxbQPu5V/view?usp=drivesdk", "https://youtube.com/@mahmoudradwan.englishawy?si=IG4D6QJ7oUNo8nVA", subjectKey = "english")
         setupSubject(R.id.cardMath, "الرياضيات", "الحساب، الدوال، الهندسة", "#3DBFA0", "https://drive.google.com/file/d/1oxls3xtQ4D6UgsXchYI4jB_YU2tedCET/view?usp=drivesdk", "https://youtube.com/@-mrlotfyzahran4469?si=PbZcVrEKd7o8DJYG", subjectKey = "math")
