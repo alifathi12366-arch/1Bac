@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
             colorHex = "#F5C518",
             bookLink = "https://drive.google.com/file/d/1_wabND8G53RlCFxyIeIP4NYOAJSesBT7/view?usp=drivesdk",
             teacherLink = "https://youtube.com/@mohamedsalah.bassthalk?si=BMSSudooCyUUFvoo",
-            bookLink3 = "https://drive.google.com/file/d/1oH-1lxOgCIbED17eBBvfTIHTi0EZrua1/view?usp=drivesdk",
+            bookLink3 = "https://drive.google.com/file/d/1c2peDQbPRr8Kbgu_5pY3VaaRqguWeb_g/view?usp=drivesdk",
             bookLabel1 = "كتاب القراءة والنصوص",
             bookLabel3 = "كتاب القصة",
             subjectKey = "arabic"
