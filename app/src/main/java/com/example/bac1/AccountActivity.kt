@@ -66,5 +66,12 @@ class AccountActivity : AppCompatActivity() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/share/1F8T5LvFYz/"))
             startActivity(intent)
         }
+
+        findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
+            startActivity(Intent(this, LeaderboardActivity::class.java))
+        }
+    }
+}
+        }
     }
 }
