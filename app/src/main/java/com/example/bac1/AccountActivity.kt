@@ -35,7 +35,7 @@ class AccountActivity : AppCompatActivity() {
             nameInput.isEnabled = false
             saveNameButton.isEnabled = false
             saveNameButton.text = "الاسم محفوظ"
-            welcomeText.text = "أهلاً بيك يا $savedName 👋"
+            welcomeText.text = "أهلاً بيك يا $savedName (كودك: #$studentId) 👋"
         }
 
         val points = prefs.getInt("student_points", 0)
@@ -54,7 +54,7 @@ class AccountActivity : AppCompatActivity() {
             val name = nameInput.text.toString().trim()
             if (name.isNotEmpty()) {
                 prefs.edit().putString("student_name", name).apply()
-                welcomeText.text = "أهلاً بيك يا $name 👋"
+                welcomeText.text = "أهلاً بيك يا $name (كودك: #$studentId) 👋"
                 nameInput.isEnabled = false
                 saveNameButton.isEnabled = false
                 saveNameButton.text = "الاسم محفوظ"
