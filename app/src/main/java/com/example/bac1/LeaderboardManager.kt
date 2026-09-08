@@ -1,14 +1,5 @@
 package com.example.bac1
-
-import com.google.firebase.firestore.FirebaseFirestore
-import java.util.Calendar
-
-object LeaderboardManager {
-
-    private fun getCurrentMonthKey(): String {
-        val cal = Calendar.getInstance()
-        val month = cal.get(Calendar.MONTH) + 1
-        val year = cal.get(Calendar.YEAR)
+(.YEAR)
         return "$year-$month"
     }
 
