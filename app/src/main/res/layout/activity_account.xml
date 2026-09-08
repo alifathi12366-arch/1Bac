@@ -64,6 +64,13 @@
             android:text=""
             android:textSize="14sp"
             android:textColor="#888888" />
+        <Button
+            android:id="@+id/leaderboardButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="🏆 المسابقة الشهرية"
+            android:backgroundTint="#F5A623" />
 
         <!-- زرار فيسبوك -->
         <Button
