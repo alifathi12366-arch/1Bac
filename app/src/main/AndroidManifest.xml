@@ -31,6 +31,7 @@ android:roundIcon="@mipmap/ic_launcher"
         <activity android:name=".LibraryActivity" />
         <activity android:name=".AccountActivity" />
         <activity android:name=".LessonsActivity" />
+        <activity android:name=".LeaderboardActivity" />
 
 <provider
     android:name="androidx.core.content.FileProvider"
