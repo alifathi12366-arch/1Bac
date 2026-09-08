@@ -60,7 +60,9 @@ object LeaderboardManager {
             .get()
             .addOnSuccessListener { result ->
                 val list = result.documents.mapNotNull { doc ->
-                    val name = doc.getString("studentName") ?: return@mapNotNull null
+                    val rawName = doc.getString("studentName") ?: return@mapNotNull null
+val id = doc.getString("studentId") ?: ""
+val name = "$rawName #$id"
                     val points = doc.getLong("points")?.toInt() ?: 0
                     val reachedAt = doc.getLong("reachedAt") ?: Long.MAX_VALUE
                     Triple(name, points, reachedAt)
