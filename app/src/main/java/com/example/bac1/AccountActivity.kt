@@ -68,7 +68,9 @@ class AccountActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
-            startActivity(Intent(this, LeaderboardActivity::class.java))
+    val i = Intent(this, InterstitialActivity::class.java)
+    i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
+    startActivity(i)
         }
     }
 }
