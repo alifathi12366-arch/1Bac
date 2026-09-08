@@ -72,6 +72,3 @@ class AccountActivity : AppCompatActivity() {
         }
     }
 }
-        }
-    }
-}
