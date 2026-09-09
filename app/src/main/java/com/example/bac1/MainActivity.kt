@@ -131,7 +131,7 @@ class MainActivity : AppCompatActivity() {
                     val json = org.json.JSONObject(response)
                     val latestVersion = json.getInt("latestVersion")
                     val downloadUrl = json.getString("downloadUrl")
-                    val currentVersion = 1
+                    val currentVersion = 2
 
                     if (latestVersion > currentVersion) {
                         val builder = android.app.AlertDialog.Builder(this)
