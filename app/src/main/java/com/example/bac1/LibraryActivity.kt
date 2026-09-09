@@ -134,12 +134,15 @@ class LibraryActivity : AppCompatActivity() {
     }
 
     private fun filterList(query: String) {
-        val filtered = if (query.isBlank()) {
-            allItems
-        } else {
-            allItems.filter { it.fileName.contains(query, ignoreCase = true) }
+    val filtered = if (query.isBlank()) {
+        allItems
+    } else {
+        allItems.filter {
+            it.fileName.contains(query, ignoreCase = true) ||
+            it.subject.contains(query, ignoreCase = true)
         }
-        adapter.updateList(filtered.toMutableList())
+    }
+    adapter.updateList(filtered.toMutableList())
     }
 
     private fun getFileType(uri: Uri): String {
