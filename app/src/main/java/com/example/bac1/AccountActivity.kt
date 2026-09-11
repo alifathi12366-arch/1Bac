@@ -66,6 +66,9 @@ class AccountActivity : AppCompatActivity() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/share/1F8T5LvFYz/"))
             startActivity(intent)
         }
+        findViewById<android.widget.TextView>(R.id.teacherRegisterButton).setOnClickListener {
+            startActivity(Intent(this, TeacherRegisterActivity::class.java))
+        }
 
         findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
     val i = Intent(this, InterstitialActivity::class.java)
