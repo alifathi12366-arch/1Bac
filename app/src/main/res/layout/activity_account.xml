@@ -72,7 +72,7 @@
             android:text="🏆 المسابقة الشهرية"
             android:backgroundTint="#F5A623" />
 
-        <!-- زرار فيسبوك -->
+    <!-- زرار فيسبوك -->
         <Button
             android:id="@+id/facebookButton"
             android:layout_width="match_parent"
@@ -80,6 +80,18 @@
             android:layout_marginTop="30dp"
             android:text="صفحتنا على فيسبوك"
             android:backgroundTint="#3b5998" />
+
+        <!-- زرار تسجيل المدرس -->
+        <TextView
+            android:id="@+id/teacherRegisterButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_gravity="center"
+            android:text="هل أنت مدرس؟ سجل هنا"
+            android:textSize="13sp"
+            android:textColor="#999999"
+            android:padding="8dp" />
 
     </LinearLayout>
 </ScrollView>
