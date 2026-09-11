@@ -21,7 +21,8 @@ class MainActivity : AppCompatActivity() {
         checkForUpdate()
         loadAd()
         checkDailyLogin()
-        checkTeacherStatus()       setupSubject(
+        checkTeacherStatus()
+        setupSubject(
             cardId = R.id.cardArabic,
             subjectName = "اللغة العربية",
             desc = "القراءة، النصوص، الأدب، النحو",
