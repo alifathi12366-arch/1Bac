@@ -21,8 +21,7 @@ class MainActivity : AppCompatActivity() {
         checkForUpdate()
         loadAd()
         checkDailyLogin()
-
-        setupSubject(
+        checkTeacherStatus()       setupSubject(
             cardId = R.id.cardArabic,
             subjectName = "اللغة العربية",
             desc = "القراءة، النصوص، الأدب، النحو",
@@ -184,5 +183,31 @@ class MainActivity : AppCompatActivity() {
         // مسح الكاش القديم قبل التحميل لضمان إزالة الخطأ
         webView.clearCache(true)
         webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
+    }
+    private fun checkTeacherStatus() {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val isTeacher = prefs.getBoolean("is_teacher", false)
+        if (!isTeacher) return
+
+        val code = prefs.getString("teacher_code", "") ?: ""
+        if (code.isEmpty()) return
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("teacherCodes")
+            .document(code)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (!doc.exists()) return@addOnSuccessListener
+
+                val expiresAt = doc.getLong("expiresAt") ?: 0L
+                val now = System.currentTimeMillis()
+                val daysLeft = (expiresAt - now) / (1000 * 60 * 60 * 24)
+
+                prefs.edit()
+                    .putLong("teacher_expires_at", expiresAt)
+                    .putBoolean("teacher_expired", now > expiresAt)
+                    .putBoolean("teacher_expiring_soon", daysLeft in 0..5)
+                    .apply()
+            }
     }
 }
