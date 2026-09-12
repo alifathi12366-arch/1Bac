@@ -93,5 +93,17 @@
             android:textColor="#999999"
             android:padding="8dp" />
 
+        <!-- زرار كود التفعيل -->
+        <TextView
+            android:id="@+id/teacherCodeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="center"
+            android:text="عندك كود تفعيل؟ ادخله هنا"
+            android:textSize="13sp"
+            android:textColor="#999999"
+            android:padding="8dp" />
+
     </LinearLayout>
 </ScrollView>
