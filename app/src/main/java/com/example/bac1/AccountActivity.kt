@@ -66,16 +66,19 @@ class AccountActivity : AppCompatActivity() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/share/1F8T5LvFYz/"))
             startActivity(intent)
         }
+
         findViewById<android.widget.TextView>(R.id.teacherRegisterButton).setOnClickListener {
             startActivity(Intent(this, TeacherRegisterActivity::class.java))
         }
 
         findViewById<android.widget.TextView>(R.id.teacherCodeButton).setOnClickListener {
             startActivity(Intent(this, TeacherCodeActivity::class.java))
-        }        findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
-    val i = Intent(this, InterstitialActivity::class.java)
-    i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
-    startActivity(i)
+        }
+
+        findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
+            val i = Intent(this, InterstitialActivity::class.java)
+            i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
+            startActivity(i)
         }
     }
 }
