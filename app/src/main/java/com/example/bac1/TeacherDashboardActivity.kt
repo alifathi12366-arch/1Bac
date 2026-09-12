@@ -26,5 +26,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
             expiringSoon -> expiryText.text = "⚠️ اشتراكك هينتهي قريبًا، جدد عشان طلابك يفضلوا شايفين المحتوى"
             else -> expiryText.text = ""
         }
+
+        findViewById<android.widget.Button>(R.id.sendMessageButton).setOnClickListener {
+            startActivity(android.content.Intent(this, SendMessageActivity::class.java))
+        }
     }
 }
