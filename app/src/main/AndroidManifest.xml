@@ -34,7 +34,7 @@ android:roundIcon="@mipmap/ic_launcher"
         <activity android:name=".LeaderboardActivity" />
         <activity android:name=".InterstitialActivity" android:exported="false" />
         <activity android:name=".TeacherRegisterActivity" android:exported="false" />
-
+<activity android:name=".TeacherDashboardActivity" android:exported="false" />
 <provider
     android:name="androidx.core.content.FileProvider"
     android:authorities="${applicationId}.fileprovider"
