@@ -70,7 +70,9 @@ class AccountActivity : AppCompatActivity() {
             startActivity(Intent(this, TeacherRegisterActivity::class.java))
         }
 
-        findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
+        findViewById<android.widget.TextView>(R.id.teacherCodeButton).setOnClickListener {
+            startActivity(Intent(this, TeacherCodeActivity::class.java))
+        }        findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
     val i = Intent(this, InterstitialActivity::class.java)
     i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
     startActivity(i)
