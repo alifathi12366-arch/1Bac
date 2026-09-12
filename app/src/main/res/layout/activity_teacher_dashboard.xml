@@ -28,7 +28,7 @@
             android:textColor="#666666"
             android:layout_marginBottom="8dp" />
 
-        <TextView
+    <TextView
             android:id="@+id/teacherExpiryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -36,6 +36,12 @@
             android:gravity="center"
             android:textColor="#F5A623"
             android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/sendMessageButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✉️ إرسال رسالة لطلابي" />
 
     </LinearLayout>
 </ScrollView>
