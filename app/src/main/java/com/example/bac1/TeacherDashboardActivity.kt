@@ -27,8 +27,16 @@ class TeacherDashboardActivity : AppCompatActivity() {
             else -> expiryText.text = ""
         }
 
-        findViewById<android.widget.Button>(R.id.sendMessageButton).setOnClickListener {
+     findViewById<android.widget.Button>(R.id.sendMessageButton).setOnClickListener {
             startActivity(android.content.Intent(this, SendMessageActivity::class.java))
         }
+
+        findViewById<android.widget.Button>(R.id.setJoinCodeButton).setOnClickListener {
+            startActivity(android.content.Intent(this, SetJoinCodeActivity::class.java))
+        }
+
+        val currentJoinCode = prefs.getString("teacher_join_code", "") ?: ""
+        findViewById<TextView>(R.id.currentJoinCodeText).text =
+            if (currentJoinCode.isNotEmpty()) "كود طلابك الحالي: $currentJoinCode" else "لسه محددتش كود لطلابك"
     }
-}
+}   
