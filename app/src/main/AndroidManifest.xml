@@ -38,6 +38,7 @@ android:roundIcon="@mipmap/ic_launcher"
         <activity android:name=".SendMessageActivity" android:exported="false" />
         <activity android:name=".TeachersListActivity" android:exported="false" />
         <activity android:name=".SetJoinCodeActivity" android:exported="false" />
+        <activity android:name=".JoinTeacherActivity" android:exported="false" />
 <provider
     android:name="androidx.core.content.FileProvider"
     android:authorities="${applicationId}.fileprovider"
