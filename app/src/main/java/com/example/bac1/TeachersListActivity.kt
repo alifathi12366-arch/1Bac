@@ -15,6 +15,10 @@ class TeachersListActivity : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.teachersRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
+        findViewById<android.widget.Button>(R.id.joinTeacherEntryButton).setOnClickListener {
+            startActivity(android.content.Intent(this, JoinTeacherActivity::class.java))
+        }
+
         FirebaseFirestore.getInstance()
             .collection("teachers")
             .get()
