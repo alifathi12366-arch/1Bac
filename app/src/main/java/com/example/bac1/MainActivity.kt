@@ -58,11 +58,15 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, ScheduleActivity::class.java))
                     true
                 }
+                R.id.nav_teachers -> {
+                    startActivity(Intent(this, TeachersListActivity::class.java))
+                    true
+                }
                 R.id.nav_library -> {
-    val i = Intent(this, InterstitialActivity::class.java)
-    i.putExtra("TARGET_CLASS", LibraryActivity::class.java.name)
-    startActivity(i)
-    true
+                    val i = Intent(this, InterstitialActivity::class.java)
+                    i.putExtra("TARGET_CLASS", LibraryActivity::class.java.name)
+                    startActivity(i)
+                    true
                 }
                 R.id.nav_account -> {
                     startActivity(Intent(this, AccountActivity::class.java))
