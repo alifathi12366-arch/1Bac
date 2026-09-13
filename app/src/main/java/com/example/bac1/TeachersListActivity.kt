@@ -15,6 +15,10 @@ class TeachersListActivity : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.teachersRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
+        findViewById<android.widget.Button>(R.id.myTeacherContentButton).setOnClickListener {
+            startActivity(android.content.Intent(this, TeacherContentActivity::class.java))
+        }
+
         findViewById<android.widget.Button>(R.id.joinTeacherEntryButton).setOnClickListener {
             startActivity(android.content.Intent(this, JoinTeacherActivity::class.java))
         }
