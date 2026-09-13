@@ -7,9 +7,9 @@
         android:title="الرئيسية" />
 
     <item
-        android:id="@+id/nav_subjects"
+        android:id="@+id/nav_teachers"
         android:icon="@android:drawable/ic_menu_agenda"
-        android:title="المواد" />
+        android:title="المدرسين" />
 
     <item
         android:id="@+id/nav_schedule"
