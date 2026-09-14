@@ -28,26 +28,20 @@
             android:textColor="#666666"
             android:layout_marginBottom="8dp" />
 
-    <TextView
+        <TextView
             android:id="@+id/teacherExpiryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:gravity="center"
             android:textColor="#F5A623"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="20dp" />
 
-        <Button
-            android:id="@+id/sendMessageButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="✉️ إرسال رسالة لطلابي" />
-
+        <!-- زرار إعداد كود الطلاب (من شغلك القديم) -->
         <Button
             android:id="@+id/setJoinCodeButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:text="🔑 تحديد كود طلابي" />
 
         <TextView
@@ -57,7 +51,57 @@
             android:layout_marginTop="8dp"
             android:gravity="center"
             android:textSize="14sp"
-            android:textColor="#666666" />
+            android:textColor="#666666"
+            android:layout_marginBottom="20dp" />
+
+        <!-- قسم إضافة المحتوى الجديد -->
+        <EditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="عنوان الدرس أو المنشور"
+            android:inputType="text" />
+
+        <EditText
+            android:id="@+id/etDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="نص الرسالة / الشرح"
+            android:minLines="3"
+            android:gravity="top"
+            android:inputType="textMultiLine"
+            android:layout_marginTop="8dp"/>
+
+        <EditText
+            android:id="@+id/etYoutubeUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="رابط يوتيوب أو القناة (اختياري)"
+            android:inputType="textUri"
+            android:layout_marginTop="8dp"/>
+
+        <Button
+            android:id="@+id/btnSelectPdf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📄 اختيار ملزمة PDF"
+            android:layout_marginTop="12dp"/>
+
+        <Button
+            android:id="@+id/btnSelectVideo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎥 اختيار فيديو للرفع"
+            android:layout_marginTop="8dp"/>
+
+        <Button
+            android:id="@+id/sendMessageButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🚀 نشر المحتوى لطلابي"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="16dp" />
 
     </LinearLayout>
 </ScrollView>
