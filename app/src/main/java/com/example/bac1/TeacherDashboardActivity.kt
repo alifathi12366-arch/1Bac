@@ -17,7 +17,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
     private var selectedPdfUri: Uri? = null
     private var selectedVideoUri: Uri? = null
 
-    // مسجلات النتائج لاختيار الملفات من الموبايل
     private val selectPdfLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
             selectedPdfUri = uri
@@ -43,17 +42,14 @@ class TeacherDashboardActivity : AppCompatActivity() {
         val btnSelectVideo = findViewById<Button>(R.id.btnSelectVideo)
         val btnPublish = findViewById<Button>(R.id.sendMessageButton)
 
-        // اختيار ملف PDF
         btnSelectPdf.setOnClickListener {
             selectPdfLauncher.launch("application/pdf")
         }
 
-        // اختيار فيديو
         btnSelectVideo.setOnClickListener {
             selectVideoLauncher.launch("video/*")
         }
 
-        // نشر المحتوى
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
             val description = etDescription.text.toString().trim()
