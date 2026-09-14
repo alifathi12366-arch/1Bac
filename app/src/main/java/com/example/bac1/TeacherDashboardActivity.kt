@@ -79,6 +79,8 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
 
         btnSelectPdf.setOnClickListener {
+            selectPdfLauncher.launch("application/pdf")
+        }
 
         btnSelectVideo.setOnClickListener {
             selectVideoLauncher.launch("video/*")
