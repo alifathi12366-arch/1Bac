@@ -34,7 +34,9 @@ android:roundIcon="@mipmap/ic_launcher"
         <activity android:name=".LeaderboardActivity" />
         <activity android:name=".InterstitialActivity" android:exported="false" />
         <activity android:name=".TeacherRegisterActivity" android:exported="false" />
-<activity android:name=".TeacherDashboardActivity" android:exported="false" />
+<activity android:name=".TeacherRegisterActivity" android:exported="false" />
+        <activity android:name=".TeacherCodeActivity" android:exported="false" />
+        <activity android:name=".TeacherDashboardActivity" android:exported="false" />
         <activity android:name=".SendMessageActivity" android:exported="false" />
         <activity android:name=".TeachersListActivity" android:exported="false" />
         <activity android:name=".SetJoinCodeActivity" android:exported="false" />
