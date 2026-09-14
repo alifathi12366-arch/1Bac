@@ -12,6 +12,18 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
 
+// تعريف الكلاس هنا مباشرة لمنع أي خطأ Unresolved Reference
+data class TeacherContent(
+    val id: String = "",
+    val teacherId: String = "",
+    val title: String = "",
+    val description: String = "",
+    val youtubeUrl: String = "",
+    val pdfUrl: String = "",
+    val directVideoUrl: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 class TeacherDashboardActivity : AppCompatActivity() {
 
     private var selectedPdfUri: Uri? = null
