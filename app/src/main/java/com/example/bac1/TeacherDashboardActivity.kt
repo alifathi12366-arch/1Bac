@@ -1,4 +1,4 @@
-package com.example.yourApp // ⚠️ غير لاسم الباكيج بتاعك
+package com.example.bac1
 
 import android.content.Intent
 import android.net.Uri
@@ -71,17 +71,13 @@ class TeacherDashboardActivity : AppCompatActivity() {
     private fun uploadContent(title: String, description: String, youtubeUrl: String) {
         Toast.makeText(this, "جاري رفع المحتوى...", Toast.LENGTH_SHORT).show()
 
-        val storage = FirebaseStorage.getInstance()
         var pdfUploadUrl = ""
         var videoUploadUrl = ""
 
-        // دالة مساعدة للحفظ في الفايربيس بعد الرفع
         fun saveToFirestore() {
             val db = FirebaseFirestore.getInstance()
             val contentId = UUID.randomUUID().toString()
-            
-            // ⚠️ غير "TEACHER_ID_HERE" لمعرّف المدرس أو الكود الخاص بيه
-            val teacherId = "TEACHER_ID_HERE" 
+            val teacherId = "TEACHER_ID_HERE"
 
             val content = TeacherContent(
                 id = contentId,
@@ -105,12 +101,12 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 }
         }
 
-        // رفع الـ PDF لو موجود الأول، بعدها رفع الفيديو، ثم الحفظ
         if (selectedPdfUri != null) {
+            val storage = FirebaseStorage.getInstance()
             val pdfRef = storage.reference.child("pdfs/${UUID.randomUUID()}.pdf")
             pdfRef.putFile(selectedPdfUri!!).addOnSuccessListener {
-                pdfRef.downloadUrl.addOnSuccessListener { uri ->
-                    pdfUploadUrl = uri.toString()
+                pdfRef.downloadUrl.addOnSuccessListener { downloadUri: Uri ->
+                    pdfUploadUrl = downloadUri.toString()
                     uploadVideoIfExist { saveToFirestore() }
                 }
             }
@@ -124,8 +120,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
             val storage = FirebaseStorage.getInstance()
             val videoRef = storage.reference.child("videos/${UUID.randomUUID()}.mp4")
             videoRef.putFile(selectedVideoUri!!).addOnSuccessListener {
-                videoRef.downloadUrl.addOnSuccessListener { uri ->
-                    // حفظ رابط الفيديو المرفوع
+                videoRef.downloadUrl.addOnSuccessListener { downloadUri: Uri ->
                     onComplete()
                 }
             }
