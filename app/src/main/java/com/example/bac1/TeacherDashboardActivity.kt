@@ -54,9 +54,31 @@ class TeacherDashboardActivity : AppCompatActivity() {
         val btnSelectVideo = findViewById<Button>(R.id.btnSelectVideo)
         val btnPublish = findViewById<Button>(R.id.sendMessageButton)
 
-        btnSelectPdf.setOnClickListener {
-            selectPdfLauncher.launch("application/pdf")
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val teacherName = prefs.getString("teacher_name", "") ?: ""
+        val teacherSubject = prefs.getString("teacher_subject", "") ?: ""
+        val expired = prefs.getBoolean("teacher_expired", false)
+        val expiringSoon = prefs.getBoolean("teacher_expiring_soon", false)
+
+        findViewById<android.widget.TextView>(R.id.teacherWelcomeText).text = "أهلاً بيك أستاذ $teacherName 👋"
+        findViewById<android.widget.TextView>(R.id.teacherSubjectText).text = "مادة: $teacherSubject"
+
+        val expiryText = findViewById<android.widget.TextView>(R.id.teacherExpiryText)
+        when {
+            expired -> expiryText.text = "⚠️ اشتراكك انتهى، تواصل معانا لتجديده"
+            expiringSoon -> expiryText.text = "⚠️ اشتراكك هينتهي قريبًا، جدد عشان طلابك يفضلوا شايفين المحتوى"
+            else -> expiryText.text = ""
         }
+
+        val currentJoinCode = prefs.getString("teacher_join_code", "") ?: ""
+        findViewById<android.widget.TextView>(R.id.currentJoinCodeText).text =
+            if (currentJoinCode.isNotEmpty()) "كود طلابك الحالي: $currentJoinCode" else "لسه محددتش كود لطلابك"
+
+        findViewById<Button>(R.id.setJoinCodeButton).setOnClickListener {
+            startActivity(Intent(this, SetJoinCodeActivity::class.java))
+        }
+
+        btnSelectPdf.setOnClickListener {
 
         btnSelectVideo.setOnClickListener {
             selectVideoLauncher.launch("video/*")
