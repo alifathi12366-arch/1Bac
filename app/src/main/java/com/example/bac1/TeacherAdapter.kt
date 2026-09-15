@@ -10,7 +10,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
-// موديل بيانات المدرس
 data class TeacherModel(
     val id: String = "",
     val name: String = "",
@@ -19,8 +18,8 @@ data class TeacherModel(
     val studentsCount: Int = 0
 )
 
-class TeachersAdapter(private val teachersList: List<TeacherModel>) :
-    RecyclerView.Adapter<TeachersAdapter.TeacherViewHolder>() {
+class TeacherAdapter(private val teachersList: List<TeacherModel>) :
+    RecyclerView.Adapter<TeacherAdapter.TeacherViewHolder>() {
 
     class TeacherViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvName: TextView = itemView.findViewById(R.id.teacherItemName)
@@ -44,7 +43,6 @@ class TeachersAdapter(private val teachersList: List<TeacherModel>) :
         holder.tvStudentsCount.text = "👥 ${teacher.studentsCount} طالب مسجل"
         holder.tvPhone.text = "📞 ${teacher.phone}"
 
-        // فتح الواتساب للتواصل المباشر مع المدرس
         holder.btnWhatsapp.setOnClickListener {
             val context = holder.itemView.context
             val phoneNumber = teacher.phone.trim()
