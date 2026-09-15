@@ -2,38 +2,54 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#121212"
+    android:padding="16dp">
 
+    <!-- عنوان الشاشة -->
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="👨‍🏫 المدرسين"
+        android:text="المدرسين 👨‍🏫"
+        android:textColor="#FFFFFF"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:gravity="center"
-        android:padding="16dp" />
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
 
+    <!-- زرار محتوى مدرستي -->
     <Button
-        android:id="@+id/myTeacherContentButton"
+        android:id="@+id/btnMyTeacherContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="8dp"
         android:text="📚 محتوى مدرستي"
-        android:backgroundTint="#3DBFA0" />
+        android:backgroundTint="#3DBFA0"
+        android:textColor="#FFFFFF" />
 
+    <!-- زرار التسجيل بكود -->
     <Button
-        android:id="@+id/joinTeacherEntryButton"
+        android:id="@+id/btnRegisterCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="12dp"
         android:text="🔑 عندك كود من مدرسك؟ سجل هنا"
-        android:backgroundTint="#F5A623" />
+        android:backgroundTint="#F5A623"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="قائمة المدرسين المتاحين:"
+        android:textColor="#A0A0A0"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- القائمة التي ستعرض المدرسين -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/teachersRecyclerView"
+        android:id="@+id/rvTeachers"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
 </LinearLayout>
