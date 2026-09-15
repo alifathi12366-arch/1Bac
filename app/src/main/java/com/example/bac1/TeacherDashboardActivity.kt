@@ -109,21 +109,22 @@ class TeacherDashboardActivity : AppCompatActivity() {
         fun saveToFirestore() {
             val db = FirebaseFirestore.getInstance()
             val contentId = UUID.randomUUID().toString()
-            val teacherId = "TEACHER_ID_HERE"
+            val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+            val teacherCode = prefs.getString("teacher_code", "") ?: ""
 
-            val content = TeacherContent(
-                id = contentId,
-                teacherId = teacherId,
-                title = title,
-                description = description,
-                youtubeUrl = youtubeUrl,
-                pdfUrl = pdfUploadUrl,
-                directVideoUrl = videoUploadUrl
+            val data = hashMapOf(
+                "teacherCode" to teacherCode,
+                "type" to "message",
+                "text" to "$title\n\n$description",
+                "youtubeUrl" to youtubeUrl,
+                "pdfUrl" to pdfUploadUrl,
+                "directVideoUrl" to videoUploadUrl,
+                "createdAt" to System.currentTimeMillis()
             )
 
-            db.collection("teacher_contents")
+            db.collection("teacherContent")
                 .document(contentId)
-                .set(content)
+                .set(data)
                 .addOnSuccessListener {
                     Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
                     finish()
