@@ -1,55 +1,54 @@
-?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="#121212">
 
-    <!-- عنوان الشاشة -->
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tvHeaderTitle"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="المدرسين 👨‍🏫"
-        android:textColor="#FFFFFF"
+        android:text="قائمة المعلمين"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:layout_gravity="center"
-        android:layout_marginBottom="16dp" />
-
-    <!-- زرار محتوى مدرستي -->
-    <Button
-        android:id="@+id/btnMyTeacherContent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📚 محتوى مدرستي"
-        android:backgroundTint="#3DBFA0"
-        android:textColor="#FFFFFF" />
-
-    <!-- زرار التسجيل بكود -->
-    <Button
-        android:id="@+id/btnRegisterCode"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="🔑 عندك كود من مدرسك؟ سجل هنا"
-        android:backgroundTint="#F5A623"
         android:textColor="#FFFFFF"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp" />
+        android:gravity="center"
+        android:layout_marginBottom="12dp"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="قائمة المدرسين المتاحين:"
-        android:textColor="#A0A0A0"
-        android:textSize="14sp"
-        android:layout_marginBottom="8dp" />
-
-    <!-- القائمة التي ستعرض المدرسين -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTeachers"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/myTeacherContentButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="محتوى مدرستي"
+            android:backgroundTint="#3DBFA0"
+            android:textColor="#FFFFFF"/>
+
+        <Button
+            android:id="@+id/joinTeacherEntryButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="عندك كود؟ سجل هنا"
+            android:backgroundTint="#F5A623"
+            android:textColor="#FFFFFF"/>
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/teachersRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
 </LinearLayout>
+       
