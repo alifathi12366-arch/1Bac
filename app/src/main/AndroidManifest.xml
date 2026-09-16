@@ -41,6 +41,7 @@ android:roundIcon="@mipmap/ic_launcher"
         <activity android:name=".SetJoinCodeActivity" android:exported="false" />
         <activity android:name=".JoinTeacherActivity" android:exported="false" />
         <activity android:name=".TeacherContentActivity" android:exported="false" />
+        <activity android:name=".AddExamActivity" android:exported="false" />
 <provider
     android:name="androidx.core.content.FileProvider"
     android:authorities="${applicationId}.fileprovider"
