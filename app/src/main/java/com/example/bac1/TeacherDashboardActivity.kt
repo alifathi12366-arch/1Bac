@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -53,6 +54,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         val btnSelectPdf = findViewById<Button>(R.id.btnSelectPdf)
         val btnSelectVideo = findViewById<Button>(R.id.btnSelectVideo)
         val btnPublish = findViewById<Button>(R.id.sendMessageButton)
+        val studentCountText = findViewById<TextView>(R.id.studentCountText)
 
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val teacherName = prefs.getString("teacher_name", "") ?: ""
@@ -61,10 +63,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         val expired = prefs.getBoolean("teacher_expired", false)
         val expiringSoon = prefs.getBoolean("teacher_expiring_soon", false)
 
-        findViewById<android.widget.TextView>(R.id.teacherWelcomeText).text = "أهلاً بيك أستاذ $teacherName 👋"
-        findViewById<android.widget.TextView>(R.id.teacherSubjectText).text = "مادة: $teacherSubject"
+        findViewById<TextView>(R.id.teacherWelcomeText).text = "أهلاً بيك أستاذ $teacherName 👋"
+        findViewById<TextView>(R.id.teacherSubjectText).text = "مادة: $teacherSubject"
 
-        val expiryText = findViewById<android.widget.TextView>(R.id.teacherExpiryText)
+        val expiryText = findViewById<TextView>(R.id.teacherExpiryText)
         when {
             expired -> expiryText.text = "⚠️ اشتراكك انتهى، تواصل معانا لتجديده"
             expiringSoon -> expiryText.text = "⚠️ اشتراكك هينتهي قريبًا، جدد عشان طلابك يفضلوا شايفين المحتوى"
@@ -72,7 +74,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
 
         val currentJoinCode = prefs.getString("teacher_join_code", "") ?: ""
-        findViewById<android.widget.TextView>(R.id.currentJoinCodeText).text =
+        findViewById<TextView>(R.id.currentJoinCodeText).text =
             if (currentJoinCode.isNotEmpty()) "كود طلابك الحالي: $currentJoinCode" else "لسه محددتش كود لطلابك"
 
         findViewById<Button>(R.id.setJoinCodeButton).setOnClickListener {
@@ -100,10 +102,31 @@ class TeacherDashboardActivity : AppCompatActivity() {
             uploadContent(title, description, youtubeUrl)
         }
 
-        // قراءة أسئلة الطلاب التفاعلية للمدرس
         if (teacherCode.isNotEmpty()) {
             loadStudentQuestions(teacherCode)
         }
+
+        // جلب عدد الطلاب المسجلين
+        if (currentJoinCode.isNotEmpty()) {
+            getStudentCount(currentJoinCode) { count ->
+                studentCountText.text = "عدد الطلاب المسجلين معاك: $count طالب 👥"
+            }
+        } else {
+            studentCountText.text = "عدد الطلاب المسجلين معاك: 0"
+        }
+    }
+
+    private fun getStudentCount(joinCode: String, onResult: (Int) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("users")
+            .whereEqualTo("joined_teacher_code", joinCode)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                onResult(snapshot.size())
+            }
+            .addOnFailureListener {
+                onResult(0)
+            }
     }
 
     private fun uploadContent(title: String, description: String, youtubeUrl: String) {
@@ -168,7 +191,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
     }
 
-    // دالة استجابة لجلب الأسئلة التي يرسلها الطلاب أثناء مشاهدة المحتوى
     private fun loadStudentQuestions(teacherCode: String) {
         val db = FirebaseFirestore.getInstance()
         db.collection("interactive_questions")
@@ -176,8 +198,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, e ->
                 if (e != null || snapshots == null) return@addSnapshotListener
-                
-                // يتم الآن قراءة أسئلة الطلاب بنجاح واستقبال التحديثات فورياً
             }
     }
 }
