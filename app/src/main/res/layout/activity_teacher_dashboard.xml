@@ -114,6 +114,14 @@
             android:backgroundTint="#4CAF50"
             android:textColor="#FFFFFF"
             android:layout_marginTop="16dp" />
+        <Button
+    android:id="@+id/btnAddExam"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="📝 إضافة امتحان جديد"
+    android:backgroundTint="#9C27B0"
+    android:textColor="#FFFFFF"
+    android:layout_marginTop="12dp" />
 
     </LinearLayout>
 </ScrollView>
