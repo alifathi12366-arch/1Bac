@@ -37,7 +37,7 @@
             android:textColor="#F5A623"
             android:layout_marginBottom="20dp" />
 
-        <!-- زرار إعداد كود الطلاب (من شغلك القديم) -->
+        <!-- زرار إعداد كود الطلاب -->
         <Button
             android:id="@+id/setJoinCodeButton"
             android:layout_width="match_parent"
@@ -51,7 +51,19 @@
             android:layout_marginTop="8dp"
             android:gravity="center"
             android:textSize="14sp"
-            android:textColor="#666666"
+            android:textColor="#666666" />
+
+        <!-- عدد الطلاب المسجلين -->
+        <TextView
+            android:id="@+id/studentCountText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2196F3"
+            android:text="جاري تحميل عدد الطلاب..."
             android:layout_marginBottom="20dp" />
 
         <!-- قسم إضافة المحتوى الجديد -->
