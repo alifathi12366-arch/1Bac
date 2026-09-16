@@ -3,6 +3,9 @@ package com.example.bac1
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +25,11 @@ class TeacherContentActivity : AppCompatActivity() {
         val nameView = findViewById<android.widget.TextView>(R.id.contentTeacherName)
         val noContentText = findViewById<android.widget.TextView>(R.id.noContentText)
         val recyclerView = findViewById<RecyclerView>(R.id.contentRecyclerView)
+        
+        // عناصر شات الأسئلة التفاعلي
+        val etQuestion = findViewById<EditText>(R.id.etQuestion)
+        val btnSendQuestion = findViewById<Button>(R.id.btnSendQuestion)
+
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         if (joinedTeacherCode.isEmpty()) {
@@ -31,6 +39,17 @@ class TeacherContentActivity : AppCompatActivity() {
         }
 
         nameView.text = "أستاذ $joinedTeacherName"
+
+        // كود تفعيل زرار إرسال السؤال التفاعلي
+        btnSendQuestion?.setOnClickListener {
+            val questionText = etQuestion.text.toString().trim()
+            if (questionText.isNotEmpty()) {
+                sendStudentQuestion(joinedTeacherCode, questionText)
+                etQuestion.setText("")
+            } else {
+                Toast.makeText(this, "اكتب سؤالك الأول", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         FirebaseFirestore.getInstance()
             .collection("teacherContent")
@@ -49,6 +68,30 @@ class TeacherContentActivity : AppCompatActivity() {
                 } else {
                     recyclerView.adapter = TeacherContentAdapter(items)
                 }
+            }
+    }
+
+    // دالة إرسال السؤال التفاعلي للمدرس
+    private fun sendStudentQuestion(teacherCode: String, questionText: String) {
+        val db = FirebaseFirestore.getInstance()
+        val sharedPref = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val studentName = sharedPref.getString("student_name", "طالب") ?: "طالب"
+
+        val questionData = hashMapOf(
+            "studentName" to studentName,
+            "teacherCode" to teacherCode,
+            "question" to questionText,
+            "reply" to "",
+            "timestamp" to com.google.firebase.Timestamp.now()
+        )
+
+        db.collection("interactive_questions")
+            .add(questionData)
+            .addOnSuccessListener {
+                Toast.makeText(this, "تم إرسال سؤالك للمدرس بنجاح 📩", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "فشل إرسال السؤال: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 }
