@@ -47,6 +47,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_dashboard)
+        findViewById<Button?>(resources.getIdentifier("btnAddExam", "id", packageName))?.setOnClickListener {
+    startActivity(Intent(this, AddExamActivity::class.java))
+        }
 
         val etTitle = findViewById<EditText>(R.id.etTitle)
         val etDescription = findViewById<EditText>(R.id.etDescription)
