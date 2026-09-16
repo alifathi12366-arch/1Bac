@@ -12,25 +12,39 @@ class AddExamActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_exam)
+        
+        val layoutRes = resources.getIdentifier("activity_add_exam", "layout", packageName)
+        if (layoutRes != 0) {
+            setContentView(layoutRes)
+        }
 
-        val etExamTitle = findViewById<EditText>(R.id.etExamTitle)
-        val etQuestionText = findViewById<EditText>(R.id.etQuestionText)
-        val etOption1 = findViewById<EditText>(R.id.etOption1)
-        val etOption2 = findViewById<EditText>(R.id.etOption2)
-        val etOption3 = findViewById<EditText>(R.id.etOption3)
-        val etOption4 = findViewById<EditText>(R.id.etOption4)
-        val etCorrectAnswer = findViewById<EditText>(R.id.etCorrectAnswer)
-        val btnSaveExam = findViewById<Button>(R.id.btnSaveExam)
+        fun getEt(idName: String): EditText? {
+            val id = resources.getIdentifier(idName, "id", packageName)
+            return if (id != 0) findViewById(id) else null
+        }
 
-        btnSaveExam.setOnClickListener {
-            val title = etExamTitle.text.toString().trim()
-            val question = etQuestionText.text.toString().trim()
-            val op1 = etOption1.text.toString().trim()
-            val op2 = etOption2.text.toString().trim()
-            val op3 = etOption3.text.toString().trim()
-            val op4 = etOption4.text.toString().trim()
-            val correctStr = etCorrectAnswer.text.toString().trim()
+        fun getBtn(idName: String): Button? {
+            val id = resources.getIdentifier(idName, "id", packageName)
+            return if (id != 0) findViewById(id) else null
+        }
+
+        val etExamTitle = getEt("etExamTitle")
+        val etQuestionText = getEt("etQuestionText")
+        val etOption1 = getEt("etOption1")
+        val etOption2 = getEt("etOption2")
+        val etOption3 = getEt("etOption3")
+        val etOption4 = getEt("etOption4")
+        val etCorrectAnswer = getEt("etCorrectAnswer")
+        val btnSaveExam = getBtn("btnSaveExam")
+
+        btnSaveExam?.setOnClickListener {
+            val title = etExamTitle?.text?.toString()?.trim() ?: ""
+            val question = etQuestionText?.text?.toString()?.trim() ?: ""
+            val op1 = etOption1?.text?.toString()?.trim() ?: ""
+            val op2 = etOption2?.text?.toString()?.trim() ?: ""
+            val op3 = etOption3?.text?.toString()?.trim() ?: ""
+            val op4 = etOption4?.text?.toString()?.trim() ?: ""
+            val correctStr = etCorrectAnswer?.text?.toString()?.trim() ?: ""
 
             if (title.isEmpty() || question.isEmpty() || op1.isEmpty() || op2.isEmpty() || correctStr.isEmpty()) {
                 Toast.makeText(this, "يرجى ملء البيانات الرئيسية والسؤال والإجابة الصحيحة", Toast.LENGTH_SHORT).show()
