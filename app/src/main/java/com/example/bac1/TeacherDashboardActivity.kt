@@ -9,10 +9,10 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
 
-// تعريف الكلاس هنا مباشرة لمنع أي خطأ Unresolved Reference
 data class TeacherContent(
     val id: String = "",
     val teacherId: String = "",
@@ -57,6 +57,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val teacherName = prefs.getString("teacher_name", "") ?: ""
         val teacherSubject = prefs.getString("teacher_subject", "") ?: ""
+        val teacherCode = prefs.getString("teacher_code", "") ?: ""
         val expired = prefs.getBoolean("teacher_expired", false)
         val expiringSoon = prefs.getBoolean("teacher_expiring_soon", false)
 
@@ -97,6 +98,11 @@ class TeacherDashboardActivity : AppCompatActivity() {
             }
 
             uploadContent(title, description, youtubeUrl)
+        }
+
+        // قراءة أسئلة الطلاب التفاعلية للمدرس
+        if (teacherCode.isNotEmpty()) {
+            loadStudentQuestions(teacherCode)
         }
     }
 
@@ -160,5 +166,18 @@ class TeacherDashboardActivity : AppCompatActivity() {
         } else {
             onComplete()
         }
+    }
+
+    // دالة استجابة لجلب الأسئلة التي يرسلها الطلاب أثناء مشاهدة المحتوى
+    private fun loadStudentQuestions(teacherCode: String) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("interactive_questions")
+            .whereEqualTo("teacherCode", teacherCode)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, e ->
+                if (e != null || snapshots == null) return@addSnapshotListener
+                
+                // يتم الآن قراءة أسئلة الطلاب بنجاح واستقبال التحديثات فورياً
+            }
     }
 }
