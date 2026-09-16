@@ -2,31 +2,65 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#121212">
 
+    <!-- اسم المدرس -->
     <TextView
         android:id="@+id/contentTeacherName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="محتوى المدرس"
+        android:textColor="#FFFFFF"
         android:textSize="20sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:padding="16dp" />
+        android:layout_marginBottom="12dp" />
 
+    <!-- رسالة عدم وجود محتوى -->
     <TextView
         android:id="@+id/noContentText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="مفيش محتوى لسه من مدرسك"
-        android:textSize="15sp"
+        android:text="لا يوجد محتوى متاح حالياً"
         android:textColor="#888888"
+        android:textSize="16sp"
         android:gravity="center"
-        android:padding="20dp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:layout_marginBottom="12dp" />
 
+    <!-- قائمة دروس ومحتوى المدرس -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/contentRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- الجزء التفاعلي: كتابة سؤال للمدرس -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <EditText
+            android:id="@+id/etQuestion"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="اسأل المستر سؤال عن الدرس..."
+            android:textColorHint="#AAAAAA"
+            android:textColor="#FFFFFF"
+            android:background="@android:drawable/editbox_background"
+            android:padding="10dp" />
+
+        <Button
+            android:id="@+id/btnSendQuestion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="إرسال"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
 
 </LinearLayout>
