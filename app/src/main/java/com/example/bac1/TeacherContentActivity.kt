@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TeacherContentActivity : AppCompatActivity() {
 
@@ -36,9 +39,14 @@ class TeacherContentActivity : AppCompatActivity() {
 
         nameView.text = "أستاذ $joinedTeacherName"
 
-        // البحث عن العناصر بأمان دون إيقاف الـ Build إذا لم تكن في الـ XML
         val etQuestion = findViewById<EditText?>(resources.getIdentifier("etQuestion", "id", packageName))
         val btnSendQuestion = findViewById<Button?>(resources.getIdentifier("btnSendQuestion", "id", packageName))
+        val btnMarkAttendance = findViewById<Button?>(resources.getIdentifier("btnMarkAttendance", "id", packageName))
+
+        // زرار تسجيل الحضور
+        btnMarkAttendance?.setOnClickListener {
+            markStudentAttendance(joinedTeacherCode)
+        }
 
         btnSendQuestion?.setOnClickListener {
             val questionText = etQuestion?.text?.toString()?.trim() ?: ""
@@ -70,6 +78,32 @@ class TeacherContentActivity : AppCompatActivity() {
             }
     }
 
+    private fun markStudentAttendance(teacherCode: String) {
+        val db = FirebaseFirestore.getInstance()
+        val sharedPref = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val studentName = sharedPref.getString("student_name", "طالب") ?: "طالب"
+        
+        val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val attendanceId = "${teacherCode}_${studentName}_$todayDate"
+
+        val attendanceData = hashMapOf(
+            "studentName" to studentName,
+            "teacherCode" to teacherCode,
+            "date" to todayDate,
+            "timestamp" to com.google.firebase.Timestamp.now()
+        )
+
+        db.collection("attendance")
+            .document(attendanceId)
+            .set(attendanceData)
+            .addOnSuccessListener {
+                Toast.makeText(this, "تم تسجيل حضورك اليوم بنجاح ✋✅", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "فشل تسجيل الحضور: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun sendStudentQuestion(teacherCode: String, questionText: String) {
         val db = FirebaseFirestore.getInstance()
         val sharedPref = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
@@ -92,4 +126,4 @@ class TeacherContentActivity : AppCompatActivity() {
                 Toast.makeText(this, "فشل إرسال السؤال: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-}
+}      
