@@ -26,10 +26,6 @@ class TeacherContentActivity : AppCompatActivity() {
         val noContentText = findViewById<android.widget.TextView>(R.id.noContentText)
         val recyclerView = findViewById<RecyclerView>(R.id.contentRecyclerView)
         
-        // عناصر شات الأسئلة التفاعلي
-        val etQuestion = findViewById<EditText>(R.id.etQuestion)
-        val btnSendQuestion = findViewById<Button>(R.id.btnSendQuestion)
-
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         if (joinedTeacherCode.isEmpty()) {
@@ -40,12 +36,15 @@ class TeacherContentActivity : AppCompatActivity() {
 
         nameView.text = "أستاذ $joinedTeacherName"
 
-        // كود تفعيل زرار إرسال السؤال التفاعلي
+        // البحث عن العناصر بأمان دون إيقاف الـ Build إذا لم تكن في الـ XML
+        val etQuestion = findViewById<EditText?>(resources.getIdentifier("etQuestion", "id", packageName))
+        val btnSendQuestion = findViewById<Button?>(resources.getIdentifier("btnSendQuestion", "id", packageName))
+
         btnSendQuestion?.setOnClickListener {
-            val questionText = etQuestion.text.toString().trim()
+            val questionText = etQuestion?.text?.toString()?.trim() ?: ""
             if (questionText.isNotEmpty()) {
                 sendStudentQuestion(joinedTeacherCode, questionText)
-                etQuestion.setText("")
+                etQuestion?.setText("")
             } else {
                 Toast.makeText(this, "اكتب سؤالك الأول", Toast.LENGTH_SHORT).show()
             }
@@ -71,7 +70,6 @@ class TeacherContentActivity : AppCompatActivity() {
             }
     }
 
-    // دالة إرسال السؤال التفاعلي للمدرس
     private fun sendStudentQuestion(teacherCode: String, questionText: String) {
         val db = FirebaseFirestore.getInstance()
         val sharedPref = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
