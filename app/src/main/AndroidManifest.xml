@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- الأذونات الأصلية -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
+        android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.1Bac">
-
+        android:theme="@style/Theme.1Bac"
+        tools:targetApi="31">
+        
+        <!-- الشاشة الرئيسية -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -20,10 +28,38 @@
             </intent-filter>
         </activity>
 
+        <!-- الشاشات القديمة الأساسية -->
+        <activity android:name=".SubjectDetailActivity" />
+        <activity android:name=".ScheduleActivity" />
+        <activity android:name=".LibraryActivity" />
+        <activity android:name=".AccountActivity" />
+        <activity android:name=".LessonsActivity" />
+        <activity android:name=".LeaderboardActivity" />
+        <activity android:name=".InterstitialActivity" android:exported="false" />
+        <activity android:name=".TeacherRegisterActivity" android:exported="false" />
+        <activity android:name=".TeacherDashboardActivity" android:exported="false" />
+        <activity android:name=".SendMessageActivity" android:exported="false" />
+        <activity android:name=".TeachersListActivity" android:exported="false" />
+        <activity android:name=".SetJoinCodeActivity" android:exported="false" />
+        <activity android:name=".JoinTeacherActivity" android:exported="false" />
+        <activity android:name=".TeacherContentActivity" android:exported="false" />
+
+        <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
         <activity android:name=".StudentExamsActivity" />
         <activity android:name=".TakeExamActivity" />
         <activity android:name=".TeacherResultsActivity" />
+
+        <!-- مزود الملفات الأصلي -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 
