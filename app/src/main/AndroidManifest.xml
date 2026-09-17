@@ -17,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.1Bac"
         tools:targetApi="31">
+        <activity android:name=".RegisterChoiceActivity" android:exported="false"/>
+<activity android:name=".StudentRegisterActivity" android:exported="false"/>
+<activity android:name=".TeacherRegisterActivity" android:exported="false"/>
         
         <!-- الشاشة الرئيسية -->
         <activity
