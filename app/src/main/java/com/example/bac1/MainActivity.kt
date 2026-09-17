@@ -15,14 +15,13 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-if (!prefs.getBoolean("is_registered", false)) {
-    startActivity(Intent(this, RegisterChoiceActivity::class.java))
-    finish()
-    return
-}
 
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        if (!prefs.getBoolean("is_registered", false)) {
+            startActivity(Intent(this, RegisterChoiceActivity::class.java))
+            finish()
+            return
+        }
         if (prefs.getBoolean("is_teacher", false)) {
             startActivity(Intent(this, TeacherDashboardActivity::class.java))
             finish()
