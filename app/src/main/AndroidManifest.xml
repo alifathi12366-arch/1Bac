@@ -23,6 +23,7 @@
         <activity android:name=".AddExamActivity" />
         <activity android:name=".StudentExamsActivity" />
         <activity android:name=".TakeExamActivity" />
+        <activity android:name=".TeacherResultsActivity" />
 
     </application>
 
