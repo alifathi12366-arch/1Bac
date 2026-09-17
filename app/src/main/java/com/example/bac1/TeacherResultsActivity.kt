@@ -1,7 +1,6 @@
 package com.example.bac1
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -30,8 +29,6 @@ class TeacherResultsActivity : AppCompatActivity() {
         rvResults?.layoutManager = LinearLayoutManager(this)
 
         val db = FirebaseFirestore.getInstance()
-        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val teacherCode = prefs.getString("teacher_code", "") ?: ""
 
         db.collection("results").get()
             .addOnSuccessListener { query ->
@@ -63,7 +60,7 @@ class ResultsAdapter(private val items: List<ResultItem>) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val tv = TextView(parent.context).apply {
-            textSize = 16sp
+            textSize = 16f
             setPadding(24, 24, 24, 24)
         }
         return ViewHolder(tv)
