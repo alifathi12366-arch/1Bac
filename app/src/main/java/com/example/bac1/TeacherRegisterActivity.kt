@@ -47,7 +47,7 @@ class TeacherRegisterActivity : AppCompatActivity() {
                     if (doc.exists()) {
                         val expiresAt = doc.getLong("expiresAt") ?: 0L
                         if (expiresAt > System.currentTimeMillis()) {
-                            getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
+                            getSharedPreferences("bac1_prefs", MODE_PRIVATE).edit()
                                 .putBoolean("is_registered", true)
                                 .putBoolean("is_teacher", true)
                                 .putString("teacher_name", name)
