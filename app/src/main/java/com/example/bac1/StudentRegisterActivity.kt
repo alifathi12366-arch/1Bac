@@ -35,7 +35,7 @@ class StudentRegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
+           getSharedPreferences("bac1_prefs", MODE_PRIVATE) .edit()
                 .putBoolean("is_registered", true)
                 .putString("student_name", name)
                 .putString("student_phone", phone)
