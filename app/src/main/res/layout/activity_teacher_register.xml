@@ -1,59 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+    <EditText android:id="@+id/etTeacherName" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="اسم المعلم"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="📝 التسجيل كمدرس"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="8dp" />
+    <EditText android:id="@+id/etTeacherSubject" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="المادة" android:layout_marginTop="12dp"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="بعد إرسال الطلب هيتم التواصل معاك لإتمام الاشتراك"
-            android:textSize="13sp"
-            android:gravity="center"
-            android:textColor="#888888"
-            android:layout_marginBottom="24dp" />
+    <EditText android:id="@+id/etTeacherPhone" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="رقم المعلم واتساب"
+        android:inputType="phone" android:layout_marginTop="12dp"/>
 
-        <EditText
-            android:id="@+id/teacherNameInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="الاسم بالكامل"
-            android:inputType="textPersonName" />
+    <EditText android:id="@+id/etTeacherCode" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:hint="الكود" android:layout_marginTop="12dp"/>
 
-        <EditText
-            android:id="@+id/teacherPhoneInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="رقم الموبايل (واتساب)"
-            android:inputType="phone" />
+    <Button android:id="@+id/btnSubmitTeacher" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="تسجيل" android:layout_marginTop="24dp"/>
 
-        <Spinner
-            android:id="@+id/teacherSubjectSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp" />
+    <TextView android:id="@+id/tvContactUsTeacher" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="تواصل معنا" android:textColor="#0000FF"
+        android:layout_gravity="center" android:layout_marginTop="20dp"/>
 
-        <Button
-            android:id="@+id/submitTeacherRequestButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="إرسال الطلب" />
-
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>
