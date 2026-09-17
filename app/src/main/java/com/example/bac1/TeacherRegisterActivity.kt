@@ -1,62 +1,78 @@
 package com.example.bac1
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
-import java.util.UUID
 
 class TeacherRegisterActivity : AppCompatActivity() {
-
-    private val subjects = arrayOf(
-        "اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "العلوم المتكاملة",
-        "الفلسفة والمنطق", "التاريخ", "البرمجة", "التربية الإسلامية", "اللغة الفرنسية"
-    )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_register)
 
-        val nameInput = findViewById<EditText>(R.id.teacherNameInput)
-        val phoneInput = findViewById<EditText>(R.id.teacherPhoneInput)
-        val subjectSpinner = findViewById<Spinner>(R.id.teacherSubjectSpinner)
-        val submitButton = findViewById<Button>(R.id.submitTeacherRequestButton)
+        val etName = findViewById<EditText>(R.id.etTeacherName)
+        val etSubject = findViewById<EditText>(R.id.etTeacherSubject)
+        val etPhone = findViewById<EditText>(R.id.etTeacherPhone)
+        val etCode = findViewById<EditText>(R.id.etTeacherCode)
+        val btnSubmit = findViewById<Button>(R.id.btnSubmitTeacher)
+        val tvContact = findViewById<TextView>(R.id.tvContactUsTeacher)
 
-        subjectSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, subjects)
+        tvContact.setOnClickListener {
+            val i = Intent(Intent.ACTION_VIEW)
+            i.data = Uri.parse("https://wa.me/201227537847")
+            startActivity(i)
+        }
 
-        submitButton.setOnClickListener {
-            val name = nameInput.text.toString().trim()
-            val phone = phoneInput.text.toString().trim()
-            val subject = subjectSpinner.selectedItem.toString()
+        btnSubmit.setOnClickListener {
+            val name = etName.text.toString().trim()
+            val subject = etSubject.text.toString().trim()
+            val phone = etPhone.text.toString().trim()
+            val code = etCode.text.toString().trim()
 
-            if (name.isEmpty() || phone.isEmpty()) {
+            if (name.isEmpty() || subject.isEmpty() || phone.isEmpty() || code.isEmpty()) {
                 Toast.makeText(this, "من فضلك املأ كل الخانات", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val requestId = UUID.randomUUID().toString()
-            val data = hashMapOf(
-                "name" to name,
-                "phone" to phone,
-                "subject" to subject,
-                "status" to "pending",
-                "requestedAt" to System.currentTimeMillis()
-            )
+            btnSubmit.isEnabled = false
+            val db = FirebaseFirestore.getInstance()
+            db.collection("teacherCodes").document(code).get()
+                .addOnSuccessListener { doc ->
+                    btnSubmit.isEnabled = true
+                    if (doc.exists()) {
+                        val expiresAt = doc.getLong("expiresAt") ?: 0L
+                        if (expiresAt > System.currentTimeMillis()) {
+                            getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
+                                .putBoolean("is_registered", true)
+                                .putBoolean("is_teacher", true)
+                                .putString("teacher_name", name)
+                                .putString("teacher_subject", subject)
+                                .putString("teacher_phone", phone)
+                                .putString("teacher_code", code)
+                                .apply()
 
-            FirebaseFirestore.getInstance()
-                .collection("teacherRequests")
-                .document(requestId)
-                .set(data)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "تم إرسال طلبك، هيتم التواصل معاك قريبًا", Toast.LENGTH_LONG).show()
-                    finish()
+                            db.collection("teacherRequests").add(
+                                hashMapOf("name" to name, "subject" to subject, "phone" to phone,
+                                    "code" to code, "timestamp" to System.currentTimeMillis())
+                            )
+
+                            startActivity(Intent(this, TeacherDashboardActivity::class.java))
+                            finish()
+                        } else {
+                            Toast.makeText(this, "الكود ده منتهي، تواصل معانا", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        Toast.makeText(this, "الكود غير صحيح", Toast.LENGTH_LONG).show()
+                    }
                 }
                 .addOnFailureListener {
-                    Toast.makeText(this, "حصل خطأ، حاول تاني", Toast.LENGTH_SHORT).show()
+                    btnSubmit.isEnabled = true
+                    Toast.makeText(this, "تأكد من اتصال الإنترنت وحاول تاني", Toast.LENGTH_LONG).show()
                 }
         }
     }
