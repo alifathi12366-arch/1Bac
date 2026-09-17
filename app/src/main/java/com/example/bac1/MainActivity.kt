@@ -30,6 +30,8 @@ class MainActivity : AppCompatActivity() {
         loadAd()
         checkDailyLogin()
         checkTeacherStatus()
+
+        // 1. إعداد المواد الدراسية مع روابط الدروس والكتب القديمة بالكامل
         setupSubject(
             cardId = R.id.cardArabic,
             subjectName = "اللغة العربية",
@@ -51,8 +53,9 @@ class MainActivity : AppCompatActivity() {
         setupSubject(R.id.cardIslamic, "التربية الإسلامية", "العقيدة، الفقه، والسيرة النبوية", "#7B7FE0", "https://drive.google.com/file/d/1adHx4kesuOnn965bqjGIp-iUrpBDNc1b/view?usp=drivesdk", "", subjectKey = "")
         setupSubject(R.id.cardFrench, "اللغة الفرنسية", "القواعد والتعبير الكتابي والفهم", "#B58ED6", "https://drive.google.com/file/d/1SWQm7elUNKIM9mEBzogFnbi9ld6UGfbn/view?usp=drivesdk", "", subjectKey = "french")
 
+        // 2. إعداد شريط التنقل السفلي الأصلي وآمن
         val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
-        bottomNav.setOnItemSelectedListener { item ->
+        bottomNav?.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_schedule -> {
                     startActivity(Intent(this, ScheduleActivity::class.java))
@@ -91,14 +94,14 @@ class MainActivity : AppCompatActivity() {
         bookLabel3: String = "فتح كتاب المادة",
         subjectKey: String = ""
     ) {
-        val card = findViewById<android.view.View>(cardId)
+        val card = findViewById<android.view.View>(cardId) ?: return
         val nameView = card.findViewById<TextView>(R.id.subjectName)
         val descView = card.findViewById<TextView>(R.id.subjectDesc)
         val iconBox = card.findViewById<LinearLayout>(R.id.iconBox)
 
-        nameView.text = subjectName
-        descView.text = desc
-        iconBox.setBackgroundColor(Color.parseColor(colorHex))
+        nameView?.text = subjectName
+        descView?.text = desc
+        iconBox?.setBackgroundColor(Color.parseColor(colorHex))
 
         card.setOnClickListener {
             val intent = Intent(this, SubjectDetailActivity::class.java)
@@ -121,7 +124,6 @@ class MainActivity : AppCompatActivity() {
             .format(java.util.Date())
 
         val lastLoginDate = prefs.getString("last_login_date", "")
-
 
         if (lastLoginDate != today) {
             val currentPoints = prefs.getInt("student_points", 0)
@@ -168,18 +170,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadAd() {
-        val webView = findViewById<WebView>(R.id.adWebView)
+        val webView = findViewById<WebView>(R.id.adWebView) ?: return
         
-        // إعدادات الـ WebView الممتازة لإعلانات Adsterra
         val settings = webView.settings
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
         
-        // حل مشكلة ERR_CACHE_MISS نهائياً
         settings.cacheMode = WebSettings.LOAD_DEFAULT
         
-        // السماح بتحميل الإعلانات المشفرة وغير المشفرة
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
@@ -193,10 +192,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // مسح الكاش القديم قبل التحميل لضمان إزالة الخطأ
         webView.clearCache(true)
         webView.loadUrl("https://alifathi12366-arch.github.io/1Bac/ad.html")
     }
+
     private fun checkTeacherStatus() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val isTeacher = prefs.getBoolean("is_teacher", false)
