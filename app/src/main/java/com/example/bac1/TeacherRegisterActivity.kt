@@ -60,6 +60,10 @@ class TeacherRegisterActivity : AppCompatActivity() {
                                 hashMapOf("name" to name, "subject" to subject, "phone" to phone,
                                     "code" to code, "timestamp" to System.currentTimeMillis())
                             )
+                            db.collection("teachers").document(code).set(
+                                hashMapOf("id" to code, "name" to name, "subject" to subject,
+                                    "phone" to phone, "studentsCount" to 0)
+                            )
 
                             startActivity(Intent(this, TeacherDashboardActivity::class.java))
                             finish()
