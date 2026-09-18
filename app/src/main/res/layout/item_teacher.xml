@@ -75,7 +75,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="تواصل عبر واتساب"
+            android:text="تواصل واتساب للحصول على الكود"
             android:backgroundTint="#25D366"
             android:textColor="#FFFFFF"/>
     </LinearLayout>
