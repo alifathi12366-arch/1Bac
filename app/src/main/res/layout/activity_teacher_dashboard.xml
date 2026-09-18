@@ -166,6 +166,14 @@
     android:backgroundTint="#9C27B0"
     android:textColor="#FFFFFF"
     android:layout_marginTop="12dp" />
+        <Button
+            android:id="@+id/btnViewResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📊 نتائج امتحانات طلابي"
+            android:backgroundTint="#607D8B"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="8dp" />
 
     </LinearLayout>
 </ScrollView>
