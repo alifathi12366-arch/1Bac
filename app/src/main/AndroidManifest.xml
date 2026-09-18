@@ -20,6 +20,7 @@
         <activity android:name=".RegisterChoiceActivity" android:exported="false"/>
 <activity android:name=".StudentRegisterActivity" android:exported="false"/>
 <activity android:name=".TeacherRegisterActivity" android:exported="false"/>
+        <activity android:name=".TeacherMyContentActivity" android:exported="false"/>
         
         <!-- الشاشة الرئيسية -->
         <activity
