@@ -27,6 +27,14 @@
         android:backgroundTint="#2196F3"
         android:textColor="#FFFFFF"
         android:layout_marginBottom="12dp" />
+    <Button
+        android:id="@+id/btnGoToExams"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📝 امتحانات أستاذي"
+        android:backgroundTint="#9C27B0"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="12dp" />
 
     <!-- رسالة عدم وجود محتوى -->
     <TextView
