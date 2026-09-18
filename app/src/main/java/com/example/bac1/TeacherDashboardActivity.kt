@@ -109,7 +109,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
             loadStudentQuestions(teacherCode)
         }
 
-        // جلب عدد الطلاب المسجلين
+       // جلب عدد الطلاب المسجلين
         if (currentJoinCode.isNotEmpty()) {
             getStudentCount(currentJoinCode) { count ->
                 studentCountText.text = "عدد الطلاب المسجلين معاك: $count طالب 👥"
@@ -117,7 +117,35 @@ class TeacherDashboardActivity : AppCompatActivity() {
         } else {
             studentCountText.text = "عدد الطلاب المسجلين معاك: 0"
         }
+
+        loadComprehensiveStats(teacherCode)
     }
+
+    private fun loadComprehensiveStats(teacherCode: String) {
+        val db = FirebaseFirestore.getInstance()
+        val statsAttendanceText = findViewById<TextView>(R.id.statsAttendanceText)
+        val statsRatingText = findViewById<TextView>(R.id.statsRatingText)
+
+        db.collection("attendance")
+            .whereEqualTo("teacherCode", teacherCode)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                statsAttendanceText.text = "إجمالي مرات الحضور المسجلة: ${snapshot.size()} 📈"
+            }
+            .addOnFailureListener {
+                statsAttendanceText.text = "إجمالي مرات الحضور المسجلة: 0 📈"
+            }
+
+        db.collection("teachers").document(teacherCode).get()
+            .addOnSuccessListener { doc ->
+                val rating = doc.getDouble("rating") ?: 0.0
+                val ratingCount = (doc.getLong("ratingCount") ?: 0L).toInt()
+                statsRatingText.text = if (ratingCount > 0)
+                    "متوسط تقييمك: ${String.format("%.1f", rating)} ⭐ (من $ratingCount تقييم)"
+                else
+                    "متوسط تقييمك: لسه مفيش تقييمات ⭐"
+            }
+    } 
 
     private fun getStudentCount(joinCode: String, onResult: (Int) -> Unit) {
         val db = FirebaseFirestore.getInstance()
