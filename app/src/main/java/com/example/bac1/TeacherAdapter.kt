@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +16,9 @@ data class TeacherModel(
     val name: String = "",
     val subject: String = "",
     val phone: String = "",
-    val studentsCount: Int = 0
+    val studentsCount: Int = 0,
+    val rating: Double = 0.0,
+    val ratingCount: Int = 0
 )
 
 class TeacherAdapter(private val teachersList: List<TeacherModel>) :
@@ -27,6 +30,8 @@ class TeacherAdapter(private val teachersList: List<TeacherModel>) :
         val tvStudentsCount: TextView = itemView.findViewById(R.id.teacherItemStudentsCount)
         val tvPhone: TextView = itemView.findViewById(R.id.teacherItemPhone)
         val btnWhatsapp: Button = itemView.findViewById(R.id.btnWhatsappContact)
+        val ratingBarDisplay: RatingBar = itemView.findViewById(R.id.teacherItemRatingBar)
+        val tvRatingCount: TextView = itemView.findViewById(R.id.teacherItemRatingCount)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TeacherViewHolder {
@@ -42,6 +47,12 @@ class TeacherAdapter(private val teachersList: List<TeacherModel>) :
         holder.tvSubject.text = "المادة: ${teacher.subject}"
         holder.tvStudentsCount.text = "👥 ${teacher.studentsCount} طالب مسجل"
         holder.tvPhone.text = "📞 ${teacher.phone}"
+
+        holder.ratingBarDisplay.rating = teacher.rating.toFloat()
+        holder.tvRatingCount.text = if (teacher.ratingCount > 0)
+            "(${String.format("%.1f", teacher.rating)} من ${teacher.ratingCount} تقييم)"
+        else
+            "(لسه مفيش تقييمات)"
 
         holder.btnWhatsapp.setOnClickListener {
             val context = holder.itemView.context
@@ -65,5 +76,4 @@ class TeacherAdapter(private val teachersList: List<TeacherModel>) :
     }
 
     override fun getItemCount(): Int = teachersList.size
-    }
-    
+} 
