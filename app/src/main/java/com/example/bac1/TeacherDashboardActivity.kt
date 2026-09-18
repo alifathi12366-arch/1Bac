@@ -83,6 +83,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
         findViewById<Button>(R.id.setJoinCodeButton).setOnClickListener {
             startActivity(Intent(this, SetJoinCodeActivity::class.java))
         }
+        findViewById<Button>(R.id.btnViewResults).setOnClickListener {
+            startActivity(Intent(this, TeacherResultsActivity::class.java))
+        }
 
         btnSelectPdf.setOnClickListener {
             selectPdfLauncher.launch("application/pdf")
