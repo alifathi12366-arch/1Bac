@@ -67,7 +67,9 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_teachers -> {
-                    startActivity(Intent(this, TeachersListActivity::class.java))
+                    val i = Intent(this, InterstitialActivity::class.java)
+                    i.putExtra("TARGET_CLASS", TeachersListActivity::class.java.name)
+                    startActivity(i)
                     true
                 }
                 R.id.nav_library -> {
