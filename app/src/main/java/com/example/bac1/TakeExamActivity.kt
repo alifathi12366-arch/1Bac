@@ -24,7 +24,7 @@ class TakeExamActivity : AppCompatActivity() {
 
         val tvTitle = getTv("tvExamTitle")
         val tvQuestion = getTv("tvQuestion")
-        
+
         val rgId = resources.getIdentifier("rgOptions", "id", packageName)
         val rgOptions = if (rgId != 0) findViewById<RadioGroup>(rgId) else null
 
@@ -70,16 +70,21 @@ class TakeExamActivity : AppCompatActivity() {
 
             val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
             val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
+            val teacherCode = prefs.getString("joined_teacher_code", "") ?: ""
 
+            val resultId = "${examId}_$studentName"
             val resultData = hashMapOf(
                 "examId" to examId,
+                "examTitle" to title,
+                "teacherCode" to teacherCode,
                 "studentName" to studentName,
                 "score" to score,
                 "timestamp" to System.currentTimeMillis()
             )
 
             FirebaseFirestore.getInstance().collection("results")
-                .add(resultData)
+                .document(resultId)
+                .set(resultData)
                 .addOnSuccessListener {
                     if (isCorrect) {
                         Toast.makeText(this, "إجابة صحيحة! أحسنت 🎯 (100%)", Toast.LENGTH_LONG).show()
