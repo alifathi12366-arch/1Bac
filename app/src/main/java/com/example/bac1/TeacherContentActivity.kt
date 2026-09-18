@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RatingBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,20 +40,33 @@ class TeacherContentActivity : AppCompatActivity() {
 
         nameView.text = "أستاذ $joinedTeacherName"
 
-        val etQuestion = findViewById<EditText?>(resources.getIdentifier("etQuestion", "id", packageName))
-        val btnSendQuestion = findViewById<Button?>(resources.getIdentifier("btnSendQuestion", "id", packageName))
-        val btnMarkAttendance = findViewById<Button?>(resources.getIdentifier("btnMarkAttendance", "id", packageName))
+        markStudentAttendance(joinedTeacherCode)
 
-        // زرار تسجيل الحضور
-        btnMarkAttendance?.setOnClickListener {
-            markStudentAttendance(joinedTeacherCode)
+        val etQuestion = findViewById<EditText>(R.id.etQuestion)
+        val btnSendQuestion = findViewById<Button>(R.id.btnSendQuestion)
+        val btnMarkAttendance = findViewById<Button>(R.id.btnMarkAttendance)
+        val ratingBar = findViewById<RatingBar>(R.id.teacherRatingBar)
+        val btnSubmitRating = findViewById<Button>(R.id.btnSubmitRating)
+
+        btnMarkAttendance.text = "✅ تم تسجيل حضورك النهاردة"
+        btnMarkAttendance.isEnabled = false
+
+        loadExistingRating(joinedTeacherCode, ratingBar, btnSubmitRating)
+
+        btnSubmitRating.setOnClickListener {
+            val stars = ratingBar.rating.toDouble()
+            if (stars <= 0.0) {
+                Toast.makeText(this, "اختار نجوم الأول", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            submitRating(joinedTeacherCode, stars, btnSubmitRating)
         }
 
-        btnSendQuestion?.setOnClickListener {
-            val questionText = etQuestion?.text?.toString()?.trim() ?: ""
+        btnSendQuestion.setOnClickListener {
+            val questionText = etQuestion.text?.toString()?.trim() ?: ""
             if (questionText.isNotEmpty()) {
                 sendStudentQuestion(joinedTeacherCode, questionText)
-                etQuestion?.setText("")
+                etQuestion.setText("")
             } else {
                 Toast.makeText(this, "اكتب سؤالك الأول", Toast.LENGTH_SHORT).show()
             }
@@ -78,6 +92,66 @@ class TeacherContentActivity : AppCompatActivity() {
             }
     }
 
+    private fun ratingDocId(teacherCode: String): String {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
+        return "${teacherCode}_$studentName"
+    }
+
+    private fun loadExistingRating(teacherCode: String, ratingBar: RatingBar, btnSubmitRating: Button) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("ratings").document(ratingDocId(teacherCode)).get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    val stars = doc.getDouble("stars") ?: 0.0
+                    ratingBar.rating = stars.toFloat()
+                    btnSubmitRating.text = "تعديل تقييمك"
+                }
+            }
+    }
+
+    private fun submitRating(teacherCode: String, newStars: Double, btnSubmitRating: Button) {
+        val db = FirebaseFirestore.getInstance()
+        val ratingRef = db.collection("ratings").document(ratingDocId(teacherCode))
+        val teacherRef = db.collection("teachers").document(teacherCode)
+
+        btnSubmitRating.isEnabled = false
+
+        ratingRef.get().addOnSuccessListener { ratingDoc ->
+            val oldStars = if (ratingDoc.exists()) ratingDoc.getDouble("stars") else null
+
+            db.runTransaction { transaction ->
+                val teacherSnap = transaction.get(teacherRef)
+                val currentAvg = teacherSnap.getDouble("rating") ?: 0.0
+                val currentCount = (teacherSnap.getLong("ratingCount") ?: 0L).toInt()
+
+                val newAvg: Double
+                val newCount: Int
+
+                if (oldStars == null) {
+                    newCount = currentCount + 1
+                    newAvg = ((currentAvg * currentCount) + newStars) / newCount
+                } else {
+                    newCount = currentCount
+                    newAvg = if (newCount > 0)
+                        ((currentAvg * currentCount) - oldStars + newStars) / newCount
+                    else newStars
+                }
+
+                transaction.update(teacherRef, "rating", newAvg)
+                transaction.update(teacherRef, "ratingCount", newCount)
+                transaction.set(ratingRef, hashMapOf("stars" to newStars, "teacherCode" to teacherCode))
+            }.addOnSuccessListener {
+                btnSubmitRating.isEnabled = true
+                btnSubmitRating.text = "تعديل تقييمك"
+                Toast.makeText(this, "تم حفظ تقييمك، شكرًا لك 🌟", Toast.LENGTH_SHORT).show()
+            }.addOnFailureListener { e ->
+                btnSubmitRating.isEnabled = true
+                Toast.makeText(this, "فشل حفظ التقييم: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun markStudentAttendance(teacherCode: String) {
         val db = FirebaseFirestore.getInstance()
         val sharedPref = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
@@ -96,12 +170,6 @@ class TeacherContentActivity : AppCompatActivity() {
         db.collection("attendance")
             .document(attendanceId)
             .set(attendanceData)
-            .addOnSuccessListener {
-                Toast.makeText(this, "تم تسجيل حضورك اليوم بنجاح ✋✅", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "فشل تسجيل الحضور: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun sendStudentQuestion(teacherCode: String, questionText: String) {
@@ -126,4 +194,4 @@ class TeacherContentActivity : AppCompatActivity() {
                 Toast.makeText(this, "فشل إرسال السؤال: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-}      
+}
