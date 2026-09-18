@@ -43,6 +43,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="🔑 تحديد كود طلابي" />
+        <Button
+            android:id="@+id/btnMyContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📚 محتواي المنشور"
+            android:backgroundTint="#795548"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="8dp" />
 
         <TextView
             android:id="@+id/currentJoinCodeText"
