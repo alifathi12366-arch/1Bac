@@ -116,8 +116,8 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
 
        // جلب عدد الطلاب المسجلين
-        if (currentJoinCode.isNotEmpty()) {
-            getStudentCount(currentJoinCode) { count ->
+        if (teacherCode.isNotEmpty()) {
+            getStudentCount(teacherCode) { count ->
                 studentCountText.text = "عدد الطلاب المسجلين معاك: $count طالب 👥"
             }
         } else {
