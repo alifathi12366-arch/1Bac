@@ -50,6 +50,9 @@ class TeacherContentActivity : AppCompatActivity() {
 
         btnMarkAttendance.text = "✅ تم تسجيل حضورك النهاردة"
         btnMarkAttendance.isEnabled = false
+        findViewById<Button>(R.id.btnGoToExams).setOnClickListener {
+            startActivity(Intent(this, StudentExamsActivity::class.java))
+        }
 
         loadExistingRating(joinedTeacherCode, ratingBar, btnSubmitRating)
 
