@@ -52,7 +52,7 @@ class AddExamActivity : AppCompatActivity() {
             }
 
             val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-            val teacherCode = prefs.getString("teacher_join_code", "") ?: ""
+            val teacherCode = prefs.getString("teacher_code", "") ?: ""
 
             val examId = UUID.randomUUID().toString()
             val examData = hashMapOf(
