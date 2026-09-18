@@ -31,7 +31,13 @@ class TeachersListActivity : AppCompatActivity() {
         teachersRecyclerView.adapter = adapter
 
         myTeacherContentButton.setOnClickListener {
-            Toast.makeText(this, "قريباً: الانتقال للمحتوى الخاص بك", Toast.LENGTH_SHORT).show()
+            val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+            val joined = prefs.getString("joined_teacher_code", "") ?: ""
+            if (joined.isEmpty()) {
+                Toast.makeText(this, "لسه مسجلتش مع أي مدرس", Toast.LENGTH_SHORT).show()
+            } else {
+                startActivity(Intent(this, TeacherContentActivity::class.java))
+            }
         }
 
         joinTeacherEntryButton.setOnClickListener {
