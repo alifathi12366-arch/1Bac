@@ -53,18 +53,62 @@
             android:textSize="14sp"
             android:textColor="#666666" />
 
-        <!-- عدد الطلاب المسجلين -->
-        <TextView
-            android:id="@+id/studentCountText"
+        <!-- الإحصائيات الشاملة -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#2196F3"
-            android:text="جاري تحميل عدد الطلاب..."
-            android:layout_marginBottom="20dp" />
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="3dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📊 إحصائياتك"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginBottom="10dp"/>
+
+                <TextView
+                    android:id="@+id/studentCountText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textSize="15sp"
+                    android:textColor="#2196F3"
+                    android:text="جاري تحميل عدد الطلاب..." />
+
+                <TextView
+                    android:id="@+id/statsAttendanceText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textSize="15sp"
+                    android:textColor="#4CAF50"
+                    android:layout_marginTop="6dp" />
+
+                <TextView
+                    android:id="@+id/statsRatingText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textSize="15sp"
+                    android:textColor="#F5A623"
+                    android:layout_marginTop="6dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    
 
         <!-- قسم إضافة المحتوى الجديد -->
         <EditText
