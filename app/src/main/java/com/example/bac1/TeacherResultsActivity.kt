@@ -13,7 +13,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 data class ResultItem(
     val studentName: String = "",
     val score: Int = 0,
-    val examId: String = ""
+    val examTitle: String = ""
 )
 
 class TeacherResultsActivity : AppCompatActivity() {
@@ -28,24 +28,26 @@ class TeacherResultsActivity : AppCompatActivity() {
         val rvResults = if (rvId != 0) findViewById<RecyclerView>(rvId) else null
         rvResults?.layoutManager = LinearLayoutManager(this)
 
-        val db = FirebaseFirestore.getInstance()
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val teacherCode = prefs.getString("teacher_code", "") ?: ""
 
-        db.collection("results").get()
+        FirebaseFirestore.getInstance().collection("results")
+            .whereEqualTo("teacherCode", teacherCode)
+            .get()
             .addOnSuccessListener { query ->
                 val list = mutableListOf<ResultItem>()
                 for (doc in query.documents) {
                     val studentName = doc.getString("studentName") ?: "طالب"
                     val score = doc.getLong("score")?.toInt() ?: 0
-                    val examId = doc.getString("examId") ?: ""
-                    list.add(ResultItem(studentName, score, examId))
+                    val examTitle = doc.getString("examTitle") ?: ""
+                    list.add(ResultItem(studentName, score, examTitle))
                 }
 
                 if (list.isEmpty()) {
                     Toast.makeText(this, "لا توجد نتائج مسجلة حتى الآن", Toast.LENGTH_SHORT).show()
                 }
 
-                val adapter = ResultsAdapter(list)
-                rvResults?.adapter = adapter
+                rvResults?.adapter = ResultsAdapter(list)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "حدث خطأ أثناء تحميل النتائج", Toast.LENGTH_SHORT).show()
@@ -68,7 +70,7 @@ class ResultsAdapter(private val items: List<ResultItem>) :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        (holder.view as TextView).text = "اسم الطالب: ${item.studentName}\nالدرجة: ${item.score}%"
+        (holder.view as TextView).text = "الامتحان: ${item.examTitle}\nاسم الطالب: ${item.studentName}\nالدرجة: ${item.score}%"
     }
 
     override fun getItemCount(): Int = items.size
