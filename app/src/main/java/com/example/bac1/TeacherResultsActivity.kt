@@ -3,24 +3,22 @@ package com.example.bac1
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 
 data class ResultItem(
     val docId: String = "",
     val studentName: String = "",
+    val examId: String = "",
     val examTitle: String = "",
     val totalScore: Int = 0,
     val autoScore: Int = 0,
     val graded: Boolean = true,
-    val mcqAnswers: List<Map<String, Any>> = emptyList(),
     val essayAnswers: List<Map<String, Any>> = emptyList()
 )
 
@@ -30,13 +28,15 @@ class TeacherResultsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_results)
 
-        val rvResults = findViewById<RecyclerView>(R.id.rvTeacherResults)
-        rvResults.layoutManager = LinearLayoutManager(this)
+        val resultsContainer = findViewById<LinearLayout>(R.id.resultsContainer)
+        val absenteesContainer = findViewById<LinearLayout>(R.id.examAbsenteesContainer)
+        val absenteesTitle = findViewById<TextView>(R.id.absenteesTitle)
 
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val teacherCode = prefs.getString("teacher_code", "") ?: ""
+        val db = FirebaseFirestore.getInstance()
 
-        FirebaseFirestore.getInstance().collection("results")
+        db.collection("results")
             .whereEqualTo("teacherCode", teacherCode)
             .get()
             .addOnSuccessListener { query ->
@@ -46,11 +46,11 @@ class TeacherResultsActivity : AppCompatActivity() {
                         ResultItem(
                             docId = doc.id,
                             studentName = doc.getString("studentName") ?: "طالب",
+                            examId = doc.getString("examId") ?: "",
                             examTitle = doc.getString("examTitle") ?: "",
                             totalScore = (doc.getLong("totalScore") ?: 0L).toInt(),
                             autoScore = (doc.getLong("autoScore") ?: 0L).toInt(),
                             graded = doc.getBoolean("graded") ?: true,
-                            mcqAnswers = doc.get("mcqAnswers") as? List<Map<String, Any>> ?: emptyList(),
                             essayAnswers = doc.get("essayAnswers") as? List<Map<String, Any>> ?: emptyList()
                         )
                     )
@@ -60,43 +60,34 @@ class TeacherResultsActivity : AppCompatActivity() {
                     Toast.makeText(this, "لا توجد نتائج مسجلة حتى الآن", Toast.LENGTH_SHORT).show()
                 }
 
-                rvResults.adapter = ResultsAdapter(list)
+                for (item in list) {
+                    renderResultCard(item, resultsContainer)
+                }
+
+                loadExamAbsentees(teacherCode, list, absenteesContainer, absenteesTitle)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "حدث خطأ أثناء تحميل النتائج", Toast.LENGTH_SHORT).show()
             }
     }
-}
 
-class ResultsAdapter(private val items: List<ResultItem>) :
-    RecyclerView.Adapter<ResultsAdapter.ViewHolder>() {
-
-    class ViewHolder(val view: View) : RecyclerView.ViewHolder(view)
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_teacher_result, parent, false)
-        return ViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = items[position]
-        val view = holder.view
+    private fun renderResultCard(item: ResultItem, container: LinearLayout) {
+        val view = LayoutInflater.from(this).inflate(R.layout.item_teacher_result, container, false)
 
         val tvHeader = view.findViewById<TextView>(R.id.tvResultHeader)
         val tvScore = view.findViewById<TextView>(R.id.tvResultScore)
-        val essayContainer = view.findViewById<android.widget.LinearLayout>(R.id.essayGradingContainer)
+        val essayContainer = view.findViewById<LinearLayout>(R.id.essayGradingContainer)
         val btnSave = view.findViewById<Button>(R.id.btnSaveGrading)
 
         tvHeader.text = "${item.examTitle} - ${item.studentName}"
 
-        essayContainer.removeAllViews()
         val essayScoreInputs = mutableListOf<EditText>()
 
         if (item.essayAnswers.isNotEmpty()) {
             essayContainer.visibility = View.VISIBLE
 
             for (essay in item.essayAnswers) {
-                val essayView = LayoutInflater.from(view.context).inflate(R.layout.item_essay_grading, essayContainer, false)
+                val essayView = LayoutInflater.from(this).inflate(R.layout.item_essay_grading, essayContainer, false)
                 essayView.findViewById<TextView>(R.id.tvEssayQuestion).text = essay["text"] as? String ?: ""
                 essayView.findViewById<TextView>(R.id.tvEssayAnswer).text = essay["answerText"] as? String ?: "(لم يجب)"
 
@@ -145,12 +136,12 @@ class ResultsAdapter(private val items: List<ResultItem>) :
                             )
                         )
                         .addOnSuccessListener {
-                            Toast.makeText(view.context, "تم حفظ التصحيح ✅", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "تم حفظ التصحيح ✅", Toast.LENGTH_SHORT).show()
                             tvScore.text = "الدرجة النهائية: $finalScore من ${item.totalScore} ✅"
                             btnSave.visibility = View.GONE
                         }
                         .addOnFailureListener {
-                            Toast.makeText(view.context, "فشل حفظ التصحيح", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "فشل حفظ التصحيح", Toast.LENGTH_SHORT).show()
                         }
                 }
             }
@@ -159,7 +150,48 @@ class ResultsAdapter(private val items: List<ResultItem>) :
             btnSave.visibility = View.GONE
             tvScore.text = "الدرجة: ${item.autoScore} من ${item.totalScore} ✅"
         }
+
+        container.addView(view)
     }
 
-    override fun getItemCount(): Int = items.size
+    private fun loadExamAbsentees(
+        teacherCode: String,
+        results: List<ResultItem>,
+        container: LinearLayout,
+        title: TextView
+    ) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users").whereEqualTo("joined_teacher_code", teacherCode).get()
+            .addOnSuccessListener { rosterSnap ->
+                val rosterNames = rosterSnap.documents.mapNotNull { it.getString("name") }.filter { it.isNotBlank() }.distinct()
+                if (rosterNames.isEmpty()) return@addOnSuccessListener
+
+                db.collection("exams").whereEqualTo("teacherCode", teacherCode).get()
+                    .addOnSuccessListener { examsSnap ->
+                        if (examsSnap.isEmpty) return@addOnSuccessListener
+
+                        title.visibility = View.VISIBLE
+
+                        for (examDoc in examsSnap.documents) {
+                            val examId = examDoc.getString("examId") ?: examDoc.id
+                            val examTitle = examDoc.getString("title") ?: ""
+
+                            val submittedNames = results.filter { it.examId == examId }.map { it.studentName }.toSet()
+                            val absentNames = rosterNames.filter { it !in submittedNames }
+
+                            val row = TextView(this)
+                            row.setTextColor(android.graphics.Color.parseColor("#FF8A65"))
+                            row.textSize = 14f
+                            row.setPadding(0, 0, 0, 10)
+                            row.text = if (absentNames.isEmpty())
+                                "✅ $examTitle: كل الطلاب قدّموا الامتحان"
+                            else
+                                "⚠️ $examTitle: ${absentNames.joinToString("، ")}"
+
+                            container.addView(row)
+                        }
+                    }
+            }
     }
+}
