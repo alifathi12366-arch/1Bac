@@ -28,62 +28,22 @@
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
             android:inputType="text"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="16dp"/>
 
-        <EditText
-            android:id="@+id/etQuestionText"
+        <LinearLayout
+            android:id="@+id/questionsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="السؤال"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:inputType="textMultiLine"
-            android:layout_marginBottom="12dp"/>
+            android:orientation="vertical" />
 
-        <EditText
-            android:id="@+id/etOption1"
+        <Button
+            android:id="@+id/btnAddQuestion"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="الخيار الأول (A)"
+            android:text="➕ ضيف سؤال"
+            android:backgroundTint="#2196F3"
             android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etOption2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="الخيار الثاني (B)"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etOption3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="الخيار الثالث (C)"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etOption4"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="الخيار الرابع (D)"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:layout_marginBottom="12dp"/>
-
-        <EditText
-            android:id="@+id/etCorrectAnswer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="الإجابة الصحيحة (اكتب الرقم 1 أو 2 أو 3 أو 4)"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:inputType="number"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="20dp"/>
 
         <Button
