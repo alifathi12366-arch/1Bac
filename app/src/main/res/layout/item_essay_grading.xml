@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#2A2A2A"
+    android:padding="10dp"
+    android:layout_marginBottom="8dp">
+
+    <TextView
+        android:id="@+id/tvEssayQuestion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvEssayAnswer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#CCCCCC"
+        android:textSize="14sp"
+        android:background="#1A1A1A"
+        android:padding="8dp"
+        android:layout_marginBottom="6dp"/>
+
+    <EditText
+        android:id="@+id/etAwardedScore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="الدرجة اللي هتديها (من الدرجة الكاملة)"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#888888"
+        android:inputType="number"/>
+
+</LinearLayout>
