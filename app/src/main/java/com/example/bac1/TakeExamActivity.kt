@@ -52,6 +52,25 @@ class TakeExamActivity : AppCompatActivity() {
         rb3?.text = op3
         rb4?.text = op4
 
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
+        val resultId = "${examId}_$studentName"
+
+        FirebaseFirestore.getInstance().collection("results").document(resultId).get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    val oldScore = doc.getLong("score")?.toInt() ?: 0
+                    tvQuestion?.text = "لقد قدّمت هذا الامتحان من قبل، درجتك: $oldScore%"
+                    rgOptions?.isEnabled = false
+                    rb1?.isEnabled = false
+                    rb2?.isEnabled = false
+                    rb3?.isEnabled = false
+                    rb4?.isEnabled = false
+                    btnSubmit?.isEnabled = false
+                    btnSubmit?.text = "تم التقديم من قبل"
+                }
+            }
+
         btnSubmit?.setOnClickListener {
             val selectedId = rgOptions?.checkedRadioButtonId ?: -1
             if (selectedId == -1) {
@@ -67,12 +86,8 @@ class TakeExamActivity : AppCompatActivity() {
 
             val isCorrect = (chosenIndex == correctIndex)
             val score = if (isCorrect) 100 else 0
-
-            val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-            val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
             val teacherCode = prefs.getString("joined_teacher_code", "") ?: ""
 
-            val resultId = "${examId}_$studentName"
             val resultData = hashMapOf(
                 "examId" to examId,
                 "examTitle" to title,
@@ -89,7 +104,7 @@ class TakeExamActivity : AppCompatActivity() {
                     if (isCorrect) {
                         Toast.makeText(this, "إجابة صحيحة! أحسنت 🎯 (100%)", Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(this, "إجابة خاطئة! حاول مرة أخرى ❌", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "إجابة خاطئة ❌", Toast.LENGTH_LONG).show()
                     }
                     finish()
                 }
