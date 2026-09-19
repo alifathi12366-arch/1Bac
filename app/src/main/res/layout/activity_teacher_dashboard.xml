@@ -85,6 +85,40 @@
                     android:textStyle="bold"
                     android:gravity="center"
                     android:layout_marginBottom="10dp"/>
+                <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="3dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🚫 الطلاب المتغيبون عن الحصة اليوم"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/absentTodayList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textSize="14sp"
+                    android:textColor="#FF8A65"
+                    android:text="جاري التحميل..." />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
                 <TextView
                     android:id="@+id/studentCountText"
