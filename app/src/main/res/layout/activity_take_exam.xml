@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -14,68 +13,24 @@
             android:id="@+id/tvExamTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="عنوان الامتحان"
             android:textColor="#4CAF50"
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center"
             android:layout_marginBottom="20dp" />
 
-        <TextView
-            android:id="@+id/tvQuestion"
+        <LinearLayout
+            android:id="@+id/questionsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="السؤال يظهر هنا..."
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:layout_marginBottom="24dp" />
-
-        <RadioGroup
-            android:id="@+id/rgOptions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
-
-            <RadioButton
-                android:id="@+id/rbOption1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:padding="8dp"/>
-
-            <RadioButton
-                android:id="@+id/rbOption2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:padding="8dp"/>
-
-            <RadioButton
-                android:id="@+id/rbOption3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:padding="8dp"/>
-
-            <RadioButton
-                android:id="@+id/rbOption4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:padding="8dp"/>
-        </RadioGroup>
+            android:orientation="vertical" />
 
         <Button
             android:id="@+id/btnSubmitExam"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📩 إرسال الإجابة"
+            android:text="📩 إرسال الإجابات"
             android:backgroundTint="#2196F3"
             android:textColor="#FFFFFF" />
-
     </LinearLayout>
 </ScrollView>
