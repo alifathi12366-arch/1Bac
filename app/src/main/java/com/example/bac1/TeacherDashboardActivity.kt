@@ -164,10 +164,11 @@ class TeacherDashboardActivity : AppCompatActivity() {
             .addOnFailureListener {
                 onResult(0)
             }
-    }
 
-    private fun uploadContent(title: String, description: String, youtubeUrl: String) {
-        Toast.makeText(this, "جاري رفع المحتوى...", Toast.LENGTH_SHORT).show()
+            private fun uploadContent(title: String, description: String, youtubeUrl: String) {
+        val progressText = findViewById<TextView>(R.id.uploadProgressText)
+        progressText.visibility = android.view.View.VISIBLE
+        progressText.text = "جاري الرفع... 0%"
 
         var pdfUploadUrl = ""
         var videoUploadUrl = ""
@@ -192,10 +193,12 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 .document(contentId)
                 .set(data)
                 .addOnSuccessListener {
+                    progressText.visibility = android.view.View.GONE
                     Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
                     finish()
                 }
                 .addOnFailureListener { e ->
+                    progressText.visibility = android.view.View.GONE
                     Toast.makeText(this, "فشل النشر: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
         }
@@ -203,22 +206,32 @@ class TeacherDashboardActivity : AppCompatActivity() {
         if (selectedPdfUri != null) {
             val storage = FirebaseStorage.getInstance()
             val pdfRef = storage.reference.child("pdfs/${UUID.randomUUID()}.pdf")
-            pdfRef.putFile(selectedPdfUri!!).addOnSuccessListener {
+            val uploadTask = pdfRef.putFile(selectedPdfUri!!)
+            uploadTask.addOnProgressListener { snapshot ->
+                val percent = (100.0 * snapshot.bytesTransferred / snapshot.totalByteCount).toInt()
+                progressText.text = "جاري رفع الملزمة... $percent%"
+            }
+            uploadTask.addOnSuccessListener {
                 pdfRef.downloadUrl.addOnSuccessListener { downloadUri: Uri ->
                     pdfUploadUrl = downloadUri.toString()
-                    uploadVideoIfExist { saveToFirestore() }
+                    uploadVideoIfExist(progressText) { saveToFirestore() }
                 }
             }
         } else {
-            uploadVideoIfExist { saveToFirestore() }
+            uploadVideoIfExist(progressText) { saveToFirestore() }
         }
     }
 
-    private fun uploadVideoIfExist(onComplete: () -> Unit) {
+    private fun uploadVideoIfExist(progressText: TextView, onComplete: () -> Unit) {
         if (selectedVideoUri != null) {
             val storage = FirebaseStorage.getInstance()
             val videoRef = storage.reference.child("videos/${UUID.randomUUID()}.mp4")
-            videoRef.putFile(selectedVideoUri!!).addOnSuccessListener {
+            val uploadTask = videoRef.putFile(selectedVideoUri!!)
+            uploadTask.addOnProgressListener { snapshot ->
+                val percent = (100.0 * snapshot.bytesTransferred / snapshot.totalByteCount).toInt()
+                progressText.text = "جاري رفع الفيديو... $percent%"
+            }
+            uploadTask.addOnSuccessListener {
                 videoRef.downloadUrl.addOnSuccessListener { downloadUri: Uri ->
                     onComplete()
                 }
@@ -227,6 +240,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
             onComplete()
         }
     }
+    }
+
+    
 
     private fun loadStudentQuestions(teacherCode: String) {
         val db = FirebaseFirestore.getInstance()
