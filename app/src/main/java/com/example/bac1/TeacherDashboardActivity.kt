@@ -1,6 +1,7 @@
 package com.example.bac1
 
 import android.content.Intent
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
@@ -48,7 +49,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_dashboard)
         findViewById<Button?>(resources.getIdentifier("btnAddExam", "id", packageName))?.setOnClickListener {
-    startActivity(Intent(this, AddExamActivity::class.java))
+            startActivity(Intent(this, AddExamActivity::class.java))
         }
 
         val etTitle = findViewById<EditText>(R.id.etTitle)
@@ -115,7 +116,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
             loadStudentQuestions(teacherCode)
         }
 
-       // جلب عدد الطلاب المسجلين
         if (teacherCode.isNotEmpty()) {
             getStudentCount(teacherCode) { count ->
                 studentCountText.text = "عدد الطلاب المسجلين معاك: $count طالب 👥"
@@ -125,6 +125,34 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
 
         loadComprehensiveStats(teacherCode)
+        loadAbsentToday(teacherCode)
+    }
+
+    private fun loadAbsentToday(teacherCode: String) {
+        val absentText = findViewById<TextView>(R.id.absentTodayList)
+        val db = FirebaseFirestore.getInstance()
+        val todayDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+
+        db.collection("users").whereEqualTo("joined_teacher_code", teacherCode).get()
+            .addOnSuccessListener { rosterSnap ->
+                val rosterNames = rosterSnap.documents.mapNotNull { it.getString("name") }.filter { it.isNotBlank() }
+                if (rosterNames.isEmpty()) {
+                    absentText.text = "لا يوجد طلاب مسجلين بعد"
+                    return@addOnSuccessListener
+                }
+                db.collection("attendance")
+                    .whereEqualTo("teacherCode", teacherCode)
+                    .whereEqualTo("date", todayDate)
+                    .get()
+                    .addOnSuccessListener { attSnap ->
+                        val attendedNames = attSnap.documents.mapNotNull { it.getString("studentName") }.toSet()
+                        val absentNames = rosterNames.filter { it !in attendedNames }
+                        absentText.text = if (absentNames.isEmpty())
+                            "كل الطلاب حضروا النهاردة ✅"
+                        else
+                            absentNames.joinToString("، ")
+                    }
+            }
     }
 
     private fun loadComprehensiveStats(teacherCode: String) {
@@ -151,7 +179,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 else
                     "متوسط تقييمك: لسه مفيش تقييمات ⭐"
             }
-    } 
+    }
 
     private fun getStudentCount(joinCode: String, onResult: (Int) -> Unit) {
         val db = FirebaseFirestore.getInstance()
@@ -164,8 +192,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
             .addOnFailureListener {
                 onResult(0)
             }
+    }
 
-            private fun uploadContent(title: String, description: String, youtubeUrl: String) {
+    private fun uploadContent(title: String, description: String, youtubeUrl: String) {
         val progressText = findViewById<TextView>(R.id.uploadProgressText)
         progressText.visibility = android.view.View.VISIBLE
         progressText.text = "جاري الرفع... 0%"
@@ -240,9 +269,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
             onComplete()
         }
     }
-    }
-
-    
 
     private fun loadStudentQuestions(teacherCode: String) {
         val db = FirebaseFirestore.getInstance()
