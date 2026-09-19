@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1E1E1E"
+    android:padding="12dp"
+    android:layout_marginBottom="12dp">
+
+    <TextView
+        android:id="@+id/tvQuestionNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="السؤال"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp"/>
+
+    <RadioGroup
+        android:id="@+id/rgQuestionType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <RadioButton
+            android:id="@+id/rbTypeMcq"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="اختياري"
+            android:textColor="#FFFFFF"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/rbTypeEssay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="مقالي"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="16dp"/>
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etQuestionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="نص السؤال"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#888888"
+        android:inputType="textMultiLine"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etQuestionScore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="درجة هذا السؤال (مثال: 10)"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#888888"
+        android:inputType="number"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:id="@+id/mcqFieldsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/etOption1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="الخيار الأول (A)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:layout_marginBottom="6dp"/>
+
+        <EditText
+            android:id="@+id/etOption2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="الخيار الثاني (B)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:layout_marginBottom="6dp"/>
+
+        <EditText
+            android:id="@+id/etOption3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="الخيار الثالث (C)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:layout_marginBottom="6dp"/>
+
+        <EditText
+            android:id="@+id/etOption4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="الخيار الرابع (D)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:layout_marginBottom="6dp"/>
+
+        <EditText
+            android:id="@+id/etCorrectAnswer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="رقم الإجابة الصحيحة (1 أو 2 أو 3 أو 4)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:inputType="number"
+            android:layout_marginBottom="6dp"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnRemoveQuestion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🗑 حذف السؤال ده"
+        android:backgroundTint="#B71C1C"
+        android:textColor="#FFFFFF"/>
+
+</LinearLayout>
