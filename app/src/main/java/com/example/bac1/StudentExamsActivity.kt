@@ -12,13 +12,21 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 
+data class ExamQuestion(
+    val qId: String = "",
+    val text: String = "",
+    val type: String = "mcq",
+    val options: List<String> = emptyList(),
+    val correctIndex: Int = -1,
+    val score: Int = 0
+)
+
 data class ExamModel(
     val examId: String = "",
     val title: String = "",
-    val question: String = "",
-    val options: List<String> = emptyList(),
-    val correctIndex: Int = 0,
-    val teacherCode: String = ""
+    val teacherCode: String = "",
+    val totalScore: Int = 0,
+    val questions: List<ExamQuestion> = emptyList()
 )
 
 class StudentExamsActivity : AppCompatActivity() {
@@ -28,7 +36,7 @@ class StudentExamsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         val layoutRes = resources.getIdentifier("activity_student_exams", "layout", packageName)
         if (layoutRes != 0) setContentView(layoutRes)
 
@@ -37,16 +45,8 @@ class StudentExamsActivity : AppCompatActivity() {
 
         rvExamsList?.layoutManager = LinearLayoutManager(this)
         adapter = ExamAdapter(examList) { exam ->
-            val intent = Intent(this, TakeExamActivity::class.java).apply {
-                putExtra("EXAM_ID", exam.examId)
-                putExtra("EXAM_TITLE", exam.title)
-                putExtra("EXAM_QUESTION", exam.question)
-                putExtra("EXAM_OP1", exam.options.getOrNull(0) ?: "")
-                putExtra("EXAM_OP2", exam.options.getOrNull(1) ?: "")
-                putExtra("EXAM_OP3", exam.options.getOrNull(2) ?: "")
-                putExtra("EXAM_OP4", exam.options.getOrNull(3) ?: "")
-                putExtra("CORRECT_INDEX", exam.correctIndex)
-            }
+            val intent = Intent(this, TakeExamActivity::class.java)
+            intent.putExtra("EXAM_ID", exam.examId)
             startActivity(intent)
         }
         rvExamsList?.adapter = adapter
