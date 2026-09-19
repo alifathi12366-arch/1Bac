@@ -76,6 +76,3 @@ class AddExamActivity : AppCompatActivity() {
                 .addOnFailureListener { e ->
                     Toast.makeText(this, "فشل حفظ الامتحان: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-        }
-    }
-}
