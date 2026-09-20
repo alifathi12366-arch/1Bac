@@ -178,28 +178,14 @@
             android:inputType="textUri"
             android:layout_marginTop="8dp"/>
 
-        <Button
-            android:id="@+id/btnSelectPdf"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="📄 اختيار ملزمة PDF"
-            android:layout_marginTop="12dp"/>
-
-        <Button
-            android:id="@+id/btnSelectVideo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🎥 اختيار فيديو للرفع"
-            android:layout_marginTop="8dp"/>
         <TextView
-            android:id="@+id/uploadProgressText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="📌 رفع الفيديو والملازم مباشرة سيتوفر قريبًا - استخدم رابط يوتيوب في الأعلى مؤقتًا"
+            android:textColor="#888888"
+            android:textSize="13sp"
             android:gravity="center"
-            android:textColor="#4CAF50"
-            android:textSize="14sp"
-            android:layout_marginTop="6dp"
-            android:visibility="gone" />
+            android:layout_marginTop="8dp"/>
 
         <Button
             android:id="@+id/sendMessageButton"
