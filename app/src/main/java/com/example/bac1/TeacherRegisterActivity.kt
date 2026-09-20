@@ -61,8 +61,8 @@ class TeacherRegisterActivity : AppCompatActivity() {
                                     "code" to code, "timestamp" to System.currentTimeMillis())
                             )
                             db.collection("teachers").document(code).set(
-                                hashMapOf("id" to code, "name" to name, "subject" to subject,
-                                    "phone" to phone, "studentsCount" to 0)
+                                hashMapOf("id" to code, "name" to name, "subject" to subject, "phone" to phone),
+                                com.google.firebase.firestore.SetOptions.merge()
                             )
 
                             startActivity(Intent(this, TeacherDashboardActivity::class.java))
