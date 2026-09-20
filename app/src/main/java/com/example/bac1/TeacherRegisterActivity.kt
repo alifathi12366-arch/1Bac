@@ -31,7 +31,10 @@ class TeacherRegisterActivity : AppCompatActivity() {
         btnSubmit.setOnClickListener {
             val name = etName.text.toString().trim()
             val subject = etSubject.text.toString().trim()
-            val phone = etPhone.text.toString().trim()
+            val rawPhone = etPhone.text.toString().trim()
+            val phone = if (rawPhone.startsWith("0")) "+20" + rawPhone.substring(1)
+                        else if (!rawPhone.startsWith("+")) "+20$rawPhone"
+                        else rawPhone
             val code = etCode.text.toString().trim()
 
             if (name.isEmpty() || subject.isEmpty() || phone.isEmpty() || code.isEmpty()) {
