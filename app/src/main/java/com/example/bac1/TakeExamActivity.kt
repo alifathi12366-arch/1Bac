@@ -151,12 +151,18 @@ class TakeExamActivity : AppCompatActivity() {
             .document(resultId)
             .set(resultData)
             .addOnSuccessListener {
-                val msg = if (hasEssay)
-                    "تم إرسال إجاباتك، هتنتظر تصحيح الأسئلة المقالية من المدرس 📩"
-                else
-                    "تم التصحيح تلقائيًا! درجتك: $autoScore من ${exam.totalScore} 🎯"
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
-                finish()
+                if (!hasEssay) {
+                    val percentage = if (exam.totalScore > 0) (autoScore * 100.0 / exam.totalScore) else 0.0
+                    if (percentage >= 95.0) {
+                        showCertificate(exam.title, autoScore, exam.totalScore, studentName)
+                    } else {
+                        Toast.makeText(this, "تم التصحيح تلقائيًا! درجتك: $autoScore من ${exam.totalScore} 🎯", Toast.LENGTH_LONG).show()
+                        finish()
+                    }
+                } else {
+                    Toast.makeText(this, "تم إرسال إجاباتك، هتنتظر تصحيح الأسئلة المقالية من المدرس 📩", Toast.LENGTH_LONG).show()
+                    finish()
+                }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "حدث خطأ أثناء حفظ الإجابات: ${e.message}", Toast.LENGTH_SHORT).show()
