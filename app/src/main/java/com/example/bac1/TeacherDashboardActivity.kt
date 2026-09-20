@@ -1,53 +1,22 @@
 package com.example.bac1
 
 import android.content.Intent
-import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
 
-data class TeacherContent(
-    val id: String = "",
-    val teacherId: String = "",
-    val title: String = "",
-    val description: String = "",
-    val youtubeUrl: String = "",
-    val pdfUrl: String = "",
-    val directVideoUrl: String = "",
-    val timestamp: Long = System.currentTimeMillis()
-)
-
 class TeacherDashboardActivity : AppCompatActivity() {
-
-    private var selectedPdfUri: Uri? = null
-    private var selectedVideoUri: Uri? = null
-
-    private val selectPdfLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            selectedPdfUri = uri
-            Toast.makeText(this, "تم اختيار ملزمة PDF ✅", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private val selectVideoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            selectedVideoUri = uri
-            Toast.makeText(this, "تم اختيار الفيديو ✅", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_dashboard)
+
         findViewById<Button?>(resources.getIdentifier("btnAddExam", "id", packageName))?.setOnClickListener {
             startActivity(Intent(this, AddExamActivity::class.java))
         }
@@ -55,8 +24,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
         val etTitle = findViewById<EditText>(R.id.etTitle)
         val etDescription = findViewById<EditText>(R.id.etDescription)
         val etYoutubeUrl = findViewById<EditText>(R.id.etYoutubeUrl)
-        val btnSelectPdf = findViewById<Button>(R.id.btnSelectPdf)
-        val btnSelectVideo = findViewById<Button>(R.id.btnSelectVideo)
         val btnPublish = findViewById<Button>(R.id.sendMessageButton)
         val studentCountText = findViewById<TextView>(R.id.studentCountText)
 
@@ -87,16 +54,11 @@ class TeacherDashboardActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnMyContent).setOnClickListener {
             startActivity(Intent(this, TeacherMyContentActivity::class.java))
         }
+        findViewById<Button>(R.id.btnTeacherQuestions).setOnClickListener {
+            startActivity(Intent(this, TeacherQuestionsActivity::class.java))
+        }
         findViewById<Button>(R.id.btnViewResults).setOnClickListener {
             startActivity(Intent(this, TeacherResultsActivity::class.java))
-        }
-
-        btnSelectPdf.setOnClickListener {
-            selectPdfLauncher.launch("application/pdf")
-        }
-
-        btnSelectVideo.setOnClickListener {
-            selectVideoLauncher.launch("video/*")
         }
 
         btnPublish.setOnClickListener {
@@ -109,7 +71,27 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            uploadContent(title, description, youtubeUrl)
+            val contentId = UUID.randomUUID().toString()
+            val data = hashMapOf(
+                "teacherCode" to teacherCode,
+                "type" to "message",
+                "text" to "$title\n\n$description",
+                "youtubeUrl" to youtubeUrl,
+                "pdfUrl" to "",
+                "directVideoUrl" to "",
+                "createdAt" to System.currentTimeMillis()
+            )
+
+            FirebaseFirestore.getInstance().collection("teacherContent")
+                .document(contentId)
+                .set(data)
+                .addOnSuccessListener {
+                    Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
+                    finish()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "فشل النشر: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
         }
 
         if (teacherCode.isNotEmpty()) {
@@ -192,82 +174,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
             .addOnFailureListener {
                 onResult(0)
             }
-    }
-
-    private fun uploadContent(title: String, description: String, youtubeUrl: String) {
-        val progressText = findViewById<TextView>(R.id.uploadProgressText)
-        progressText.visibility = android.view.View.VISIBLE
-        progressText.text = "جاري الرفع... 0%"
-
-        var pdfUploadUrl = ""
-        var videoUploadUrl = ""
-
-        fun saveToFirestore() {
-            val db = FirebaseFirestore.getInstance()
-            val contentId = UUID.randomUUID().toString()
-            val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-            val teacherCode = prefs.getString("teacher_code", "") ?: ""
-
-            val data = hashMapOf(
-                "teacherCode" to teacherCode,
-                "type" to "message",
-                "text" to "$title\n\n$description",
-                "youtubeUrl" to youtubeUrl,
-                "pdfUrl" to pdfUploadUrl,
-                "directVideoUrl" to videoUploadUrl,
-                "createdAt" to System.currentTimeMillis()
-            )
-
-            db.collection("teacherContent")
-                .document(contentId)
-                .set(data)
-                .addOnSuccessListener {
-                    progressText.visibility = android.view.View.GONE
-                    Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
-                    finish()
-                }
-                .addOnFailureListener { e ->
-                    progressText.visibility = android.view.View.GONE
-                    Toast.makeText(this, "فشل النشر: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-        }
-
-        if (selectedPdfUri != null) {
-            val storage = FirebaseStorage.getInstance()
-            val pdfRef = storage.reference.child("pdfs/${UUID.randomUUID()}.pdf")
-            val uploadTask = pdfRef.putFile(selectedPdfUri!!)
-            uploadTask.addOnProgressListener { snapshot ->
-                val percent = (100.0 * snapshot.bytesTransferred / snapshot.totalByteCount).toInt()
-                progressText.text = "جاري رفع الملزمة... $percent%"
-            }
-            uploadTask.addOnSuccessListener {
-                pdfRef.downloadUrl.addOnSuccessListener { downloadUri: Uri ->
-                    pdfUploadUrl = downloadUri.toString()
-                    uploadVideoIfExist(progressText) { saveToFirestore() }
-                }
-            }
-        } else {
-            uploadVideoIfExist(progressText) { saveToFirestore() }
-        }
-    }
-
-    private fun uploadVideoIfExist(progressText: TextView, onComplete: () -> Unit) {
-        if (selectedVideoUri != null) {
-            val storage = FirebaseStorage.getInstance()
-            val videoRef = storage.reference.child("videos/${UUID.randomUUID()}.mp4")
-            val uploadTask = videoRef.putFile(selectedVideoUri!!)
-            uploadTask.addOnProgressListener { snapshot ->
-                val percent = (100.0 * snapshot.bytesTransferred / snapshot.totalByteCount).toInt()
-                progressText.text = "جاري رفع الفيديو... $percent%"
-            }
-            uploadTask.addOnSuccessListener {
-                videoRef.downloadUrl.addOnSuccessListener { downloadUri: Uri ->
-                    onComplete()
-                }
-            }
-        } else {
-            onComplete()
-        }
     }
 
     private fun loadStudentQuestions(teacherCode: String) {
