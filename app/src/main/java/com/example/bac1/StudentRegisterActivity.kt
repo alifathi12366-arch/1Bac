@@ -28,7 +28,10 @@ class StudentRegisterActivity : AppCompatActivity() {
 
         btnSubmit.setOnClickListener {
             val name = etName.text.toString().trim()
-            val phone = etPhone.text.toString().trim()
+    val rawPhone = etPhone.text.toString().trim()
+    val phone = if (rawPhone.startsWith("0")) "+20" + rawPhone.substring(1)
+                else if (!rawPhone.startsWith("+")) "+20$rawPhone"
+                else rawPhone
 
             if (name.isEmpty() || phone.isEmpty()) {
                 Toast.makeText(this, "من فضلك املأ كل الخانات", Toast.LENGTH_SHORT).show()
