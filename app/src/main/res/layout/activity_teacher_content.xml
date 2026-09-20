@@ -35,6 +35,14 @@
         android:backgroundTint="#9C27B0"
         android:textColor="#FFFFFF"
         android:layout_marginBottom="12dp" />
+    <Button
+        android:id="@+id/btnMyMistakes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🎯 أخطائي"
+        android:backgroundTint="#E65100"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="12dp" />
 
     <!-- رسالة عدم وجود محتوى -->
     <TextView
