@@ -54,11 +54,19 @@ class StudentExamsActivity : AppCompatActivity() {
         loadExams()
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadExams()
+    }
+
     private fun loadExams() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val joinedCode = prefs.getString("joined_teacher_code", "") ?: ""
+        val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
 
-        FirebaseFirestore.getInstance().collection("exams")
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("exams")
             .whereEqualTo("teacherCode", joinedCode)
             .get()
             .addOnSuccessListener { documents ->
@@ -68,9 +76,26 @@ class StudentExamsActivity : AppCompatActivity() {
                     examList.add(exam)
                 }
                 adapter.notifyDataSetChanged()
+
                 if (examList.isEmpty()) {
                     Toast.makeText(this, "لا توجد امتحانات متاحة حالياً", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
                 }
+
+                db.collection("results")
+                    .whereEqualTo("studentName", studentName)
+                    .whereEqualTo("teacherCode", joinedCode)
+                    .get()
+                    .addOnSuccessListener { resultsSnap ->
+                        val resultsMap = mutableMapOf<String, Pair<Int, Boolean>>()
+                        for (doc in resultsSnap.documents) {
+                            val examId = doc.getString("examId") ?: continue
+                            val score = (doc.getLong("autoScore") ?: 0L).toInt()
+                            val graded = doc.getBoolean("graded") ?: true
+                            resultsMap[examId] = Pair(score, graded)
+                        }
+                        adapter.updateResults(resultsMap)
+                    }
             }
             .addOnFailureListener {
                 Toast.makeText(this, "خطأ في تحميل الامتحانات", Toast.LENGTH_SHORT).show()
@@ -82,8 +107,16 @@ class StudentExamsActivity : AppCompatActivity() {
         private val onClick: (ExamModel) -> Unit
     ) : RecyclerView.Adapter<ExamAdapter.ExamViewHolder>() {
 
+        private var resultsMap: Map<String, Pair<Int, Boolean>> = emptyMap()
+
+        fun updateResults(map: Map<String, Pair<Int, Boolean>>) {
+            resultsMap = map
+            notifyDataSetChanged()
+        }
+
         inner class ExamViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val tvTitle: TextView? = view.findViewById(resources.getIdentifier("tvItemExamTitle", "id", packageName))
+            val tvStatus: TextView? = view.findViewById(resources.getIdentifier("tvItemExamStatus", "id", packageName))
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExamViewHolder {
@@ -95,6 +128,14 @@ class StudentExamsActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ExamViewHolder, position: Int) {
             val item = list[position]
             holder.tvTitle?.text = item.title
+
+            val result = resultsMap[item.examId]
+            holder.tvStatus?.text = when {
+                result == null -> "اضغط للبدء في الامتحان"
+                !result.second -> "بانتظار تصحيح المدرس ⏳"
+                else -> "✅ درجتك: ${result.first} من ${item.totalScore}"
+            }
+
             holder.itemView.setOnClickListener { onClick(item) }
         }
 
