@@ -168,4 +168,12 @@ class TakeExamActivity : AppCompatActivity() {
                 Toast.makeText(this, "حدث خطأ أثناء حفظ الإجابات: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun showCertificate(examTitle: String, score: Int, total: Int, studentName: String) {
+        setContentView(R.layout.activity_certificate)
+        findViewById<TextView>(R.id.tvCertStudentName).text = studentName
+        findViewById<TextView>(R.id.tvCertExamTitle).text = examTitle
+        findViewById<TextView>(R.id.tvCertScore).text = "$score من $total"
+        findViewById<Button>(R.id.btnCertClose).setOnClickListener { finish() }
+    }
 }
