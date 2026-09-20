@@ -37,18 +37,27 @@
             android:textColor="#F5A623"
             android:layout_marginBottom="20dp" />
 
-        <!-- زرار إعداد كود الطلاب -->
         <Button
             android:id="@+id/setJoinCodeButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="🔑 تحديد كود طلابي" />
+
         <Button
             android:id="@+id/btnMyContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="📚 محتواي المنشور"
             android:backgroundTint="#795548"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btnTeacherQuestions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="❓ أسئلة طلابي"
+            android:backgroundTint="#00897B"
             android:textColor="#FFFFFF"
             android:layout_marginTop="8dp" />
 
@@ -61,34 +70,11 @@
             android:textSize="14sp"
             android:textColor="#666666" />
 
-        <!-- الإحصائيات الشاملة -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="20dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="3dp"
-            xmlns:app="http://schemas.android.com/apk/res-auto">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="📊 إحصائياتك"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:layout_marginBottom="10dp"/>
-                <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="3dp"
             xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -120,6 +106,29 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="3dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📊 إحصائياتك"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginBottom="10dp"/>
+
                 <TextView
                     android:id="@+id/studentCountText"
                     android:layout_width="match_parent"
@@ -150,9 +159,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-    
-
-        <!-- قسم إضافة المحتوى الجديد -->
         <EditText
             android:id="@+id/etTitle"
             android:layout_width="match_parent"
@@ -195,14 +201,16 @@
             android:backgroundTint="#4CAF50"
             android:textColor="#FFFFFF"
             android:layout_marginTop="16dp" />
+
         <Button
-    android:id="@+id/btnAddExam"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="📝 إضافة امتحان جديد"
-    android:backgroundTint="#9C27B0"
-    android:textColor="#FFFFFF"
-    android:layout_marginTop="12dp" />
+            android:id="@+id/btnAddExam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📝 إضافة امتحان جديد"
+            android:backgroundTint="#9C27B0"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="12dp" />
+
         <Button
             android:id="@+id/btnViewResults"
             android:layout_width="match_parent"
