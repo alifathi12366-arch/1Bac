@@ -100,9 +100,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="اسأل المستر سؤال عن الدرس..."
-            android:textColorHint="#AAAAAA"
-            android:textColor="#FFFFFF"
-            android:background="@android:drawable/editbox_background"
+            android:textColorHint="#888888"
+            android:textColor="#000000"
+            android:background="#FFFFFF"
             android:padding="10dp" />
 
         <Button
