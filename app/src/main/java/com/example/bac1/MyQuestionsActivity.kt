@@ -19,7 +19,7 @@ class MyQuestionsActivity : AppCompatActivity() {
 
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
-        val teacherCode = prefs.getString("joined_teacher_code", "") ?: ""
+        val teacherCode = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_CODE) ?: ""
 
         FirebaseFirestore.getInstance().collection("interactive_questions")
             .whereEqualTo("teacherCode", teacherCode)
