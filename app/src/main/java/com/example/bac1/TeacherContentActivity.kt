@@ -57,6 +57,9 @@ class TeacherContentActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnMyMistakes).setOnClickListener {
             startActivity(Intent(this, MyMistakesActivity::class.java))
         }
+        findViewById<Button>(R.id.btnMyQuestions).setOnClickListener {
+            startActivity(Intent(this, MyQuestionsActivity::class.java))
+        }
 
         loadExistingRating(joinedTeacherCode, ratingBar, btnSubmitRating)
 
