@@ -1,12 +1,12 @@
 package com.example.bac1
 
 import android.content.Intent
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.RatingBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,29 +19,31 @@ import java.util.Locale
 
 class TeacherContentActivity : AppCompatActivity() {
 
+    private lateinit var teacherCode: String
+    private lateinit var teacherName: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_content)
 
-        val prefs = getSharedPreferences("bac1_prefs", Context.MODE_PRIVATE)
-        val joinedTeacherCode = prefs.getString("joined_teacher_code", "") ?: ""
-        val joinedTeacherName = prefs.getString("joined_teacher_name", "") ?: ""
+        teacherCode = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_CODE) ?: ""
+        teacherName = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_NAME) ?: ""
 
-        val nameView = findViewById<android.widget.TextView>(R.id.contentTeacherName)
-        val noContentText = findViewById<android.widget.TextView>(R.id.noContentText)
+        val nameView = findViewById<TextView>(R.id.contentTeacherName)
+        val noContentText = findViewById<TextView>(R.id.noContentText)
         val recyclerView = findViewById<RecyclerView>(R.id.contentRecyclerView)
-        
+
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        if (joinedTeacherCode.isEmpty()) {
-            nameView.text = "لسه مسجلتش مع أي مدرس"
+        if (teacherCode.isEmpty()) {
+            nameView.text = "حدث خطأ، ارجع واختار المدرس تاني"
             noContentText.visibility = View.VISIBLE
             return
         }
 
-        nameView.text = "أستاذ $joinedTeacherName"
+        nameView.text = "أستاذ $teacherName"
 
-        markStudentAttendance(joinedTeacherCode)
+        markStudentAttendance(teacherCode)
 
         val etQuestion = findViewById<EditText>(R.id.etQuestion)
         val btnSendQuestion = findViewById<Button>(R.id.btnSendQuestion)
@@ -51,17 +53,26 @@ class TeacherContentActivity : AppCompatActivity() {
 
         btnMarkAttendance.text = "✅ تم تسجيل حضورك النهاردة"
         btnMarkAttendance.isEnabled = false
+
         findViewById<Button>(R.id.btnGoToExams).setOnClickListener {
-            startActivity(Intent(this, StudentExamsActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnMyMistakes).setOnClickListener {
-            startActivity(Intent(this, MyMistakesActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnMyQuestions).setOnClickListener {
-            startActivity(Intent(this, MyQuestionsActivity::class.java))
+            val i = Intent(this, StudentExamsActivity::class.java)
+            i.putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
+            startActivity(i)
         }
 
-        loadExistingRating(joinedTeacherCode, ratingBar, btnSubmitRating)
+        findViewById<Button>(R.id.btnMyMistakes).setOnClickListener {
+            val i = Intent(this, MyMistakesActivity::class.java)
+            i.putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
+            startActivity(i)
+        }
+
+        findViewById<Button>(R.id.btnMyQuestions).setOnClickListener {
+            val i = Intent(this, MyQuestionsActivity::class.java)
+            i.putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
+            startActivity(i)
+        }
+
+        loadExistingRating(teacherCode, ratingBar, btnSubmitRating)
 
         btnSubmitRating.setOnClickListener {
             val stars = ratingBar.rating.toDouble()
@@ -69,13 +80,13 @@ class TeacherContentActivity : AppCompatActivity() {
                 Toast.makeText(this, "اختار نجوم الأول", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            submitRating(joinedTeacherCode, stars, btnSubmitRating)
+            submitRating(teacherCode, stars, btnSubmitRating)
         }
 
         btnSendQuestion.setOnClickListener {
             val questionText = etQuestion.text?.toString()?.trim() ?: ""
             if (questionText.isNotEmpty()) {
-                sendStudentQuestion(joinedTeacherCode, questionText)
+                sendStudentQuestion(teacherCode, questionText)
                 etQuestion.setText("")
             } else {
                 Toast.makeText(this, "اكتب سؤالك الأول", Toast.LENGTH_SHORT).show()
@@ -84,7 +95,7 @@ class TeacherContentActivity : AppCompatActivity() {
 
         FirebaseFirestore.getInstance()
             .collection("teacherContent")
-            .whereEqualTo("teacherCode", joinedTeacherCode)
+            .whereEqualTo("teacherCode", teacherCode)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { result ->
@@ -166,7 +177,7 @@ class TeacherContentActivity : AppCompatActivity() {
         val db = FirebaseFirestore.getInstance()
         val sharedPref = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val studentName = sharedPref.getString("student_name", "طالب") ?: "طالب"
-        
+
         val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val attendanceId = "${teacherCode}_${studentName}_$todayDate"
 
