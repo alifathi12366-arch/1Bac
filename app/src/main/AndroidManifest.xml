@@ -22,7 +22,8 @@
 <activity android:name=".TeacherRegisterActivity" android:exported="false"/>
         <activity android:name=".TeacherMyContentActivity" android:exported="false"/>
         <activity android:name=".TeacherQuestionsActivity" android:exported="false"/>
-<activity android:name=".MyMistakesActivity" android:exported="false"/>        
+<activity android:name=".MyMistakesActivity" android:exported="false"/> 
+     <activity android:name=".MyQuestionsActivity" android:exported="false"/>   
         <!-- الشاشة الرئيسية -->
         <activity
             android:name=".MainActivity"
