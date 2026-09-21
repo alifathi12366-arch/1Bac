@@ -112,5 +112,13 @@
             android:text="إرسال"
             android:layout_marginStart="8dp" />
     </LinearLayout>
+    <Button
+        android:id="@+id/btnMyQuestions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="💬 أسئلتي وردود المدرس"
+        android:backgroundTint="#607D8B"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="10dp" />
 
 </LinearLayout>
