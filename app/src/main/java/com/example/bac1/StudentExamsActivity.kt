@@ -59,10 +59,10 @@ class StudentExamsActivity : AppCompatActivity() {
         loadExams()
     }
 
-    private fun loadExams() {
+   private fun loadExams() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val joinedCode = prefs.getString("joined_teacher_code", "") ?: ""
-        val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
+        val joinedCode = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_CODE) ?: ""
+        val studentName = prefs.getString("student_name", "طالب") ?: "طالب" 
 
         val db = FirebaseFirestore.getInstance()
 
