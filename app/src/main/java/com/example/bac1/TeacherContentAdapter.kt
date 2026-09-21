@@ -1,5 +1,7 @@
 package com.example.bac1
 
+import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +15,7 @@ class TeacherContentAdapter(
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val typeLabel: TextView = view.findViewById(R.id.contentTypeLabel)
         val contentText: TextView = view.findViewById(R.id.contentText)
+        val linkText: TextView = view.findViewById(R.id.contentLinkText)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -24,6 +27,17 @@ class TeacherContentAdapter(
         val item = items[position]
         holder.typeLabel.text = if (item.type == "message") "✉️ رسالة" else item.type
         holder.contentText.text = item.text
+
+        if (item.youtubeUrl.isNotBlank()) {
+            holder.linkText.visibility = View.VISIBLE
+            holder.linkText.text = "▶️ فتح رابط الدرس / يوتيوب"
+            holder.linkText.setOnClickListener {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.youtubeUrl))
+                holder.itemView.context.startActivity(intent)
+            }
+        } else {
+            holder.linkText.visibility = View.GONE
+        }
     }
 
     override fun getItemCount(): Int = items.size
