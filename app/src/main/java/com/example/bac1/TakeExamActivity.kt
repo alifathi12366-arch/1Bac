@@ -132,7 +132,7 @@ class TakeExamActivity : AppCompatActivity() {
         }
 
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val teacherCode = prefs.getString("joined_teacher_code", "") ?: ""
+        val teacherCode = exam.teacherCode
 
         val resultData = hashMapOf(
             "examId" to exam.examId,
