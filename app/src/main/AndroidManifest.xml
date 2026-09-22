@@ -25,6 +25,7 @@
 <activity android:name=".MyMistakesActivity" android:exported="false"/> 
      <activity android:name=".MyQuestionsActivity" android:exported="false"/>
         <activity android:name=".MyTeachersActivity" android:exported="false"/>
+        <activity android:name=".WeeklyUpdatesActivity" android:exported="false"/>
         <!-- الشاشة الرئيسية -->
         <activity
             android:name=".MainActivity"
