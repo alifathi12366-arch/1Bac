@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -84,6 +85,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 else -> true
             }
+        }
+
+        findViewById<Button>(R.id.btnWeeklyUpdates).setOnClickListener {
+            startActivity(Intent(this, WeeklyUpdatesActivity::class.java))
         }
     }
 
