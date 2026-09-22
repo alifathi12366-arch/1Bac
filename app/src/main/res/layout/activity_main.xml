@@ -38,6 +38,15 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/text_dark" />
+    <Button
+        android:id="@+id/btnWeeklyUpdates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        android:text="📢 التقييمات الأسبوعية"
+        android:backgroundTint="#E65100"
+        android:textColor="#FFFFFF" />
 
     <ScrollView
         android:layout_width="match_parent"
