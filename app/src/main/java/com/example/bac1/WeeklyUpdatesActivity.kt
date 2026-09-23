@@ -1,5 +1,7 @@
 package com.example.bac1
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebSettings
@@ -8,6 +10,7 @@ import android.webkit.WebViewClient
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.firebase.firestore.FirebaseFirestore
@@ -34,24 +37,23 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                 noUpdatesText.visibility = View.GONE
                 container.removeAllViews()
 
-                // 1. تجميع التقييمات حسب اسم المادة (source أو subject)
+                // 1. تجميع التقييمات حسب المادة (source)
                 val groupedBySubject = result.documents.groupBy { 
                     it.getString("source") ?: "تقييمات عامة" 
                 }
 
-                // 2. عرض كل مادة وتحتها التقييمات مرتبة بالأسبوع
                 for ((subjectName, docs) in groupedBySubject) {
                     
-                    // عنوان المادة (مثلاً: اللغة العربية)
+                    // عنوان المادة (مثل: 📘 اللغة العربية)
                     val headerText = TextView(this)
                     headerText.text = "📘 $subjectName"
                     headerText.textSize = 18f
-                    headerText.setTextColor(android.graphics.Color.parseColor("#FFD700")) // لون ذهبي ممتاز
+                    headerText.setTextColor(android.graphics.Color.parseColor("#FFD700"))
                     headerText.setTypeface(null, android.graphics.Typeface.BOLD)
-                    headerText.setPadding(12, 24, 12, 12)
+                    headerText.setPadding(16, 28, 16, 12)
                     container.addView(headerText)
 
-                    // ترتيب تقييمات المادة نفسها حسب رقم الأسبوع (من الأسبوع 1 إلى الأحدث)
+                    // ترتيب الأسابيع جوه المادة
                     val sortedDocs = docs.sortedBy { 
                         it.getLong("weekNumber") ?: 0L 
                     }
@@ -59,6 +61,7 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                     for (doc in sortedDocs) {
                         val title = doc.getString("title") ?: ""
                         val imageUrl = doc.getString("imageUrl") ?: ""
+                        val pdfUrl = doc.getString("pdfUrl") ?: "" // رابط الـ PDF لو موجود
 
                         val block = layoutInflater.inflate(R.layout.item_weekly_update, container, false)
                         block.findViewById<TextView>(R.id.tvUpdateTitle).text = title
@@ -67,6 +70,22 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                         val imageView = block.findViewById<ImageView>(R.id.ivUpdateImage)
                         if (imageUrl.isNotBlank()) {
                             Glide.with(this).load(imageUrl).into(imageView)
+                        } else {
+                            imageView.visibility = View.GONE
+                        }
+
+                        // عند الضغط على كارت التقييم: يفتح ملف الـ PDF فوراً
+                        block.setOnClickListener {
+                            if (pdfUrl.isNotBlank()) {
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pdfUrl))
+                                    startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(this, "تعذر فتح الرابط", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                Toast.makeText(this, "لا يوجد ملف PDF مرفق مع هذا التقييم", Toast.LENGTH_SHORT).show()
+                            }
                         }
 
                         container.addView(block)
