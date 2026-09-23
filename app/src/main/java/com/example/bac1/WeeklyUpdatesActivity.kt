@@ -37,14 +37,14 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                 noUpdatesText.visibility = View.GONE
                 container.removeAllViews()
 
-                // 1. تجميع التقييمات حسب المادة (source)
+                // تجميع التقييمات حسب اسم المادة (source)
                 val groupedBySubject = result.documents.groupBy { 
                     it.getString("source") ?: "تقييمات عامة" 
                 }
 
                 for ((subjectName, docs) in groupedBySubject) {
                     
-                    // عنوان المادة (مثل: 📘 اللغة العربية)
+                    // عنوان المادة (مثلاً: 📘 اللغة العربية)
                     val headerText = TextView(this)
                     headerText.text = "📘 $subjectName"
                     headerText.textSize = 18f
@@ -53,15 +53,17 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                     headerText.setPadding(16, 28, 16, 12)
                     container.addView(headerText)
 
-                    // ترتيب الأسابيع جوه المادة
-                    val sortedDocs = docs.sortedBy { 
-                        it.getLong("weekNumber") ?: 0L 
+                    // ترتيب آمن جداً للأسابيع يقرأ الرقم بجميع أشكاله
+                    val sortedDocs = docs.sortedBy { doc ->
+                        doc.getLong("weekNumber") 
+                            ?: doc.getString("weekNumber")?.toLongOrNull() 
+                            ?: 0L 
                     }
 
                     for (doc in sortedDocs) {
                         val title = doc.getString("title") ?: ""
                         val imageUrl = doc.getString("imageUrl") ?: ""
-                        val pdfUrl = doc.getString("pdfUrl") ?: "" // رابط الـ PDF لو موجود
+                        val pdfUrl = doc.getString("pdfUrl") ?: ""
 
                         val block = layoutInflater.inflate(R.layout.item_weekly_update, container, false)
                         block.findViewById<TextView>(R.id.tvUpdateTitle).text = title
@@ -69,12 +71,13 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
 
                         val imageView = block.findViewById<ImageView>(R.id.ivUpdateImage)
                         if (imageUrl.isNotBlank()) {
+                            imageView.visibility = View.VISIBLE
                             Glide.with(this).load(imageUrl).into(imageView)
                         } else {
                             imageView.visibility = View.GONE
                         }
 
-                        // عند الضغط على كارت التقييم: يفتح ملف الـ PDF فوراً
+                        // الضغط على التقييم لفتح الـ PDF
                         block.setOnClickListener {
                             if (pdfUrl.isNotBlank()) {
                                 try {
@@ -84,7 +87,7 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                                     Toast.makeText(this, "تعذر فتح الرابط", Toast.LENGTH_SHORT).show()
                                 }
                             } else {
-                                Toast.makeText(this, "لا يوجد ملف PDF مرفق مع هذا التقييم", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "لا يوجد ملف PDF مرفق", Toast.LENGTH_SHORT).show()
                             }
                         }
 
@@ -92,7 +95,7 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                     }
                 }
             }
-            .addOnFailureListener {
+            .addOnFailureListener { e ->
                 noUpdatesText.visibility = View.VISIBLE
             }
     }
