@@ -11,7 +11,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 
 class WeeklyUpdatesActivity : AppCompatActivity() {
 
@@ -25,7 +24,6 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
         val noUpdatesText = findViewById<TextView>(R.id.noUpdatesText)
 
         FirebaseFirestore.getInstance().collection("weeklyUpdates")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
@@ -33,22 +31,50 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                for (doc in result.documents) {
-                    val title = doc.getString("title") ?: ""
-                    val imageUrl = doc.getString("imageUrl") ?: ""
-                    val source = doc.getString("source") ?: ""
+                noUpdatesText.visibility = View.GONE
+                container.removeAllViews()
 
-                    val block = layoutInflater.inflate(R.layout.item_weekly_update, container, false)
-                    block.findViewById<TextView>(R.id.tvUpdateTitle).text = title
-                    block.findViewById<TextView>(R.id.tvUpdateSource).text = source
+                // 1. تجميع التقييمات حسب اسم المادة (source أو subject)
+                val groupedBySubject = result.documents.groupBy { 
+                    it.getString("source") ?: "تقييمات عامة" 
+                }
 
-                    val imageView = block.findViewById<ImageView>(R.id.ivUpdateImage)
-                    if (imageUrl.isNotBlank()) {
-                        Glide.with(this).load(imageUrl).into(imageView)
+                // 2. عرض كل مادة وتحتها التقييمات مرتبة بالأسبوع
+                for ((subjectName, docs) in groupedBySubject) {
+                    
+                    // عنوان المادة (مثلاً: اللغة العربية)
+                    val headerText = TextView(this)
+                    headerText.text = "📘 $subjectName"
+                    headerText.textSize = 18f
+                    headerText.setTextColor(android.graphics.Color.parseColor("#FFD700")) // لون ذهبي ممتاز
+                    headerText.setTypeface(null, android.graphics.Typeface.BOLD)
+                    headerText.setPadding(12, 24, 12, 12)
+                    container.addView(headerText)
+
+                    // ترتيب تقييمات المادة نفسها حسب رقم الأسبوع (من الأسبوع 1 إلى الأحدث)
+                    val sortedDocs = docs.sortedBy { 
+                        it.getLong("weekNumber") ?: 0L 
                     }
 
-                    container.addView(block)
+                    for (doc in sortedDocs) {
+                        val title = doc.getString("title") ?: ""
+                        val imageUrl = doc.getString("imageUrl") ?: ""
+
+                        val block = layoutInflater.inflate(R.layout.item_weekly_update, container, false)
+                        block.findViewById<TextView>(R.id.tvUpdateTitle).text = title
+                        block.findViewById<TextView>(R.id.tvUpdateSource).text = subjectName
+
+                        val imageView = block.findViewById<ImageView>(R.id.ivUpdateImage)
+                        if (imageUrl.isNotBlank()) {
+                            Glide.with(this).load(imageUrl).into(imageView)
+                        }
+
+                        container.addView(block)
+                    }
                 }
+            }
+            .addOnFailureListener {
+                noUpdatesText.visibility = View.VISIBLE
             }
     }
 
