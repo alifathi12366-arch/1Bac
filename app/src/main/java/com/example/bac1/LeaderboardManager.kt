@@ -61,8 +61,8 @@ object LeaderboardManager {
             .addOnSuccessListener { result ->
                 val list = result.documents.mapNotNull { doc ->
                     val rawName = doc.getString("studentName") ?: return@mapNotNull null
-val id = doc.getString("studentId") ?: ""
-val name = "$rawName #$id"
+                    val id = doc.getString("studentId") ?: ""
+                    val name = "$rawName #$id"
                     val points = doc.getLong("points")?.toInt() ?: 0
                     val reachedAt = doc.getLong("reachedAt") ?: Long.MAX_VALUE
                     Triple(name, points, reachedAt)
@@ -76,5 +76,33 @@ val name = "$rawName #$id"
             .addOnFailureListener {
                 onResult(emptyList())
             }
+    }
+
+    fun getHomeSummary(
+        myKey: String,
+        onResult: (top: List<String>, myRank: Int, myPoints: Int) -> Unit
+    ) {
+        FirebaseFirestore.getInstance().collection("leaderboard")
+            .whereEqualTo("month", getCurrentMonthKey())
+            .orderBy("points", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(100)
+            .get()
+            .addOnSuccessListener { result ->
+                val rows = result.documents.mapNotNull { doc ->
+                    val name = doc.getString("studentName") ?: return@mapNotNull null
+                    val id = doc.getString("studentId") ?: ""
+                    val pts = doc.getLong("points")?.toInt() ?: 0
+                    val at = doc.getLong("reachedAt") ?: Long.MAX_VALUE
+                    listOf(name, id, pts, at)
+                }.sortedWith(
+                    compareByDescending<List<Any>> { it[2] as Int }
+                        .thenBy { it[3] as Long }
+                )
+                val top = rows.take(3).map { "${it[0]} #${it[1]} · ${it[2]} نقطة" }
+                val idx = rows.indexOfFirst { it[1] == myKey }
+                val pts = if (idx >= 0) rows[idx][2] as Int else 0
+                onResult(top, if (idx >= 0) idx + 1 else -1, pts)
+            }
+            .addOnFailureListener { onResult(emptyList(), -1, 0) }
     }
 }
