@@ -71,10 +71,15 @@ class WeeklyUpdatesActivity : AppCompatActivity() {
 
                         val imageView = block.findViewById<ImageView>(R.id.ivUpdateImage)
                         if (imageUrl.isNotBlank()) {
-                            imageView.visibility = View.VISIBLE
-                            Glide.with(this).load(imageUrl).into(imageView)
-                        } else {
-                            imageView.visibility = View.GONE
+    imageView.visibility = View.VISIBLE
+    Glide.with(this).load(imageUrl).into(imageView)
+    imageView.setOnClickListener {
+        val i = Intent(this, ImageViewerActivity::class.java)
+        i.putExtra("imageUrl", imageUrl)
+        startActivity(i)
+    }
+} else {
+    imageView.visibility = View.GONE
                         }
 
                         // الضغط على التقييم لفتح الـ PDF
