@@ -14,6 +14,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
+
+    private var uiReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -31,7 +34,8 @@ class MainActivity : AppCompatActivity() {
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        
+        uiReady = true
+
         checkForUpdate()
         loadAd()
         checkDailyLogin()
@@ -86,8 +90,12 @@ class MainActivity : AppCompatActivity() {
                 else -> true
             }
         }
-        findViewById<Button>(R.id.btnDailyChallenge).setOnClickListener {
-    startActivity(Intent(this, DailyChallengeActivity::class.java))
+
+        findViewById<android.view.View>(R.id.cardDailyChallenge).setOnClickListener {
+            startActivity(Intent(this, DailyChallengeActivity::class.java))
+        }
+        findViewById<android.view.View>(R.id.cardMonthly).setOnClickListener {
+            startActivity(Intent(this, LeaderboardActivity::class.java))
         }
 
         findViewById<Button>(R.id.btnWeeklyUpdates).setOnClickListener {
@@ -186,14 +194,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadAd() {
         val webView = findViewById<WebView>(R.id.adWebView) ?: return
-        
+
         val settings = webView.settings
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
-        
+
         settings.cacheMode = WebSettings.LOAD_DEFAULT
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
@@ -236,5 +244,43 @@ class MainActivity : AppCompatActivity() {
                     .putBoolean("teacher_expiring_soon", daysLeft in 0..5)
                     .apply()
             }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (uiReady) refreshHomeCards()
+    }
+
+    private fun refreshHomeCards() {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val id = prefs.all["student_id"]?.toString().orEmpty()
+        val key = if (id.isNotEmpty()) id
+        else (prefs.getString("student_phone", "") ?: "").filter { it.isDigit() }
+
+        val fmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+        fmt.timeZone = java.util.TimeZone.getTimeZone("Africa/Cairo")
+        val today = fmt.format(java.util.Date())
+
+        val tvSub = findViewById<TextView>(R.id.tvDailySub)
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("dailyAttempts").document("${key}_$today").get()
+            .addOnSuccessListener { a ->
+                if (a.exists()) {
+                    val s = a.getLong("score")?.toInt() ?: 0
+                    val t = a.getLong("total")?.toInt() ?: 5
+                    tvSub.text = "أنهيتَ تحدي اليوم ✅ نتيجتك $s من $t"
+                } else {
+                    tvSub.text = "5 أسئلة · نقطة لكل إجابة صحيحة · اضغط للبدء"
+                }
+            }
+
+        LeaderboardManager.getHomeSummary(key) { top, rank, pts ->
+            findViewById<TextView>(R.id.tvTop1).text = "🥇 " + (top.getOrNull(0) ?: "—")
+            findViewById<TextView>(R.id.tvTop2).text = "🥈 " + (top.getOrNull(1) ?: "—")
+            findViewById<TextView>(R.id.tvTop3).text = "🥉 " + (top.getOrNull(2) ?: "—")
+            findViewById<TextView>(R.id.tvMyRank).text =
+                if (rank > 0) "ترتيبك: #$rank · $pts نقطة (اضغط للتفاصيل)"
+                else "لم تظهر في الترتيب بعد (اضغط للتفاصيل)"
+        }
     }
 }
