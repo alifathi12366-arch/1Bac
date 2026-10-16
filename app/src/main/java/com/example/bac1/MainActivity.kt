@@ -35,6 +35,9 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         uiReady = true
+                if ((prefs.getString("student_id", "") ?: "").isEmpty()) {
+            prefs.edit().putString("student_id", (1000..9999).random().toString()).apply()
+                }
 
         checkForUpdate()
         loadAd()
