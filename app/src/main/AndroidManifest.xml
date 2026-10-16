@@ -56,6 +56,10 @@
         <activity android:name=".StudentExamsActivity" />
         <activity android:name=".TakeExamActivity" />
         <activity android:name=".TeacherResultsActivity" />
+        <activity
+    android:name=".DailyChallengeActivity"
+    android:exported="false"
+    android:screenOrientation="portrait" />
 
         <!-- مزود الملفات الأصلي -->
         <provider
