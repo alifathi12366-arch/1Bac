@@ -86,6 +86,9 @@ class MainActivity : AppCompatActivity() {
                 else -> true
             }
         }
+        findViewById<Button>(R.id.btnDailyChallenge).setOnClickListener {
+    startActivity(Intent(this, DailyChallengeActivity::class.java))
+        }
 
         findViewById<Button>(R.id.btnWeeklyUpdates).setOnClickListener {
             startActivity(Intent(this, WeeklyUpdatesActivity::class.java))
