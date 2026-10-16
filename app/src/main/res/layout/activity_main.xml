@@ -39,15 +39,6 @@
         android:textStyle="bold"
         android:textColor="@color/text_dark" />
     <Button
-    android:id="@+id/btnDailyChallenge"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginHorizontal="20dp"
-    android:layout_marginTop="12dp"
-    android:text="🔥 تحدي اليوم"
-    android:backgroundTint="#5C7CFA"
-    android:textColor="#FFFFFF" />
-    <Button
         android:id="@+id/btnWeeklyUpdates"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -67,6 +58,81 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="8dp">
+            <com.google.android.material.card.MaterialCardView
+    android:id="@+id/cardDailyChallenge"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#E65100">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            android:id="@+id/tvDailyTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔥 تحدي اليوم"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/tvDailySub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="5 أسئلة · نقطة لكل إجابة صحيحة"
+            android:textSize="14sp"
+            android:textColor="#FFE0B2" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
+
+<com.google.android.material.card.MaterialCardView
+    android:id="@+id/cardMonthly"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#283593">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏆 المسابقة الشهرية"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+        <TextView android:id="@+id/tvTop1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="🥇 —" android:textSize="15sp" android:textColor="#FFD700" />
+        <TextView android:id="@+id/tvTop2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="🥈 —" android:textSize="15sp" android:textColor="#E0E0E0" />
+        <TextView android:id="@+id/tvTop3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="🥉 —" android:textSize="15sp" android:textColor="#FFAB91" />
+
+        <TextView
+            android:id="@+id/tvMyRank"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="اضغط لعرض الترتيب كاملًا"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="wrap_content"
