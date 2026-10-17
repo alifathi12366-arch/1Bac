@@ -221,12 +221,11 @@ class DailyChallengeActivity : AppCompatActivity() {
             "finishedAt" to FieldValue.serverTimestamp()
         ))
 
-        if (score > 0) {
+               if (score > 0) {
             val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-            val newTotal = prefs.getInt("student_points", 0) + score
-            prefs.edit().putInt("student_points", newTotal).apply()
-            LeaderboardManager.submitScore(studentKey, studentName, newTotal)
-        }
+            val monthPoints = PointsManager.addPoints(prefs, score)
+            LeaderboardManager.submitScore(studentKey, studentName, monthPoints)
+        } 
 
         val title = if (forced) "أُنهي التحدي ⛔" else "انتهى التحدي 🎉"
         val note = if (forced) "غادرتَ التطبيق أثناء التحدي، فاحتُسبت الأسئلة المتبقية خاطئة.\n\n" else ""
