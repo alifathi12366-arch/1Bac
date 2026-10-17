@@ -13,6 +13,7 @@ object LeaderboardManager {
     }
 
     fun submitScore(studentId: String, studentName: String, points: Int) {
+                if (studentId == "1089") return
         val db = FirebaseFirestore.getInstance()
         val monthKey = getCurrentMonthKey()
         val docId = "$monthKey-$studentId"
