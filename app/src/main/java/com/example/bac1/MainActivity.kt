@@ -1,14 +1,12 @@
 package com.example.bac1
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     private var uiReady = false
+    private var challengeDoneToday = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,38 +34,17 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         uiReady = true
-                if ((prefs.getString("student_id", "") ?: "").isEmpty()) {
+
+        if ((prefs.getString("student_id", "") ?: "").isEmpty()) {
             prefs.edit().putString("student_id", (1000..9999).random().toString()).apply()
-                }
+        }
 
         checkForUpdate()
         loadAd()
         checkDailyLogin()
         checkTeacherStatus()
 
-        // 1. إعداد المواد الدراسية مع روابط الدروس والكتب القديمة بالكامل
-        setupSubject(
-            cardId = R.id.cardArabic,
-            subjectName = "اللغة العربية",
-            desc = "القراءة، النصوص، الأدب، النحو",
-            colorHex = "#F5C518",
-            bookLink = "https://drive.google.com/file/d/1_wabND8G53RlCFxyIeIP4NYOAJSesBT7/view?usp=drivesdk",
-            teacherLink = "https://youtube.com/@mohamedsalah.bassthalk?si=BMSSudooCyUUFvoo",
-            bookLink3 = "https://drive.google.com/file/d/1c2peDQbPRr8Kbgu_5pY3VaaRqguWeb_g/view?usp=drivesdk",
-            bookLabel1 = "كتاب القراءة والنصوص",
-            bookLabel3 = "كتاب القصة",
-            subjectKey = "arabic"
-        )
-        setupSubject(R.id.cardEnglish, "اللغة الإنجليزية", "Reading Comprehension & Writing", "#4FA3E3", "https://drive.google.com/file/d/1Z39u9VOs8SH6nrHxZ3IE3SznDxbQPu5V/view?usp=drivesdk", "https://youtube.com/@mahmoudradwan.englishawy?si=IG4D6QJ7oUNo8nVA", subjectKey = "english")
-        setupSubject(R.id.cardMath, "الرياضيات", "الحساب، الدوال، الهندسة", "#3DBFA0", "https://drive.google.com/file/d/1oxls3xtQ4D6UgsXchYI4jB_YU2tedCET/view?usp=drivesdk", "https://youtube.com/@-mrlotfyzahran4469?si=PbZcVrEKd7o8DJYG", subjectKey = "math")
-        setupSubject(R.id.cardScience, "العلوم المتكاملة", "الفيزياء والكيمياء وعلوم الحياة", "#5C7CFA", "https://drive.google.com/file/d/1KtD56ULXsVh1imQaN4JIIwjPoFtjdhdr/view?usp=drivesdk", "https://youtube.com/@gohary?si=Gq5uRgIbQWSCmOnu", subjectKey = "science")
-        setupSubject(R.id.cardPhilosophy, "الفلسفة والمنطق", "المفاهيم الفلسفية والاستدلال", "#9ACD32", "https://drive.google.com/file/d/1WO_PYfE_j5SIOKMpX0UMah85cbkuM1k1/view?usp=drivesdk", "https://youtube.com/@filasofmasr?si=_DUPM-YnU_foOrud", subjectKey = "philosophy")
-        setupSubject(R.id.cardHistory, "التاريخ", "الحضارات القديمة والتاريخ المعاصر", "#E06B9E", "https://drive.google.com/file/d/1bZgJHy_363Ic1J4csuEUOsK3h0VzB0rn/view?usp=drivesdk", "https://youtube.com/@-mostafaarafa4617?si=qrWg04WNl9jGYVdu", subjectKey = "history")
-        setupSubject(R.id.cardProgramming, "البرمجة", "أساسيات البرمجة والذكاء الاصطناعي", "#8E9BAE", "https://drive.google.com/file/d/1AtcPFcl7ZNciYnFwSfFLv3mdX5T9tq7z/view?usp=drivesdk", "", subjectKey = "programming")
-        setupSubject(R.id.cardIslamic, "التربية الإسلامية", "العقيدة، الفقه، والسيرة النبوية", "#7B7FE0", "https://drive.google.com/file/d/1adHx4kesuOnn965bqjGIp-iUrpBDNc1b/view?usp=drivesdk", "", subjectKey = "")
-        setupSubject(R.id.cardFrench, "اللغة الفرنسية", "القواعد والتعبير الكتابي والفهم", "#B58ED6", "https://drive.google.com/file/d/1SWQm7elUNKIM9mEBzogFnbi9ld6UGfbn/view?usp=drivesdk", "", subjectKey = "french")
-
-        // 2. إعداد شريط التنقل السفلي الأصلي وآمن
+        // شريط التنقل السفلي
         val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
         bottomNav?.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -94,53 +72,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<android.view.View>(R.id.cardDailyChallenge).setOnClickListener {
-            startActivity(Intent(this, DailyChallengeActivity::class.java))
+        // الكروت
+        findViewById<View>(R.id.cardSubjects).setOnClickListener {
+            startActivity(Intent(this, SubjectsActivity::class.java))
         }
-        findViewById<android.view.View>(R.id.cardMonthly).setOnClickListener {
-            startActivity(Intent(this, LeaderboardActivity::class.java))
-        }
-
-        findViewById<Button>(R.id.btnWeeklyUpdates).setOnClickListener {
+        findViewById<View>(R.id.cardWeekly).setOnClickListener {
             startActivity(Intent(this, WeeklyUpdatesActivity::class.java))
         }
-    }
-
-    private fun setupSubject(
-        cardId: Int,
-        subjectName: String,
-        desc: String,
-        colorHex: String,
-        bookLink: String,
-        teacherLink: String,
-        bookLink2: String = "",
-        bookLink3: String = "",
-        bookLabel1: String = "فتح كتاب المادة",
-        bookLabel2: String = "فتح كتاب المادة",
-        bookLabel3: String = "فتح كتاب المادة",
-        subjectKey: String = ""
-    ) {
-        val card = findViewById<android.view.View>(cardId) ?: return
-        val nameView = card.findViewById<TextView>(R.id.subjectName)
-        val descView = card.findViewById<TextView>(R.id.subjectDesc)
-        val iconBox = card.findViewById<LinearLayout>(R.id.iconBox)
-
-        nameView?.text = subjectName
-        descView?.text = desc
-        iconBox?.setBackgroundColor(Color.parseColor(colorHex))
-
-        card.setOnClickListener {
-            val intent = Intent(this, SubjectDetailActivity::class.java)
-            intent.putExtra("subjectName", subjectName)
-            intent.putExtra("subjectKey", subjectKey)
-            intent.putExtra("bookLink", bookLink)
-            intent.putExtra("bookLink2", bookLink2)
-            intent.putExtra("bookLink3", bookLink3)
-            intent.putExtra("bookLabel1", bookLabel1)
-            intent.putExtra("bookLabel2", bookLabel2)
-            intent.putExtra("bookLabel3", bookLabel3)
-            intent.putExtra("teacherLink", teacherLink)
-            startActivity(intent)
+        findViewById<View>(R.id.cardDailyChallenge).setOnClickListener {
+            if (challengeDoneToday) {
+                startActivity(Intent(this, DailyChallengeActivity::class.java))
+            } else {
+                val i = Intent(this, InterstitialActivity::class.java)
+                i.putExtra("TARGET_CLASS", DailyChallengeActivity::class.java.name)
+                startActivity(i)
+            }
+        }
+        findViewById<View>(R.id.cardMonthly).setOnClickListener {
+            val i = Intent(this, InterstitialActivity::class.java)
+            i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
+            startActivity(i)
         }
     }
 
@@ -269,21 +220,20 @@ class MainActivity : AppCompatActivity() {
             .collection("dailyAttempts").document("${key}_$today").get()
             .addOnSuccessListener { a ->
                 if (a.exists()) {
+                    challengeDoneToday = true
                     val s = a.getLong("score")?.toInt() ?: 0
                     val t = a.getLong("total")?.toInt() ?: 5
                     tvSub.text = "أنهيتَ تحدي اليوم ✅ نتيجتك $s من $t"
                 } else {
+                    challengeDoneToday = false
                     tvSub.text = "5 أسئلة · نقطة لكل إجابة صحيحة · اضغط للبدء"
                 }
             }
 
-        LeaderboardManager.getHomeSummary(key) { top, rank, pts ->
-            findViewById<TextView>(R.id.tvTop1).text = "🥇 " + (top.getOrNull(0) ?: "—")
-            findViewById<TextView>(R.id.tvTop2).text = "🥈 " + (top.getOrNull(1) ?: "—")
-            findViewById<TextView>(R.id.tvTop3).text = "🥉 " + (top.getOrNull(2) ?: "—")
+        LeaderboardManager.getHomeSummary(key) { _, rank, pts ->
             findViewById<TextView>(R.id.tvMyRank).text =
-                if (rank > 0) "ترتيبك: #$rank · $pts نقطة (اضغط للتفاصيل)"
-                else "لم تظهر في الترتيب بعد (اضغط للتفاصيل)"
+                if (rank > 0) "ترتيبك: #$rank · $pts نقطة · اضغط للتفاصيل"
+                else "اضغط للتفاصيل"
         }
     }
 }
