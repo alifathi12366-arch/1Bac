@@ -21,6 +21,9 @@ class AdminQuestionsActivity : AppCompatActivity() {
 
     private val fields = mutableListOf<List<EditText>>()
     private val groups = mutableListOf<RadioGroup>()
+    private lateinit var etDate: EditText
+    private lateinit var etSubject: EditText
+    private lateinit var etTimer: EditText
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -41,29 +44,49 @@ class AdminQuestionsActivity : AppCompatActivity() {
         return e
     }
 
+    private fun dateString(plusDays: Int): String {
+        val tz = TimeZone.getTimeZone("Africa/Cairo")
+        val cal = Calendar.getInstance(tz)
+        cal.add(Calendar.DAY_OF_YEAR, plusDays)
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        fmt.timeZone = tz
+        return fmt.format(cal.time)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_questions)
         val container = findViewById<LinearLayout>(R.id.adminContainer)
 
-        // تاريخ الغد بتوقيت القاهرة كقيمة افتراضية
-        val cal = Calendar.getInstance(TimeZone.getTimeZone("Africa/Cairo"))
-        cal.add(Calendar.DAY_OF_YEAR, 1)
-        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        fmt.timeZone = TimeZone.getTimeZone("Africa/Cairo")
-
-        container.addView(label("➕ إضافة أسئلة تحدي اليوم", 20f))
+        container.addView(label("➕ إضافة / تعديل أسئلة تحدي اليوم", 20f))
         container.addView(label("التاريخ (yyyy-MM-dd)"))
-        val etDate = edit("2026-10-17")
-        etDate.setText(fmt.format(cal.time))
+        etDate = edit("2026-10-17")
+        etDate.setText(dateString(0))
         container.addView(etDate)
 
+        // أزرار التاريخ والتحميل
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        fun smallBtn(text: String, onClick: () -> Unit): Button {
+            val b = Button(this)
+            b.text = text
+            val p = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            p.marginEnd = dp(4)
+            b.layoutParams = p
+            b.setOnClickListener { onClick() }
+            return b
+        }
+        row.addView(smallBtn("اليوم") { etDate.setText(dateString(0)) })
+        row.addView(smallBtn("بكرة") { etDate.setText(dateString(1)) })
+        row.addView(smallBtn("📥 تحميل الأسئلة") { loadExisting() })
+        container.addView(row)
+
         container.addView(label("المادة"))
-        val etSubject = edit("الرياضيات")
+        etSubject = edit("الرياضيات")
         container.addView(etSubject)
 
         container.addView(label("وقت كل سؤال بالثواني"))
-        val etTimer = edit("25")
+        etTimer = edit("25")
         etTimer.inputType = InputType.TYPE_CLASS_NUMBER
         etTimer.setText("25")
         container.addView(etTimer)
@@ -134,5 +157,40 @@ class AdminQuestionsActivity : AppCompatActivity() {
                     Toast.makeText(this, "فشل الحفظ: ${it.message}", Toast.LENGTH_LONG).show()
                 }
         }
+    }
+
+    // تحميل أسئلة تاريخ محفوظ لتعديلها
+    private fun loadExisting() {
+        val date = etDate.text.toString().trim()
+        if (!Regex("\\d{4}-\\d{2}-\\d{2}").matches(date)) {
+            Toast.makeText(this, "اكتب التاريخ بشكل صحيح", Toast.LENGTH_SHORT).show()
+            return
+        }
+        FirebaseFirestore.getInstance().collection("dailyChallenges").document(date).get()
+            .addOnSuccessListener { d ->
+                if (!d.exists()) {
+                    Toast.makeText(this, "لا توجد أسئلة محفوظة بهذا التاريخ", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+                etSubject.setText(d.getString("subject") ?: "")
+                etTimer.setText((d.getLong("timerSeconds") ?: 25L).toString())
+                val raw = d.get("questions") as? List<*> ?: emptyList<Any>()
+                raw.forEachIndexed { i, item ->
+                    if (i >= fields.size) return@forEachIndexed
+                    val m = item as? Map<*, *> ?: return@forEachIndexed
+                    fields[i][0].setText(m["text"] as? String ?: "")
+                    val opts = (m["options"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                    for (k in 0 until 4) fields[i][k + 1].setText(opts.getOrNull(k) ?: "")
+                    val c = (m["correctIndex"] as? Number)?.toInt() ?: -1
+                    groups[i].clearCheck()
+                    if (c in 0 until groups[i].childCount) {
+                        (groups[i].getChildAt(c) as RadioButton).isChecked = true
+                    }
+                }
+                Toast.makeText(this, "تم التحميل ✏️ عدّل ثم اضغط حفظ", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "فشل التحميل: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
