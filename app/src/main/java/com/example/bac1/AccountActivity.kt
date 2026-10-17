@@ -3,11 +3,11 @@ package com.example.bac1
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import java.util.UUID
 
 class AccountActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,8 +38,8 @@ class AccountActivity : AppCompatActivity() {
             welcomeText.text = "أهلاً بيك يا $savedName (كودك: #$studentId) 👋"
         }
 
-        val points = prefs.getInt("student_points", 0)
-        pointsText.text = "نقاطك: $points"
+        val points = PointsManager.getMonthPoints(prefs)
+        pointsText.text = "نقاطك هذا الشهر: $points (الإجمالي: ${prefs.getInt("student_points", 0)})"
 
         val lastLogin = prefs.getString("last_login_date", "")
         if (!lastLogin.isNullOrEmpty()) {
@@ -61,7 +61,9 @@ class AccountActivity : AppCompatActivity() {
                 LeaderboardManager.submitScore(studentId, name, points)
             }
         }
-                welcomeText.setOnLongClickListener {
+
+        // ضغطة طويلة مخفية لصفحة الأدمن (لكودك فقط + رقم سري)
+        welcomeText.setOnLongClickListener {
             if (studentId == "1089") {
                 val pinInput = EditText(this)
                 pinInput.inputType = android.text.InputType.TYPE_CLASS_NUMBER or
@@ -78,21 +80,22 @@ class AccountActivity : AppCompatActivity() {
                     .show()
             }
             true
-                }
+        }
 
         facebookButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/share/1F8T5LvFYz/"))
             startActivity(intent)
         }
 
-        findViewById<android.widget.TextView>(R.id.teacherRegisterButton).setOnClickListener {
+        findViewById<TextView>(R.id.teacherRegisterButton).setOnClickListener {
             startActivity(Intent(this, TeacherRegisterActivity::class.java))
         }
 
-        findViewById<android.widget.TextView>(R.id.teacherCodeButton).setOnClickListener {
+        findViewById<TextView>(R.id.teacherCodeButton).setOnClickListener {
             startActivity(Intent(this, TeacherCodeActivity::class.java))
         }
 
-                findViewById<Button>(R.id.leaderboardButton).visibility = android.view.View.GONE
+        // إخفاء زرار المسابقة من الحساب (موجودة الآن في الرئيسية)
+        findViewById<Button>(R.id.leaderboardButton).visibility = View.GONE
     }
 }
