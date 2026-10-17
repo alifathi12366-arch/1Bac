@@ -51,6 +51,7 @@
         <activity android:name=".SetJoinCodeActivity" android:exported="false" />
         <activity android:name=".JoinTeacherActivity" android:exported="false" />
         <activity android:name=".TeacherContentActivity" android:exported="false" />
+        <activity android:name=".SubjectsActivity" android:exported="false" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
