@@ -61,6 +61,24 @@ class AccountActivity : AppCompatActivity() {
                 LeaderboardManager.submitScore(studentId, name, points)
             }
         }
+                welcomeText.setOnLongClickListener {
+            if (studentId == "1089") {
+                val pinInput = EditText(this)
+                pinInput.inputType = android.text.InputType.TYPE_CLASS_NUMBER or
+                        android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("الرقم السري")
+                    .setView(pinInput)
+                    .setPositiveButton("دخول") { _, _ ->
+                        if (pinInput.text.toString() == "7391") {
+                            startActivity(Intent(this, AdminQuestionsActivity::class.java))
+                        }
+                    }
+                    .setNegativeButton("إلغاء", null)
+                    .show()
+            }
+            true
+                }
 
         facebookButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/share/1F8T5LvFYz/"))
