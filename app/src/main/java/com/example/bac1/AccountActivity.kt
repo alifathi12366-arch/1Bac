@@ -93,10 +93,6 @@ class AccountActivity : AppCompatActivity() {
             startActivity(Intent(this, TeacherCodeActivity::class.java))
         }
 
-        findViewById<Button>(R.id.leaderboardButton).setOnClickListener {
-            val i = Intent(this, InterstitialActivity::class.java)
-            i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
-            startActivity(i)
-        }
+                findViewById<Button>(R.id.leaderboardButton).visibility = android.view.View.GONE
     }
 }
