@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkDailyLogin() {
+        private fun checkDailyLogin() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             .format(java.util.Date())
@@ -103,13 +103,16 @@ class MainActivity : AppCompatActivity() {
         val lastLoginDate = prefs.getString("last_login_date", "")
 
         if (lastLoginDate != today) {
-            val currentPoints = prefs.getInt("student_points", 0)
-            prefs.edit()
-                .putInt("student_points", currentPoints + 1)
-                .putString("last_login_date", today)
-                .apply()
+            val month = PointsManager.addPoints(prefs, 1)
+            prefs.edit().putString("last_login_date", today).apply()
+
+            val id = prefs.getString("student_id", "") ?: ""
+            val name = prefs.getString("student_name", "") ?: ""
+            if (id.isNotEmpty() && name.isNotEmpty()) {
+                LeaderboardManager.submitScore(id, name, month)
+            }
         }
-    }
+        }
 
     private fun checkForUpdate() {
         val queue = com.android.volley.toolbox.Volley.newRequestQueue(this)
