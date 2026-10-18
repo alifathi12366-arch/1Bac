@@ -211,7 +211,7 @@ class MainActivity : AppCompatActivity() {
         if (uiReady) refreshHomeCards()
     }
 
-    private fun refreshHomeCards() {
+        private fun refreshHomeCards() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val id = prefs.all["student_id"]?.toString().orEmpty()
         val key = if (id.isNotEmpty()) id
@@ -222,8 +222,8 @@ class MainActivity : AppCompatActivity() {
         val today = fmt.format(java.util.Date())
 
         val tvSub = findViewById<TextView>(R.id.tvDailySub)
-        com.google.firebase.firestore.FirebaseFirestore.getInstance()
-            .collection("dailyAttempts").document("${key}_$today").get()
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        db.collection("dailyAttempts").document("${key}_$today").get()
             .addOnSuccessListener { a ->
                 if (a.exists()) {
                     challengeDoneToday = true
@@ -232,7 +232,12 @@ class MainActivity : AppCompatActivity() {
                     tvSub.text = "أنهيتَ تحدي اليوم ✅ نتيجتك $s من $t"
                 } else {
                     challengeDoneToday = false
-                    tvSub.text = "5 أسئلة · نقطة لكل إجابة صحيحة · اضغط للبدء"
+                    db.collection("dailyChallenges").document(today).get()
+                        .addOnSuccessListener { c ->
+                            val n = (c.get("questions") as? List<*>)?.size ?: 0
+                            tvSub.text = if (n > 0) "$n أسئلة · نقطة لكل إجابة صحيحة · اضغط للبدء"
+                            else "لا يوجد تحدٍّ لليوم بعد"
+                        }
                 }
             }
 
