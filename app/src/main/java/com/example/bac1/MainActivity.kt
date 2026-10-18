@@ -88,6 +88,9 @@ class MainActivity : AppCompatActivity() {
                 startActivity(i)
             }
         }
+        findViewById<View>(R.id.cardFriends).setOnClickListener {
+            startActivity(Intent(this, ChallengeHomeActivity::class.java))
+        }
         findViewById<View>(R.id.cardMonthly).setOnClickListener {
             val i = Intent(this, InterstitialActivity::class.java)
             i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
@@ -95,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-        private fun checkDailyLogin() {
+    private fun checkDailyLogin() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             .format(java.util.Date())
@@ -112,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                 LeaderboardManager.submitScore(id, name, month)
             }
         }
-        }
+    }
 
     private fun checkForUpdate() {
         val queue = com.android.volley.toolbox.Volley.newRequestQueue(this)
