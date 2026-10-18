@@ -3,9 +3,12 @@ package com.example.bac1
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +18,8 @@ class ChallengeHomeActivity : AppCompatActivity() {
     private lateinit var container: LinearLayout
     private var studentId = ""
     private var studentName = ""
+    private var selectedCount = 5
+    private var creating = false
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -65,12 +70,29 @@ class ChallengeHomeActivity : AppCompatActivity() {
         container.addView(tv(balText, 18f, true))
         container.addView(tv("إنشاء غرفة يكلّف نقطة واحدة. الدخول بكود صديقك مجاني. الفائز +2 والتعادل +1.", 13f))
 
+        container.addView(tv("عدد الأسئلة", 16f, true))
+        val rg = RadioGroup(this)
+        rg.orientation = RadioGroup.HORIZONTAL
+        listOf(5, 10, 15).forEach { n ->
+            val rb = RadioButton(this)
+            rb.id = View.generateViewId()
+            rb.text = "$n"
+            rb.setTextColor(0xFF000000.toInt())
+            rb.isChecked = (n == selectedCount)
+            rb.setOnClickListener { selectedCount = n }
+            rg.addView(rb)
+        }
+        container.addView(rg)
+
         container.addView(btn("➕ إنشاء غرفة جديدة (بنقطة)", 0xFFE65100) {
             if (balance == 0) {
                 Toast.makeText(this, "رصيدك انتهى، اربح نقاطًا من الغرف", Toast.LENGTH_SHORT).show()
                 return@btn
             }
-            ChallengeManager.createRoom(studentId, studentName) { code, err ->
+            if (creating) return@btn
+            creating = true
+            ChallengeManager.createRoom(studentId, studentName, selectedCount) { code, err ->
+                creating = false
                 if (code != null) openRoom(code)
                 else Toast.makeText(this, err ?: "حدث خطأ", Toast.LENGTH_LONG).show()
             }
@@ -95,17 +117,19 @@ class ChallengeHomeActivity : AppCompatActivity() {
         })
 
         container.addView(tv("غرفي (آخر 24 ساعة)", 16f, true))
-        ChallengeManager.myRooms(studentId) { rooms ->
-            if (rooms.isEmpty()) {
-                container.addView(tv("لا توجد غرف حاليًا.", 14f))
-            } else {
-                rooms.forEach { r ->
-                    val code = r.getString("code") ?: return@forEach
-                    val owner = r.getString("ownerName") ?: ""
-                    val count = (r.get("playerIds") as? List<*>)?.size ?: 0
-                    container.addView(btn("غرفة $code · أنشأها $owner · $count لاعب", 0xFF00796B) {
-                        openRoom(code)
-                    })
+        if (balance != -2) {
+            ChallengeManager.myRooms(studentId) { rooms ->
+                if (rooms.isEmpty()) {
+                    container.addView(tv("لا توجد غرف حاليًا.", 14f))
+                } else {
+                    rooms.forEach { r ->
+                        val code = r.getString("code") ?: return@forEach
+                        val owner = r.getString("ownerName") ?: ""
+                        val count = (r.get("playerIds") as? List<*>)?.size ?: 0
+                        container.addView(btn("غرفة $code · أنشأها $owner · $count لاعب", 0xFF00796B) {
+                            openRoom(code)
+                        })
+                    }
                 }
             }
         }
