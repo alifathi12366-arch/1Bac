@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 
 class RoomLobbyActivity : AppCompatActivity() {
@@ -16,11 +17,12 @@ class RoomLobbyActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var container: LinearLayout
     private var code = ""
+    private var studentId = ""
 
     private val refresher = object : Runnable {
         override fun run() {
             load()
-            handler.postDelayed(this, 8000)
+            handler.postDelayed(this, 15000)
         }
     }
 
@@ -36,11 +38,22 @@ class RoomLobbyActivity : AppCompatActivity() {
         return t
     }
 
+    private fun btn(text: String, color: Long, onClick: () -> Unit): Button {
+        val b = Button(this)
+        b.text = text
+        b.setTextColor(0xFFFFFFFF.toInt())
+        b.backgroundTintList = android.content.res.ColorStateList.valueOf(color.toInt())
+        b.setOnClickListener { onClick() }
+        return b
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_questions)
         container = findViewById(R.id.adminContainer)
         code = intent.getStringExtra("code") ?: ""
+        studentId = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+            .getString("student_id", "") ?: ""
     }
 
     override fun onResume() {
@@ -54,48 +67,88 @@ class RoomLobbyActivity : AppCompatActivity() {
     }
 
     private fun load() {
-        FirebaseFirestore.getInstance().collection("rooms").document(code).get()
+        val db = FirebaseFirestore.getInstance()
+        db.collection("rooms").document(code).get()
             .addOnSuccessListener { d ->
                 if (!d.exists()) {
                     Toast.makeText(this, "الغرفة غير موجودة", Toast.LENGTH_SHORT).show()
                     finish()
                     return@addOnSuccessListener
                 }
-                render(d)
+                db.collection("roomResults").whereEqualTo("code", code).get()
+                    .addOnSuccessListener { res -> render(d, res.documents) }
+                    .addOnFailureListener { render(d, emptyList()) }
             }
     }
 
-    private fun render(d: com.google.firebase.firestore.DocumentSnapshot) {
+    private fun render(d: DocumentSnapshot, results: List<DocumentSnapshot>) {
         container.removeAllViews()
         val owner = d.getString("ownerName") ?: ""
         val expires = d.getLong("expiresAt") ?: 0L
+        val expired = System.currentTimeMillis() > expires
         val hoursLeft = ((expires - System.currentTimeMillis()) / 3600000L).coerceAtLeast(0)
         val max = (d.getLong("maxPlayers") ?: 10L).toInt()
+        val qCount = (d.get("questions") as? List<*>)?.size ?: 0
         val players = (d.get("players") as? List<*>)?.mapNotNull { it as? Map<*, *> } ?: emptyList()
+        val byId = results.associateBy { it.getString("studentId") ?: "" }
+        val mine = byId[studentId]
 
         container.addView(tv("⚔️ غرفة التحدي", 22f, true))
         container.addView(tv("الكود: $code", 28f, true))
-        container.addView(tv("أنشأها: $owner · تنتهي بعد $hoursLeft ساعة", 13f))
+        container.addView(tv(
+            "أنشأها: $owner · $qCount سؤال · " +
+                    (if (expired) "انتهت صلاحيتها" else "تنتهي بعد $hoursLeft ساعة"), 13f))
 
-        val share = Button(this)
-        share.text = "📤 شارك الكود مع أصحابك"
-        share.setTextColor(0xFFFFFFFF.toInt())
-        share.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF25D366.toInt())
-        share.setOnClickListener {
+        val share = btn("📤 شارك الكود مع أصحابك", 0xFF25D366) {
             val i = Intent(Intent.ACTION_SEND)
             i.type = "text/plain"
-            i.putExtra(Intent.EXTRA_TEXT, "تحداك $owner في تطبيق أولى بكالوريا ⚔️\nادخل بكود الغرفة: $code\nمن: اتحدي أصحابك")
+            i.putExtra(Intent.EXTRA_TEXT,
+                "تحداك $owner في تطبيق أولى بكالوريا ⚔️\nادخل بكود الغرفة: $code\nمن: اتحدي أصحابك")
             startActivity(Intent.createChooser(i, "مشاركة الكود"))
         }
         container.addView(share)
 
-        container.addView(tv("اللاعبون (${players.size} من $max)", 18f, true))
-        players.forEachIndexed { idx, p ->
-            val n = p["name"] as? String ?: ""
-            val id = p["id"] as? String ?: ""
-            container.addView(tv("${idx + 1}. $n #$id", 16f))
+        // زرار الحل
+        when {
+            qCount == 0 -> container.addView(
+                tv("هذه غرفة قديمة بدون أسئلة. أنشئ غرفة جديدة.", 14f))
+            expired -> container.addView(tv("انتهت صلاحية الغرفة.", 14f))
+            mine == null -> container.addView(btn("▶️ ابدأ الحل", 0xFFE65100) {
+                val i = Intent(this, InterstitialActivity::class.java)
+                i.putExtra("TARGET_CLASS", RoomPlayActivity::class.java.name)
+                i.putExtra("code", code)
+                startActivity(i)
+            })
+            else -> {
+                val s = (mine.getLong("score") ?: 0L)
+                val t = (mine.getLong("total") ?: qCount.toLong())
+                container.addView(tv(
+                    if (mine.getBoolean("finished") == true) "✅ حللتَ التحدي: $s من $t"
+                    else "⌛ بدأتَ الحل ولم تُكمل (انتهت محاولتك)", 16f, true))
+            }
         }
 
-        container.addView(tv("🚧 بدء الحل والنتائج في التحديث القادم. ارجع للغرفة بعدها.", 14f))
+        container.addView(btn("🔄 تحديث", 0xFF546E7A) { load() })
+
+        // اللاعبون والترتيب المبدئي
+        container.addView(tv("اللاعبون (${players.size} من $max)", 18f, true))
+        val rows = players.map { p -> (p["id"] as? String ?: "") to (p["name"] as? String ?: "") }
+        val sorted = rows.sortedWith(compareBy<Pair<String, String>>(
+            { if (byId[it.first]?.getBoolean("finished") == true) 0 else 1 },
+            { -(byId[it.first]?.getLong("score") ?: 0L) },
+            { byId[it.first]?.getLong("timeMs") ?: Long.MAX_VALUE }
+        ))
+        sorted.forEachIndexed { idx, (id, name) ->
+            val r = byId[id]
+            val line = when {
+                r == null -> "⏳ لم يحل بعد"
+                r.getBoolean("finished") != true -> "⌛ لم يُكمل"
+                else -> "✅ ${r.getLong("score") ?: 0} من ${r.getLong("total") ?: qCount}" +
+                        " · ${(r.getLong("timeMs") ?: 0L) / 1000} ث"
+            }
+            container.addView(tv("${idx + 1}. $name #$id\n     $line", 15f))
+        }
+
+        container.addView(tv("🚧 الفائز والنقاط والرسائل الجاهزة في التحديثات القادمة. الصفحة تتحدّث كل 15 ثانية.", 13f))
     }
 }
