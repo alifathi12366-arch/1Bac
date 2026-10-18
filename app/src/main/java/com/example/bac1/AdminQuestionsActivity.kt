@@ -24,6 +24,8 @@ class AdminQuestionsActivity : AppCompatActivity() {
     private lateinit var etDate: EditText
     private lateinit var etSubject: EditText
     private lateinit var etTimer: EditText
+    private lateinit var etCount: EditText
+    private lateinit var questionsBox: LinearLayout
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -53,6 +55,33 @@ class AdminQuestionsActivity : AppCompatActivity() {
         return fmt.format(cal.time)
     }
 
+    // يبني خانات الأسئلة بالعدد المطلوب (1 إلى 20)
+    private fun buildQuestions(count: Int) {
+        questionsBox.removeAllViews()
+        fields.clear()
+        groups.clear()
+        for (n in 1..count) {
+            questionsBox.addView(label("السؤال $n", 18f))
+            val q = edit("نص السؤال", true)
+            val o = listOf(edit("الاختيار أ"), edit("الاختيار ب"), edit("الاختيار ج"), edit("الاختيار د"))
+            questionsBox.addView(q)
+            o.forEach { questionsBox.addView(it) }
+            questionsBox.addView(label("الإجابة الصحيحة:", 14f))
+            val rg = RadioGroup(this)
+            rg.orientation = RadioGroup.HORIZONTAL
+            listOf("أ", "ب", "ج", "د").forEach { name ->
+                val rb = RadioButton(this)
+                rb.id = View.generateViewId()
+                rb.text = name
+                rb.setTextColor(0xFF000000.toInt())
+                rg.addView(rb)
+            }
+            questionsBox.addView(rg)
+            fields.add(listOf(q) + o)
+            groups.add(rg)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_questions)
@@ -64,7 +93,6 @@ class AdminQuestionsActivity : AppCompatActivity() {
         etDate.setText(dateString(0))
         container.addView(etDate)
 
-        // أزرار التاريخ والتحميل
         val row = LinearLayout(this)
         row.orientation = LinearLayout.HORIZONTAL
         fun smallBtn(text: String, onClick: () -> Unit): Button {
@@ -91,26 +119,31 @@ class AdminQuestionsActivity : AppCompatActivity() {
         etTimer.setText("25")
         container.addView(etTimer)
 
-        for (n in 1..5) {
-            container.addView(label("السؤال $n", 18f))
-            val q = edit("نص السؤال", true)
-            val o = listOf(edit("الاختيار أ"), edit("الاختيار ب"), edit("الاختيار ج"), edit("الاختيار د"))
-            container.addView(q)
-            o.forEach { container.addView(it) }
-            container.addView(label("الإجابة الصحيحة:", 14f))
-            val rg = RadioGroup(this)
-            rg.orientation = RadioGroup.HORIZONTAL
-            listOf("أ", "ب", "ج", "د").forEach { name ->
-                val rb = RadioButton(this)
-                rb.id = View.generateViewId()
-                rb.text = name
-                rb.setTextColor(0xFF000000.toInt())
-                rg.addView(rb)
+        container.addView(label("عدد الأسئلة (من 1 إلى 20)"))
+        val countRow = LinearLayout(this)
+        countRow.orientation = LinearLayout.HORIZONTAL
+        etCount = edit("5")
+        etCount.inputType = InputType.TYPE_CLASS_NUMBER
+        etCount.setText("5")
+        etCount.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        countRow.addView(etCount)
+        val applyBtn = Button(this)
+        applyBtn.text = "تطبيق"
+        applyBtn.setOnClickListener {
+            val c = etCount.text.toString().trim().toIntOrNull() ?: 5
+            if (c !in 1..20) {
+                Toast.makeText(this, "العدد من 1 إلى 20", Toast.LENGTH_SHORT).show()
+            } else {
+                buildQuestions(c)
             }
-            container.addView(rg)
-            fields.add(listOf(q) + o)
-            groups.add(rg)
         }
+        countRow.addView(applyBtn)
+        container.addView(countRow)
+
+        questionsBox = LinearLayout(this)
+        questionsBox.orientation = LinearLayout.VERTICAL
+        container.addView(questionsBox)
+        buildQuestions(5)
 
         val btn = Button(this)
         btn.text = "حفظ الأسئلة"
@@ -132,7 +165,7 @@ class AdminQuestionsActivity : AppCompatActivity() {
             }
 
             val questions = mutableListOf<HashMap<String, Any>>()
-            for (i in 0 until 5) {
+            for (i in 0 until fields.size) {
                 val f = fields[i]
                 val text = f[0].text.toString().trim()
                 val opts = f.drop(1).map { it.text.toString().trim() }
@@ -149,7 +182,7 @@ class AdminQuestionsActivity : AppCompatActivity() {
             FirebaseFirestore.getInstance().collection("dailyChallenges").document(date)
                 .set(hashMapOf("subject" to subject, "timerSeconds" to timer, "questions" to questions))
                 .addOnSuccessListener {
-                    Toast.makeText(this, "تم الحفظ ✅ تحدي $date", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "تم الحفظ ✅ تحدي $date (${questions.size} أسئلة)", Toast.LENGTH_LONG).show()
                     finish()
                 }
                 .addOnFailureListener {
@@ -159,7 +192,6 @@ class AdminQuestionsActivity : AppCompatActivity() {
         }
     }
 
-    // تحميل أسئلة تاريخ محفوظ لتعديلها
     private fun loadExisting() {
         val date = etDate.text.toString().trim()
         if (!Regex("\\d{4}-\\d{2}-\\d{2}").matches(date)) {
@@ -175,6 +207,9 @@ class AdminQuestionsActivity : AppCompatActivity() {
                 etSubject.setText(d.getString("subject") ?: "")
                 etTimer.setText((d.getLong("timerSeconds") ?: 25L).toString())
                 val raw = d.get("questions") as? List<*> ?: emptyList<Any>()
+                val count = raw.size.coerceIn(1, 20)
+                etCount.setText(count.toString())
+                buildQuestions(count)
                 raw.forEachIndexed { i, item ->
                     if (i >= fields.size) return@forEachIndexed
                     val m = item as? Map<*, *> ?: return@forEachIndexed
