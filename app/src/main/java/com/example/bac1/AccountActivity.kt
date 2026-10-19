@@ -62,7 +62,7 @@ class AccountActivity : AppCompatActivity() {
             }
         }
 
-        // ضغطة طويلة مخفية لصفحة الأدمن (لكودك فقط + رقم سري)
+        // ضغطة طويلة مخفية للأدمن (لكودك فقط + رقم سري)
         welcomeText.setOnLongClickListener {
             if (studentId == "1089") {
                 val pinInput = EditText(this)
@@ -73,7 +73,16 @@ class AccountActivity : AppCompatActivity() {
                     .setView(pinInput)
                     .setPositiveButton("دخول") { _, _ ->
                         if (pinInput.text.toString() == "7391") {
-                            startActivity(Intent(this, AdminQuestionsActivity::class.java))
+                            android.app.AlertDialog.Builder(this)
+                                .setTitle("لوحة الأدمن")
+                                .setItems(arrayOf("➕ أسئلة اليوم", "📢 التقييمات الأسبوعية")) { _, which ->
+                                    if (which == 0) {
+                                        startActivity(Intent(this, AdminQuestionsActivity::class.java))
+                                    } else {
+                                        startActivity(Intent(this, AdminWeeklyActivity::class.java))
+                                    }
+                                }
+                                .show()
                         }
                     }
                     .setNegativeButton("إلغاء", null)
@@ -95,8 +104,8 @@ class AccountActivity : AppCompatActivity() {
             startActivity(Intent(this, TeacherCodeActivity::class.java))
         }
 
-        // إخفاء زرار المسابقة من الحساب (موجودة الآن في الرئيسية)
-                val reportBtn = findViewById<Button>(R.id.leaderboardButton)
+        // زرار مستواي الدراسي (بنستخدم الزرار القديم)
+        val reportBtn = findViewById<Button>(R.id.leaderboardButton)
         reportBtn.text = "📊 مستواي الدراسي"
         reportBtn.visibility = View.VISIBLE
         reportBtn.setOnClickListener { startActivity(Intent(this, ReportActivity::class.java)) }
