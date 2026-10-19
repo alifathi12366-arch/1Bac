@@ -18,6 +18,7 @@ class RoomLobbyActivity : AppCompatActivity() {
     private lateinit var container: LinearLayout
     private var code = ""
     private var studentId = ""
+    private var studentName = ""
     private var settling = false
 
     private val refresher = object : Runnable {
@@ -53,8 +54,9 @@ class RoomLobbyActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin_questions)
         container = findViewById(R.id.adminContainer)
         code = intent.getStringExtra("code") ?: ""
-        studentId = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-            .getString("student_id", "") ?: ""
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        studentId = prefs.getString("student_id", "") ?: ""
+        studentName = prefs.getString("student_name", "طالب") ?: "طالب"
     }
 
     override fun onResume() {
@@ -77,12 +79,14 @@ class RoomLobbyActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
                 db.collection("roomResults").whereEqualTo("code", code).get()
-                    .addOnSuccessListener { res -> render(d, res.documents) }
-                    .addOnFailureListener { render(d, emptyList()) }
+                    .addOnSuccessListener { res ->
+                        RoomChat.latest(code) { msgs -> render(d, res.documents, msgs) }
+                    }
+                    .addOnFailureListener { render(d, emptyList(), emptyList()) }
             }
     }
 
-    private fun render(d: DocumentSnapshot, results: List<DocumentSnapshot>) {
+    private fun render(d: DocumentSnapshot, results: List<DocumentSnapshot>, msgs: List<DocumentSnapshot>) {
         container.removeAllViews()
         val owner = d.getString("ownerName") ?: ""
         val expires = d.getLong("expiresAt") ?: 0L
@@ -96,7 +100,6 @@ class RoomLobbyActivity : AppCompatActivity() {
         val mine = byId[studentId]
         val rows = players.map { p -> (p["id"] as? String ?: "") to (p["name"] as? String ?: "") }
 
-        // هل الغرفة جاهزة للقفل وتوزيع النقاط؟
         val finishedCount = rows.count { byId[it.first]?.getBoolean("finished") == true }
         val allDone = rows.isNotEmpty() && finishedCount == rows.size
         val ready = !settled && qCount > 0 && ((allDone && rows.size >= 2) || expired)
@@ -108,7 +111,6 @@ class RoomLobbyActivity : AppCompatActivity() {
             }
         }
 
-        // عرض شاشة النتيجة مرة واحدة لمن شارك
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val seenKey = "seen_${code}_$studentId"
         if (settled && mine?.getBoolean("finished") == true && !prefs.getBoolean(seenKey, false)) {
@@ -180,6 +182,42 @@ class RoomLobbyActivity : AppCompatActivity() {
                         " · ${(r.getLong("timeMs") ?: 0L) / 1000} ث"
             }
             container.addView(tv("${idx + 1}. $name #$id\n     $line", 15f))
+        }
+
+        // ---------- الرسائل الجاهزة ----------
+        container.addView(tv("💬 الرسائل", 18f, true))
+        if (!settled && !expired) {
+            RoomChat.PRESETS.chunked(2).forEach { pair ->
+                val row = LinearLayout(this)
+                row.orientation = LinearLayout.HORIZONTAL
+                pair.forEach { text ->
+                    val b = Button(this)
+                    b.text = text
+                    b.textSize = 13f
+                    b.isAllCaps = false
+                    val p = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    p.marginEnd = dp(4)
+                    b.layoutParams = p
+                    b.setOnClickListener {
+                        RoomChat.send(code, studentId, studentName, text) { ok, msg ->
+                            if (ok) load()
+                            else Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    row.addView(b)
+                }
+                container.addView(row)
+            }
+        }
+        if (msgs.isEmpty()) {
+            container.addView(tv("لا توجد رسائل بعد. ابدأ المشاكسة! 😄", 13f))
+        } else {
+            msgs.forEach { m ->
+                val who = m.getString("senderName") ?: ""
+                val text = m.getString("text") ?: ""
+                val me = if (m.getString("senderId") == studentId) " (أنت)" else ""
+                container.addView(tv("$who$me: $text", 15f))
+            }
         }
 
         container.addView(tv(
