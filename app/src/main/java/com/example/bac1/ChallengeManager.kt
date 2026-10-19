@@ -49,7 +49,6 @@ object ChallengeManager {
     }
 
     // بنك الأسئلة = تحديات اليوم المحفوظة (أسئلة اليوم أولًا ثم القديمة)
-    fun pickQuestions(count: Int, onResult: (List<HashMap<String, Any>>) -> Unit) {
         db().collection("dailyChallenges")
             .orderBy(FieldPath.documentId(), Query.Direction.DESCENDING)
             .limit(30)
@@ -69,6 +68,7 @@ object ChallengeManager {
             }
             .addOnFailureListener { onResult(emptyList()) }
     }
+    
 
     fun getBalance(studentId: String, onResult: (Int) -> Unit) {
         val ref = db().collection("challengeWallets").document(studentId)
