@@ -26,6 +26,7 @@ class AdminQuestionsActivity : AppCompatActivity() {
     private lateinit var etTimer: EditText
     private lateinit var etCount: EditText
     private lateinit var questionsBox: LinearLayout
+        private val col by lazy { intent.getStringExtra("collection") ?: "dailyChallenges" }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
