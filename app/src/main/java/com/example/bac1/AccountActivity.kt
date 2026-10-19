@@ -73,19 +73,22 @@ class AccountActivity : AppCompatActivity() {
                     .setView(pinInput)
                     .setPositiveButton("دخول") { _, _ ->
                         if (pinInput.text.toString() == "7391") {
+                            val items = arrayOf(
+                                "➕ أسئلة اليوم",
+                                "⚔️ أسئلة تحدي الأصحاب",
+                                "📢 التقييمات الأسبوعية"
+                            )
                             android.app.AlertDialog.Builder(this)
                                 .setTitle("لوحة الأدمن")
-                                                                .setItems(arrayOf("➕ أسئلة اليوم", "⚔️ أسئلة تحدي الأصحاب", "📢 التقييمات الأسبوعية")) { _, which ->
+                                .setItems(items) { _, which ->
                                     when (which) {
-                                        0 -> startActivity(Intent(this, AdminQuestionsActivity::class.java))
-                                        1 -> startActivity(Intent(this, AdminQuestionsActivity::class.java).putExtra("collection", "friendChallenges"))
-                                        else -> startActivity(Intent(this, AdminWeeklyActivity::class.java))
-                                    }
-                                }
-                                    if (which == 0) {
-                                        startActivity(Intent(this, AdminQuestionsActivity::class.java))
-                                    } else {
-                                        startActivity(Intent(this, AdminWeeklyActivity::class.java))
+                                        0 -> startActivity(
+                                            Intent(this, AdminQuestionsActivity::class.java))
+                                        1 -> startActivity(
+                                            Intent(this, AdminQuestionsActivity::class.java)
+                                                .putExtra("collection", "friendChallenges"))
+                                        else -> startActivity(
+                                            Intent(this, AdminWeeklyActivity::class.java))
                                     }
                                 }
                                 .show()
