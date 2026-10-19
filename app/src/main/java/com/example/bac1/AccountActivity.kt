@@ -75,7 +75,13 @@ class AccountActivity : AppCompatActivity() {
                         if (pinInput.text.toString() == "7391") {
                             android.app.AlertDialog.Builder(this)
                                 .setTitle("لوحة الأدمن")
-                                .setItems(arrayOf("➕ أسئلة اليوم", "📢 التقييمات الأسبوعية")) { _, which ->
+                                                                .setItems(arrayOf("➕ أسئلة اليوم", "⚔️ أسئلة تحدي الأصحاب", "📢 التقييمات الأسبوعية")) { _, which ->
+                                    when (which) {
+                                        0 -> startActivity(Intent(this, AdminQuestionsActivity::class.java))
+                                        1 -> startActivity(Intent(this, AdminQuestionsActivity::class.java).putExtra("collection", "friendChallenges"))
+                                        else -> startActivity(Intent(this, AdminWeeklyActivity::class.java))
+                                    }
+                                }
                                     if (which == 0) {
                                         startActivity(Intent(this, AdminQuestionsActivity::class.java))
                                     } else {
