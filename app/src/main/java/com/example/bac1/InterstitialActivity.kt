@@ -77,7 +77,9 @@ class InterstitialActivity : AppCompatActivity() {
         val targetClassName = intent.getStringExtra("TARGET_CLASS")
         if (targetClassName != null) {
             try {
-                startActivity(Intent(this, Class.forName(targetClassName)))
+                val next = Intent(this, Class.forName(targetClassName))
+                intent.extras?.let { next.putExtras(it) }
+                startActivity(next)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
