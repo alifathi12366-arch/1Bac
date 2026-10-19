@@ -7,8 +7,10 @@ import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -37,7 +39,9 @@ class DailyChallengeActivity : AppCompatActivity() {
     private var index = 0
     private var score = 0
     private var answered = false
+    private var startMs = 0L
     private var timer: CountDownTimer? = null
+    private var boardBtn: Button? = null
 
     private lateinit var panelInfo: View
     private lateinit var panelQuestion: View
@@ -46,7 +50,6 @@ class DailyChallengeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // منع لقطة الشاشة وتسجيلها وأدوات قراءة الشاشة
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_daily_challenge)
 
@@ -89,7 +92,6 @@ class DailyChallengeActivity : AppCompatActivity() {
         checkAttempt()
     }
 
-    // ---------- المحاولة الواحدة ----------
     private fun attemptRef() = db.collection("dailyAttempts").document("${studentKey}_$today")
 
     private fun checkAttempt() {
@@ -118,7 +120,6 @@ class DailyChallengeActivity : AppCompatActivity() {
                 val opts = (m["options"] as? List<*>)?.mapNotNull { it as? String } ?: return@mapNotNull null
                 val c = (m["correctIndex"] as? Number)?.toInt() ?: return@mapNotNull null
                 if (opts.size < 2 || c !in opts.indices) return@mapNotNull null
-                // خلط الاختيارات مع تتبع الإجابة الصحيحة
                 val correctText = opts[c]
                 val shuffled = opts.shuffled()
                 Q(text, shuffled, shuffled.indexOf(correctText))
@@ -127,7 +128,7 @@ class DailyChallengeActivity : AppCompatActivity() {
                 showInfo("🔥 تحدي اليوم", "لا يوجد تحدٍّ لهذا اليوم بعد.", false)
                 return@addOnSuccessListener
             }
-            questions = parsed.shuffled() // خلط ترتيب الأسئلة
+            questions = parsed.shuffled()
             val rules = "المادة: $subject\n" +
                 "عدد الأسئلة: ${questions.size}، ولكل سؤال $timerSeconds ثانية.\n" +
                 "لكل إجابة صحيحة نقطة واحدة.\n\n" +
@@ -140,10 +141,8 @@ class DailyChallengeActivity : AppCompatActivity() {
         }.addOnFailureListener { showInfo("تعذّر الاتصال", "تحقق من الإنترنت ثم حاول مجددًا.", false) }
     }
 
-    // ---------- بدء التحدي ----------
     private fun startChallenge() {
         findViewById<Button>(R.id.btnStart).isEnabled = false
-        // تسجيل المحاولة فور البدء
         attemptRef().set(hashMapOf(
             "studentKey" to studentKey, "studentName" to studentName,
             "date" to today, "subject" to subject,
@@ -153,6 +152,7 @@ class DailyChallengeActivity : AppCompatActivity() {
             state = State.RUNNING
             index = 0
             score = 0
+            startMs = System.currentTimeMillis()
             panelInfo.visibility = View.GONE
             panelResult.visibility = View.GONE
             panelQuestion.visibility = View.VISIBLE
@@ -208,7 +208,6 @@ class DailyChallengeActivity : AppCompatActivity() {
         handler.postDelayed({ index++; showQuestion() }, 1200)
     }
 
-    // ---------- الإنهاء وإضافة النقاط ----------
     private fun finishChallenge(forced: Boolean) {
         if (state == State.DONE) return
         state = State.DONE
@@ -216,23 +215,33 @@ class DailyChallengeActivity : AppCompatActivity() {
         handler.removeCallbacksAndMessages(null)
 
         val total = questions.size
+        val timeMs = System.currentTimeMillis() - startMs
         attemptRef().update(mapOf(
             "score" to score, "finished" to true, "leftApp" to forced,
-            "finishedAt" to FieldValue.serverTimestamp()
+            "timeMs" to timeMs, "finishedAt" to FieldValue.serverTimestamp()
         ))
 
-               if (score > 0) {
+        if (score > 0) {
             val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
             val monthPoints = PointsManager.addPoints(prefs, score)
             LeaderboardManager.submitScore(studentKey, studentName, monthPoints)
-        } 
+        }
 
-        val title = if (forced) "أُنهي التحدي ⛔" else "انتهى التحدي 🎉"
+        val perfect = !forced && total > 0 && score == total
+        val title = when {
+            forced -> "أُنهي التحدي ⛔"
+            perfect -> "ممتاز! إجابات كلها صحيحة 🌟"
+            else -> "انتهى التحدي 🎉"
+        }
         val note = if (forced) "غادرتَ التطبيق أثناء التحدي، فاحتُسبت الأسئلة المتبقية خاطئة.\n\n" else ""
         showResult(title, "${note}أجبتَ إجابات صحيحة: $score من $total\nكسبتَ $score نقطة ⭐\n\nعُد غدًا لتحدٍّ جديد.")
+
+        if (perfect) {
+            findViewById<ViewGroup>(android.R.id.content).addView(
+                ConfettiView(this), ViewGroup.LayoutParams(-1, -1))
+        }
     }
 
-    // ---------- الخروج من التطبيق ----------
     override fun onStop() {
         super.onStop()
         if (state == State.RUNNING && !isChangingConfigurations) {
@@ -246,7 +255,6 @@ class DailyChallengeActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    // ---------- عرض الشاشات ----------
     private fun showInfo(title: String, body: String, canStart: Boolean) {
         if (state != State.RUNNING) state = State.INFO
         panelQuestion.visibility = View.GONE
@@ -265,5 +273,19 @@ class DailyChallengeActivity : AppCompatActivity() {
         panelResult.visibility = View.VISIBLE
         findViewById<TextView>(R.id.tvResultTitle).text = title
         findViewById<TextView>(R.id.tvResultDetail).text = detail
+
+        if (boardBtn == null && today.isNotEmpty()) {
+            val b = Button(this)
+            b.text = "🏆 ترتيب اليوم والرسائل"
+            b.setTextColor(Color.WHITE)
+            b.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#283593"))
+            b.setOnClickListener {
+                val i = android.content.Intent(this, DailyBoardActivity::class.java)
+                i.putExtra("date", today)
+                startActivity(i)
+            }
+            (panelResult as LinearLayout).addView(b, 2)
+            boardBtn = b
+        }
     }
 }
