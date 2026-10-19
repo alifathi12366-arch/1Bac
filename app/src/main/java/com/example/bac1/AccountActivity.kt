@@ -96,6 +96,9 @@ class AccountActivity : AppCompatActivity() {
         }
 
         // إخفاء زرار المسابقة من الحساب (موجودة الآن في الرئيسية)
-        findViewById<Button>(R.id.leaderboardButton).visibility = View.GONE
+                val reportBtn = findViewById<Button>(R.id.leaderboardButton)
+        reportBtn.text = "📊 مستواي الدراسي"
+        reportBtn.visibility = View.VISIBLE
+        reportBtn.setOnClickListener { startActivity(Intent(this, ReportActivity::class.java)) }
     }
 }
