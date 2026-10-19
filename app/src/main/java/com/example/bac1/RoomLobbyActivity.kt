@@ -18,6 +18,7 @@ class RoomLobbyActivity : AppCompatActivity() {
     private lateinit var container: LinearLayout
     private var code = ""
     private var studentId = ""
+    private var settling = false
 
     private val refresher = object : Runnable {
         override fun run() {
@@ -86,53 +87,85 @@ class RoomLobbyActivity : AppCompatActivity() {
         val owner = d.getString("ownerName") ?: ""
         val expires = d.getLong("expiresAt") ?: 0L
         val expired = System.currentTimeMillis() > expires
+        val settled = d.getBoolean("settled") == true
         val hoursLeft = ((expires - System.currentTimeMillis()) / 3600000L).coerceAtLeast(0)
         val max = (d.getLong("maxPlayers") ?: 10L).toInt()
         val qCount = (d.get("questions") as? List<*>)?.size ?: 0
         val players = (d.get("players") as? List<*>)?.mapNotNull { it as? Map<*, *> } ?: emptyList()
         val byId = results.associateBy { it.getString("studentId") ?: "" }
         val mine = byId[studentId]
+        val rows = players.map { p -> (p["id"] as? String ?: "") to (p["name"] as? String ?: "") }
+
+        // هل الغرفة جاهزة للقفل وتوزيع النقاط؟
+        val finishedCount = rows.count { byId[it.first]?.getBoolean("finished") == true }
+        val allDone = rows.isNotEmpty() && finishedCount == rows.size
+        val ready = !settled && qCount > 0 && ((allDone && rows.size >= 2) || expired)
+        if (ready && !settling) {
+            settling = true
+            ChallengeSettler.settle(code) { ok ->
+                settling = false
+                if (ok) load()
+            }
+        }
+
+        // عرض شاشة النتيجة مرة واحدة لمن شارك
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val seenKey = "seen_${code}_$studentId"
+        if (settled && mine?.getBoolean("finished") == true && !prefs.getBoolean(seenKey, false)) {
+            val i = Intent(this, RoomResultActivity::class.java)
+            i.putExtra("code", code)
+            startActivity(i)
+        }
 
         container.addView(tv("⚔️ غرفة التحدي", 22f, true))
         container.addView(tv("الكود: $code", 28f, true))
         container.addView(tv(
-            "أنشأها: $owner · $qCount سؤال · " +
-                    (if (expired) "انتهت صلاحيتها" else "تنتهي بعد $hoursLeft ساعة"), 13f))
+            "أنشأها: $owner · $qCount سؤال · " + when {
+                settled -> "انتهى التحدي"
+                expired -> "انتهت صلاحيتها"
+                else -> "تنتهي بعد $hoursLeft ساعة"
+            }, 13f))
 
-        val share = btn("📤 شارك الكود مع أصحابك", 0xFF25D366) {
-            val i = Intent(Intent.ACTION_SEND)
-            i.type = "text/plain"
-            i.putExtra(Intent.EXTRA_TEXT,
-                "تحداك $owner في تطبيق أولى بكالوريا ⚔️\nادخل بكود الغرفة: $code\nمن: اتحدي أصحابك")
-            startActivity(Intent.createChooser(i, "مشاركة الكود"))
+        if (!settled && !expired) {
+            container.addView(btn("📤 شارك الكود مع أصحابك", 0xFF25D366) {
+                val i = Intent(Intent.ACTION_SEND)
+                i.type = "text/plain"
+                i.putExtra(Intent.EXTRA_TEXT,
+                    "تحداك $owner في تطبيق أولى بكالوريا ⚔️\nادخل بكود الغرفة: $code\nمن: اتحدي أصحابك")
+                startActivity(Intent.createChooser(i, "مشاركة الكود"))
+            })
         }
-        container.addView(share)
 
-        // زرار الحل
         when {
             qCount == 0 -> container.addView(
                 tv("هذه غرفة قديمة بدون أسئلة. أنشئ غرفة جديدة.", 14f))
-            expired -> container.addView(tv("انتهت صلاحية الغرفة.", 14f))
-            mine == null -> container.addView(btn("▶️ ابدأ الحل", 0xFFE65100) {
-                val i = Intent(this, InterstitialActivity::class.java)
-                i.putExtra("TARGET_CLASS", RoomPlayActivity::class.java.name)
-                i.putExtra("code", code)
-                startActivity(i)
-            })
-            else -> {
+            mine != null -> {
                 val s = (mine.getLong("score") ?: 0L)
                 val t = (mine.getLong("total") ?: qCount.toLong())
                 container.addView(tv(
                     if (mine.getBoolean("finished") == true) "✅ حللتَ التحدي: $s من $t"
                     else "⌛ بدأتَ الحل ولم تُكمل (انتهت محاولتك)", 16f, true))
             }
+            settled || expired -> container.addView(tv("انتهى هذا التحدي، لا يمكن الحل الآن.", 14f))
+            else -> container.addView(btn("▶️ ابدأ الحل", 0xFFE65100) {
+                val i = Intent(this, InterstitialActivity::class.java)
+                i.putExtra("TARGET_CLASS", RoomPlayActivity::class.java.name)
+                i.putExtra("code", code)
+                startActivity(i)
+            })
+        }
+
+        if (settled) {
+            container.addView(btn("🏆 عرض النتيجة النهائية", 0xFF6A1B9A) {
+                val i = Intent(this, RoomResultActivity::class.java)
+                i.putExtra("code", code)
+                startActivity(i)
+            })
         }
 
         container.addView(btn("🔄 تحديث", 0xFF546E7A) { load() })
 
-        // اللاعبون والترتيب المبدئي
         container.addView(tv("اللاعبون (${players.size} من $max)", 18f, true))
-        val rows = players.map { p -> (p["id"] as? String ?: "") to (p["name"] as? String ?: "") }
         val sorted = rows.sortedWith(compareBy<Pair<String, String>>(
             { if (byId[it.first]?.getBoolean("finished") == true) 0 else 1 },
             { -(byId[it.first]?.getLong("score") ?: 0L) },
@@ -149,6 +182,7 @@ class RoomLobbyActivity : AppCompatActivity() {
             container.addView(tv("${idx + 1}. $name #$id\n     $line", 15f))
         }
 
-        container.addView(tv("🚧 الفائز والنقاط والرسائل الجاهزة في التحديثات القادمة. الصفحة تتحدّث كل 15 ثانية.", 13f))
+        container.addView(tv(
+            "تُحسم النتيجة عندما يخلص الجميع أو بعد انتهاء الـ 24 ساعة. الصفحة تتحدّث كل 15 ثانية.", 12f))
     }
 }
