@@ -57,6 +57,7 @@
         <activity android:name=".RoomPlayActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".RoomResultActivity" android:exported="false" />
         <activity android:name=".DailyBoardActivity" android:exported="false" />
+        <activity android:name=".ReportActivity" android:exported="false" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
