@@ -1,11 +1,9 @@
 package com.example.bac1
 
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Transaction
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -48,27 +46,28 @@ object ChallengeManager {
         }
     }
 
-    // بنك الأسئلة = تحديات اليوم المحفوظة (أسئلة اليوم أولًا ثم القديمة)
-        db().collection("dailyChallenges")
-            .orderBy(FieldPath.documentId(), Query.Direction.DESCENDING)
-            .limit(30)
-            .get()
-            .addOnSuccessListener { res ->
-                val today = todayKey()
-                val todayQs = mutableListOf<HashMap<String, Any>>()
-                val others = mutableListOf<HashMap<String, Any>>()
-                for (d in res.documents) {
-                    val qs = parseQuestions(d.get("questions"))
-                    if (d.id == today) todayQs.addAll(qs) else others.addAll(qs)
-                }
+    // الترتيب: أسئلة أصحاب اليوم ثم تحدي اليوم ثم القديم
+    fun pickQuestions(count: Int, onResult: (List<HashMap<String, Any>>) -> Unit) {
+        val today = todayKey()
+        db().collection("friendChallenges").get().addOnCompleteListener { f ->
+            val friendDocs: List<DocumentSnapshot> =
+                if (f.isSuccessful) f.result.documents else emptyList()
+            db().collection("dailyChallenges").get().addOnCompleteListener { d ->
+                val dailyDocs: List<DocumentSnapshot> =
+                    if (d.isSuccessful) d.result.documents else emptyList()
+
+                fun qs(list: List<DocumentSnapshot>, todayOnly: Boolean): List<HashMap<String, Any>> =
+                    list.filter { (it.id == today) == todayOnly }
+                        .flatMap { parseQuestions(it.get("questions")) }
+                        .shuffled()
+
+                val ordered = qs(friendDocs, true) + qs(dailyDocs, true) +
+                        qs(friendDocs, false) + qs(dailyDocs, false)
                 val seen = HashSet<String>()
-                val ordered = (todayQs.shuffled() + others.shuffled())
-                    .filter { seen.add(it["text"] as String) }
-                onResult(ordered.take(count))
+                onResult(ordered.filter { seen.add(it["text"] as String) }.take(count))
             }
-            .addOnFailureListener { onResult(emptyList()) }
+        }
     }
-    
 
     fun getBalance(studentId: String, onResult: (Int) -> Unit) {
         val ref = db().collection("challengeWallets").document(studentId)
@@ -82,7 +81,6 @@ object ChallengeManager {
         }.addOnFailureListener { onResult(-1) }
     }
 
-    // إنشاء غرفة: يختار الأسئلة ثم يخصم نقطة ويرجّع الكود
     fun createRoom(
         studentId: String, studentName: String, count: Int,
         onResult: (code: String?, error: String?) -> Unit
