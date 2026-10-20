@@ -1,8 +1,10 @@
 package com.example.bac1
 
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -17,9 +19,15 @@ class TakeExamActivity : AppCompatActivity() {
 
     private lateinit var exam: ExamModel
     private val questionBlocks = mutableListOf<View>()
+    private var running = false
+    private var submitted = false
+    private var timer: CountDownTimer? = null
+    private var resultId = ""
+    private var studentName = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_take_exam)
 
         val examId = intent.getStringExtra("EXAM_ID") ?: ""
@@ -32,9 +40,12 @@ class TakeExamActivity : AppCompatActivity() {
                 exam = doc.toObject(ExamModel::class.java) ?: return@addOnSuccessListener
                 tvExamTitle.text = exam.title
 
+                val durationMin = doc.getLong("durationMinutes") ?: 0L
+                val deadline = doc.getLong("deadline") ?: 0L
+
                 val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-                val studentName = prefs.getString("student_name", "طالب") ?: "طالب"
-                val resultId = "${examId}_$studentName"
+                studentName = prefs.getString("student_name", "طالب") ?: "طالب"
+                resultId = "${examId}_$studentName"
 
                 FirebaseFirestore.getInstance().collection("results").document(resultId).get()
                     .addOnSuccessListener { resultDoc ->
@@ -43,14 +54,49 @@ class TakeExamActivity : AppCompatActivity() {
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "تم التقديم من قبل"
                             renderQuestions(exam, questionsContainer, readOnly = true)
+                        } else if (deadline > 0L && System.currentTimeMillis() > deadline) {
+                            tvExamTitle.text = "${exam.title}\n(انتهى موعد هذا الامتحان)"
+                            btnSubmit.isEnabled = false
+                            btnSubmit.text = "الامتحان مغلق"
                         } else {
                             renderQuestions(exam, questionsContainer, readOnly = false)
-                            btnSubmit.setOnClickListener {
-                                submitExam(exam, resultId, studentName)
-                            }
+                            running = true
+                            btnSubmit.setOnClickListener { submitExam(auto = false) }
+                            startTimer(tvExamTitle, durationMin, deadline)
                         }
                     }
             }
+    }
+
+    private fun startTimer(title: TextView, durationMin: Long, deadline: Long) {
+        val now = System.currentTimeMillis()
+        var end = Long.MAX_VALUE
+        if (durationMin > 0L) end = now + durationMin * 60_000L
+        if (deadline > 0L) end = minOf(end, deadline)
+        if (end == Long.MAX_VALUE) return
+
+        timer = object : CountDownTimer(end - now, 1000) {
+            override fun onTick(ms: Long) {
+                val s = ms / 1000
+                title.text = "${exam.title}\n⏱ %d:%02d".format(s / 60, s % 60)
+            }
+            override fun onFinish() {
+                title.text = "${exam.title}\n⏱ انتهى الوقت"
+                submitExam(auto = true)
+            }
+        }.start()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (running && !submitted && !isChangingConfigurations) {
+            submitExam(auto = true)
+        }
+    }
+
+    override fun onDestroy() {
+        timer?.cancel()
+        super.onDestroy()
     }
 
     private fun renderQuestions(exam: ExamModel, container: LinearLayout, readOnly: Boolean) {
@@ -92,7 +138,13 @@ class TakeExamActivity : AppCompatActivity() {
         }
     }
 
-    private fun submitExam(exam: ExamModel, resultId: String, studentName: String) {
+    private fun submitExam(auto: Boolean) {
+        if (submitted || !::exam.isInitialized) return
+        submitted = true
+        running = false
+        timer?.cancel()
+        findViewById<Button>(R.id.btnSubmitExam).isEnabled = false
+
         var autoScore = 0
         var hasEssay = false
         val essayAnswers = mutableListOf<HashMap<String, Any>>()
@@ -131,17 +183,15 @@ class TakeExamActivity : AppCompatActivity() {
             }
         }
 
-        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val teacherCode = exam.teacherCode
-
         val resultData = hashMapOf(
             "examId" to exam.examId,
             "examTitle" to exam.title,
-            "teacherCode" to teacherCode,
+            "teacherCode" to exam.teacherCode,
             "studentName" to studentName,
             "totalScore" to exam.totalScore,
             "autoScore" to autoScore,
             "graded" to !hasEssay,
+            "autoSubmitted" to auto,
             "mcqAnswers" to mcqAnswers,
             "essayAnswers" to essayAnswers,
             "timestamp" to System.currentTimeMillis()
@@ -151,7 +201,10 @@ class TakeExamActivity : AppCompatActivity() {
             .document(resultId)
             .set(resultData)
             .addOnSuccessListener {
-                if (!hasEssay) {
+                if (auto) {
+                    Toast.makeText(this, "تم تسليم الامتحان تلقائيًا ⏱", Toast.LENGTH_LONG).show()
+                    finish()
+                } else if (!hasEssay) {
                     val percentage = if (exam.totalScore > 0) (autoScore * 100.0 / exam.totalScore) else 0.0
                     if (percentage >= 95.0) {
                         showCertificate(exam.title, autoScore, exam.totalScore, studentName)
@@ -165,6 +218,8 @@ class TakeExamActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { e ->
+                submitted = false
+                findViewById<Button>(R.id.btnSubmitExam).isEnabled = true
                 Toast.makeText(this, "حدث خطأ أثناء حفظ الإجابات: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
