@@ -59,6 +59,16 @@ class TeacherContentActivity : AppCompatActivity() {
             i.putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
             startActivity(i)
         }
+                val examsBtn = findViewById<Button>(R.id.btnGoToExams)
+        val examsParent = examsBtn.parent as android.view.ViewGroup
+        val challengesBtn = Button(this)
+        challengesBtn.text = "🎯 تحديات المدرس"
+        challengesBtn.setOnClickListener {
+            val i = Intent(this, TeacherChallengesActivity::class.java)
+            i.putExtra("teacherCode", teacherCode)
+            startActivity(i)
+        }
+        examsParent.addView(challengesBtn, examsParent.indexOfChild(examsBtn) + 1)
 
         findViewById<Button>(R.id.btnMyMistakes).setOnClickListener {
             val i = Intent(this, MyMistakesActivity::class.java)
