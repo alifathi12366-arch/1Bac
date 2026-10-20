@@ -71,6 +71,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         btnParent.addView(createBtn, at)
         btnParent.addView(listBtn, at + 1)
         }
+                val honorBtn = Button(this)
+        honorBtn.text = "🏅 تكريم طالب"
+        honorBtn.setOnClickListener { startActivity(Intent(this, HonorActivity::class.java)) }
+        btnParent.addView(honorBtn, at + 2)
 
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
