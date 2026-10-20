@@ -1,5 +1,7 @@
 package com.example.bac1
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,21 +9,29 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 class AddExamActivity : AppCompatActivity() {
 
     private lateinit var questionsContainer: LinearLayout
     private val questionBlocks = mutableListOf<View>()
+    private var deadlineMs = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_exam)
 
         val etExamTitle = findViewById<EditText>(R.id.etExamTitle)
+        val etDuration = findViewById<EditText>(R.id.etDuration)
+        val tvDeadline = findViewById<TextView>(R.id.tvDeadline)
         questionsContainer = findViewById(R.id.questionsContainer)
         val btnAddQuestion = findViewById<Button>(R.id.btnAddQuestion)
         val btnSaveExam = findViewById<Button>(R.id.btnSaveExam)
@@ -32,16 +42,38 @@ class AddExamActivity : AppCompatActivity() {
             addQuestionBlock()
         }
 
-        btnSaveExam.setOnClickListener {
-            saveExam(etExamTitle.text.toString().trim())
+        tvDeadline.setOnClickListener { pickDeadline(tvDeadline) }
+        tvDeadline.setOnLongClickListener {
+            deadlineMs = 0L
+            tvDeadline.text = "📅 آخر موعد للحل: غير محدد (اضغط للتحديد)"
+            true
         }
+
+        btnSaveExam.setOnClickListener {
+            val duration = etDuration.text.toString().trim().toLongOrNull() ?: 0L
+            saveExam(etExamTitle.text.toString().trim(), duration)
+        }
+    }
+
+    private fun pickDeadline(label: TextView) {
+        val cal = Calendar.getInstance()
+        DatePickerDialog(this, { _, y, m, d ->
+            TimePickerDialog(this, { _, h, min ->
+                val c = Calendar.getInstance()
+                c.set(y, m, d, h, min, 0)
+                c.set(Calendar.MILLISECOND, 0)
+                deadlineMs = c.timeInMillis
+                val fmt = SimpleDateFormat("yyyy-MM-dd  HH:mm", Locale.US)
+                label.text = "📅 آخر موعد للحل: ${fmt.format(Date(deadlineMs))}\n(اضغط مطولاً للإلغاء)"
+            }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false).show()
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
 
     private fun addQuestionBlock() {
         val block = LayoutInflater.from(this).inflate(R.layout.item_add_question, questionsContainer, false)
         val index = questionBlocks.size + 1
 
-        block.findViewById<android.widget.TextView>(R.id.tvQuestionNumber).text = "السؤال رقم $index"
+        block.findViewById<TextView>(R.id.tvQuestionNumber).text = "السؤال رقم $index"
 
         val rgType = block.findViewById<RadioGroup>(R.id.rgQuestionType)
         val mcqFields = block.findViewById<LinearLayout>(R.id.mcqFieldsContainer)
@@ -62,17 +94,21 @@ class AddExamActivity : AppCompatActivity() {
 
     private fun renumberQuestions() {
         questionBlocks.forEachIndexed { i, block ->
-            block.findViewById<android.widget.TextView>(R.id.tvQuestionNumber).text = "السؤال رقم ${i + 1}"
+            block.findViewById<TextView>(R.id.tvQuestionNumber).text = "السؤال رقم ${i + 1}"
         }
     }
 
-    private fun saveExam(title: String) {
+    private fun saveExam(title: String, durationMin: Long) {
         if (title.isEmpty()) {
             Toast.makeText(this, "اكتب عنوان الامتحان الأول", Toast.LENGTH_SHORT).show()
             return
         }
         if (questionBlocks.isEmpty()) {
             Toast.makeText(this, "لازم تضيف سؤال واحد على الأقل", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (deadlineMs > 0L && deadlineMs <= System.currentTimeMillis()) {
+            Toast.makeText(this, "آخر موعد لازم يكون في المستقبل", Toast.LENGTH_LONG).show()
             return
         }
 
@@ -125,7 +161,7 @@ class AddExamActivity : AppCompatActivity() {
         val examId = UUID.randomUUID().toString()
         val totalScore = questionsData.sumOf { (it["score"] as? Int) ?: 0 }
 
-        val examData = hashMapOf(
+        val examData = hashMapOf<String, Any>(
             "examId" to examId,
             "teacherCode" to teacherCode,
             "title" to title,
@@ -133,6 +169,8 @@ class AddExamActivity : AppCompatActivity() {
             "totalScore" to totalScore,
             "createdAt" to System.currentTimeMillis()
         )
+        if (durationMin > 0L) examData["durationMinutes"] = durationMin
+        if (deadlineMs > 0L) examData["deadline"] = deadlineMs
 
         FirebaseFirestore.getInstance()
             .collection("exams")
