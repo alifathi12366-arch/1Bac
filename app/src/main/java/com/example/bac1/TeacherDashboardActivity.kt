@@ -59,6 +59,17 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.btnViewResults).setOnClickListener {
             startActivity(Intent(this, TeacherResultsActivity::class.java))
+                    val resultsBtn = findViewById<Button>(R.id.btnViewResults)
+        val btnParent = resultsBtn.parent as android.view.ViewGroup
+        val at = btnParent.indexOfChild(resultsBtn) + 1
+        val createBtn = Button(this)
+        createBtn.text = "🎯 إنشاء تحدي للطلاب"
+        createBtn.setOnClickListener { startActivity(Intent(this, AddTeacherChallengeActivity::class.java)) }
+        val listBtn = Button(this)
+        listBtn.text = "🏅 تحدياتي ونتائجها"
+        listBtn.setOnClickListener { startActivity(Intent(this, TeacherChallengesActivity::class.java)) }
+        btnParent.addView(createBtn, at)
+        btnParent.addView(listBtn, at + 1)
         }
 
         btnPublish.setOnClickListener {
