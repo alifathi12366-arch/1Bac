@@ -59,6 +59,10 @@
         <activity android:name=".DailyBoardActivity" android:exported="false" />
         <activity android:name=".ReportActivity" android:exported="false" />
         <activity android:name=".AdminWeeklyActivity" android:exported="false" />
+        <activity android:name=".AddTeacherChallengeActivity" android:exported="false" />
+<activity android:name=".TeacherChallengesActivity" android:exported="false" />
+<activity android:name=".TeacherChallengePlayActivity" android:exported="false" android:screenOrientation="portrait" />
+<activity android:name=".TeacherChallengeBoardActivity" android:exported="false" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
