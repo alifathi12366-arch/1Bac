@@ -91,6 +91,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.cardFriends).setOnClickListener {
             startActivity(Intent(this, ChallengeHomeActivity::class.java))
         }
+                findViewById<View>(R.id.cardHonors).setOnClickListener {
+            startActivity(Intent(this, MyHonorsActivity::class.java))
+                }
         findViewById<View>(R.id.cardMonthly).setOnClickListener {
             val i = Intent(this, InterstitialActivity::class.java)
             i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
