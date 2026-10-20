@@ -2,6 +2,7 @@ package com.example.bac1
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -59,8 +60,11 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.btnViewResults).setOnClickListener {
             startActivity(Intent(this, TeacherResultsActivity::class.java))
-                    val resultsBtn = findViewById<Button>(R.id.btnViewResults)
-        val btnParent = resultsBtn.parent as android.view.ViewGroup
+        }
+
+        // أزرار التحدي والتكريم (تُضاف برمجيًا تحت زرار النتائج)
+        val resultsBtn = findViewById<Button>(R.id.btnViewResults)
+        val btnParent = resultsBtn.parent as ViewGroup
         val at = btnParent.indexOfChild(resultsBtn) + 1
         val createBtn = Button(this)
         createBtn.text = "🎯 إنشاء تحدي للطلاب"
@@ -68,12 +72,11 @@ class TeacherDashboardActivity : AppCompatActivity() {
         val listBtn = Button(this)
         listBtn.text = "🏅 تحدياتي ونتائجها"
         listBtn.setOnClickListener { startActivity(Intent(this, TeacherChallengesActivity::class.java)) }
-        btnParent.addView(createBtn, at)
-        btnParent.addView(listBtn, at + 1)
-        }
-                val honorBtn = Button(this)
+        val honorBtn = Button(this)
         honorBtn.text = "🏅 تكريم طالب"
         honorBtn.setOnClickListener { startActivity(Intent(this, HonorActivity::class.java)) }
+        btnParent.addView(createBtn, at)
+        btnParent.addView(listBtn, at + 1)
         btnParent.addView(honorBtn, at + 2)
 
         btnPublish.setOnClickListener {
