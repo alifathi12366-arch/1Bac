@@ -63,6 +63,9 @@
 <activity android:name=".TeacherChallengesActivity" android:exported="false" />
 <activity android:name=".TeacherChallengePlayActivity" android:exported="false" android:screenOrientation="portrait" />
 <activity android:name=".TeacherChallengeBoardActivity" android:exported="false" />
+        <activity android:name=".HonorActivity" android:exported="false" />
+<activity android:name=".HonorCertificateActivity" android:exported="false" />
+<activity android:name=".MyHonorsActivity" android:exported="false" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
