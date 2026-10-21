@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -44,7 +45,6 @@ class MainActivity : AppCompatActivity() {
         checkDailyLogin()
         checkTeacherStatus()
 
-        // شريط التنقل السفلي
         val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
         bottomNav?.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -72,7 +72,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // الكروت
         findViewById<View>(R.id.cardSubjects).setOnClickListener {
             startActivity(Intent(this, SubjectsActivity::class.java))
         }
@@ -91,9 +90,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.cardFriends).setOnClickListener {
             startActivity(Intent(this, ChallengeHomeActivity::class.java))
         }
-                findViewById<View>(R.id.cardHonors).setOnClickListener {
+        findViewById<View>(R.id.cardHonors).setOnClickListener {
             startActivity(Intent(this, MyHonorsActivity::class.java))
-                }
+        }
         findViewById<View>(R.id.cardMonthly).setOnClickListener {
             val i = Intent(this, InterstitialActivity::class.java)
             i.putExtra("TARGET_CLASS", LeaderboardActivity::class.java.name)
@@ -211,10 +210,49 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (uiReady) refreshHomeCards()
+        if (uiReady) {
+            refreshHomeCards()
+            showTeacherBanners()
+        }
     }
 
-        private fun refreshHomeCards() {
+    // شريط تنبيه لنشاط المدرسين المربوط بيهم الطالب
+    private fun showTeacherBanners() {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val codes = prefs.getStringSet("joined_teacher_codes", emptySet()) ?: emptySet()
+        if (codes.isEmpty()) return
+        val parent = findViewById<View>(R.id.cardSubjects).parent as? ViewGroup ?: return
+
+        for (code in codes) {
+            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("teacherActivity").document(code).get()
+                .addOnSuccessListener { d ->
+                    if (!d.exists()) return@addOnSuccessListener
+                    val at = d.getLong("updatedAt") ?: 0L
+                    val seen = prefs.getLong("seen_act_$code", 0L)
+                    val tag = "actBanner_$code"
+                    if (at <= seen || parent.findViewWithTag<View>(tag) != null) return@addOnSuccessListener
+
+                    val t = TextView(this)
+                    t.tag = tag
+                    t.text = "🔔 أ. ${d.getString("teacherName") ?: ""} ${d.getString("text") ?: ""}\n(اضغط للإخفاء)"
+                    t.textSize = 15f
+                    t.setTextColor(0xFF4E342E.toInt())
+                    t.setBackgroundColor(0xFFFFE082.toInt())
+                    val pad = (14 * resources.displayMetrics.density).toInt()
+                    t.setPadding(pad, pad, pad, pad)
+                    val lp = ViewGroup.MarginLayoutParams(-1, -2)
+                    lp.bottomMargin = (10 * resources.displayMetrics.density).toInt()
+                    t.setOnClickListener {
+                        prefs.edit().putLong("seen_act_$code", at).apply()
+                        parent.removeView(t)
+                    }
+                    parent.addView(t, 0, lp)
+                }
+        }
+    }
+
+    private fun refreshHomeCards() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val id = prefs.all["student_id"]?.toString().orEmpty()
         val key = if (id.isNotEmpty()) id
