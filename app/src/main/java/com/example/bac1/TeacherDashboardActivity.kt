@@ -108,6 +108,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 .document(contentId)
                 .set(data)
                 .addOnSuccessListener {
+                                        TeacherActivityLog.post(this, "نزّل محتوى جديد 📚")
                     Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
                     finish()
                 }
