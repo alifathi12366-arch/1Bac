@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -76,7 +77,8 @@ class AccountActivity : AppCompatActivity() {
                             val items = arrayOf(
                                 "➕ أسئلة اليوم",
                                 "⚔️ أسئلة تحدي الأصحاب",
-                                "📢 التقييمات الأسبوعية"
+                                "📢 التقييمات الأسبوعية",
+                                "💡 الاقتراحات"
                             )
                             android.app.AlertDialog.Builder(this)
                                 .setTitle("لوحة الأدمن")
@@ -87,8 +89,10 @@ class AccountActivity : AppCompatActivity() {
                                         1 -> startActivity(
                                             Intent(this, AdminQuestionsActivity::class.java)
                                                 .putExtra("collection", "friendChallenges"))
-                                        else -> startActivity(
+                                        2 -> startActivity(
                                             Intent(this, AdminWeeklyActivity::class.java))
+                                        else -> startActivity(
+                                            Intent(this, AdminSuggestionsActivity::class.java))
                                     }
                                 }
                                 .show()
@@ -118,5 +122,12 @@ class AccountActivity : AppCompatActivity() {
         reportBtn.text = "📊 مستواي الدراسي"
         reportBtn.visibility = View.VISIBLE
         reportBtn.setOnClickListener { startActivity(Intent(this, ReportActivity::class.java)) }
+
+        // زرار الاقتراحات (يُضاف برمجيًا تحت زرار مستواي)
+        val sugBtn = Button(this)
+        sugBtn.text = "💡 اقتراح أو شكوى"
+        sugBtn.setOnClickListener { startActivity(Intent(this, SuggestionActivity::class.java)) }
+        val p = reportBtn.parent as ViewGroup
+        p.addView(sugBtn, p.indexOfChild(reportBtn) + 1)
     }
 }
