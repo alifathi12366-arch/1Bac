@@ -123,6 +123,55 @@ class TeacherContentActivity : AppCompatActivity() {
                 }
             }
     }
+       private fun addTeacherCard(anchor: TextView, code: String) {
+        FirebaseFirestore.getInstance().collection("teachers").document(code).get()
+            .addOnSuccessListener { d ->
+                val photo = d.getString("photoUrl") ?: ""
+                val subject = d.getString("profileSubject") ?: ""
+                val bio = d.getString("bio") ?: ""
+                val phone = d.getString("whatsapp") ?: ""
+                if (photo.isEmpty() && subject.isEmpty() && bio.isEmpty() && phone.isEmpty()) return@addOnSuccessListener
+
+                val parent = anchor.parent as? android.view.ViewGroup ?: return@addOnSuccessListener
+                val box = android.widget.LinearLayout(this)
+                box.orientation = android.widget.LinearLayout.VERTICAL
+                box.gravity = android.view.Gravity.CENTER_HORIZONTAL
+                val pad = (12 * resources.displayMetrics.density).toInt()
+                box.setPadding(pad, pad, pad, pad)
+
+                if (photo.startsWith("http")) {
+                    val img = android.widget.ImageView(this)
+                    val size = (110 * resources.displayMetrics.density).toInt()
+                    box.addView(img, android.widget.LinearLayout.LayoutParams(size, size))
+                    com.bumptech.glide.Glide.with(this).load(photo).circleCrop().into(img)
+                }
+                if (subject.isNotEmpty()) {
+                    val t = TextView(this)
+                    t.text = "مادة: $subject"
+                    t.textSize = 15f
+                    box.addView(t)
+                }
+                if (bio.isNotEmpty()) {
+                    val t = TextView(this)
+                    t.text = bio
+                    t.textSize = 13f
+                    t.gravity = android.view.Gravity.CENTER
+                    box.addView(t)
+                }
+                if (phone.isNotEmpty()) {
+                    val b = Button(this)
+                    b.text = "💬 تواصل واتساب"
+                    b.setOnClickListener {
+                        var digits = phone.filter { it.isDigit() }
+                        if (digits.startsWith("0")) digits = "20" + digits.substring(1)
+                        startActivity(Intent(Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://wa.me/$digits")))
+                    }
+                    box.addView(b)
+                }
+                parent.addView(box, parent.indexOfChild(anchor) + 1)
+            }
+    } 
 
     private fun ratingDocId(teacherCode: String): String {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
