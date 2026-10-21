@@ -42,6 +42,7 @@ class TeacherContentActivity : AppCompatActivity() {
         }
 
         nameView.text = "أستاذ $teacherName"
+                addTeacherCard(nameView, teacherCode)
 
         markStudentAttendance(teacherCode)
 
