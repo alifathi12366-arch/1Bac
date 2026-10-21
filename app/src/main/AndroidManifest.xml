@@ -66,6 +66,7 @@
         <activity android:name=".HonorActivity" android:exported="false" />
 <activity android:name=".HonorCertificateActivity" android:exported="false" />
 <activity android:name=".MyHonorsActivity" android:exported="false" />
+        <activity android:name=".TeacherProfileActivity" android:exported="false" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
