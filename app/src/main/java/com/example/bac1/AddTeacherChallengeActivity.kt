@@ -186,6 +186,7 @@ class AddTeacherChallengeActivity : AppCompatActivity() {
                     "createdAt" to System.currentTimeMillis()
                 ))
                 .addOnSuccessListener {
+                                        TeacherActivityLog.post(this, "أنشأ تحديًا جديدًا 🎯")
                     Toast.makeText(this, "تم نشر التحدي ✅", Toast.LENGTH_LONG).show()
                     finish()
                 }
