@@ -177,6 +177,7 @@ class AddExamActivity : AppCompatActivity() {
             .document(examId)
             .set(examData)
             .addOnSuccessListener {
+                                TeacherActivityLog.post(this, "نزّل امتحانًا جديدًا 📝")
                 Toast.makeText(this, "تم نشر الامتحان بنجاح! 📝✅", Toast.LENGTH_SHORT).show()
                 finish()
             }
