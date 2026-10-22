@@ -70,20 +70,6 @@ class ChallengeHomeActivity : AppCompatActivity() {
         container.addView(tv(balText, 18f, true))
         container.addView(tv("إنشاء غرفة يكلّف نقطة واحدة. الدخول بكود صديقك مجاني. الفائز +2 والتعادل +1.", 13f))
 
-        container.addView(tv("عدد الأسئلة", 16f, true))
-        val rg = RadioGroup(this)
-        rg.orientation = RadioGroup.HORIZONTAL
-        listOf(5, 10, 15).forEach { n ->
-            val rb = RadioButton(this)
-            rb.id = View.generateViewId()
-            rb.text = "$n"
-            rb.setTextColor(0xFF000000.toInt())
-            rb.isChecked = (n == selectedCount)
-            rb.setOnClickListener { selectedCount = n }
-            rg.addView(rb)
-        }
-        container.addView(rg)
-
         container.addView(btn("➕ إنشاء غرفة جديدة (بنقطة)", 0xFFE65100) {
             if (balance == 0) {
                 Toast.makeText(this, "رصيدك انتهى، اربح نقاطًا من الغرف", Toast.LENGTH_SHORT).show()
