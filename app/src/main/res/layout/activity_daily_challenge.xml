@@ -44,8 +44,9 @@
             android:text="ابدأ التحدي"
             android:backgroundTint="#E65100"
             android:textColor="#FFFFFF"
-            android:visibility="gone" />
+                        android:visibility="gone" />
     </LinearLayout>
+    </ScrollView>
 
     <!-- شاشة السؤال -->
     <LinearLayout
