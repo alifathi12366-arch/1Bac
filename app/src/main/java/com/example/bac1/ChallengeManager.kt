@@ -82,7 +82,7 @@ object ChallengeManager {
     ) {
         pickQuestions(count) { qs ->
             if (qs.isEmpty()) {
-                onResult(null, "لا توجد أسئلة كافية بعد. احفظ أسئلة تحدي اليوم أولًا")
+                onResult(null, "لا توجد أسئلة لليوم بعد. حاول لاحقًا")
                 return@pickQuestions
             }
 
