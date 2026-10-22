@@ -84,7 +84,7 @@ class AddTeacherChallengeActivity : AppCompatActivity() {
         container.addView(etTitle)
 
         container.addView(label("الجائزة (نص، والمدرس هو اللي يسلّمها)"))
-        val etPrize = edit("مثال: كارت شحن 20 جنيه")
+                val etPrize = edit("مثال: شهادة تقدير + كتاب هدية 🎁")
         container.addView(etPrize)
 
         container.addView(label("مدة الحل بالدقائق"))
