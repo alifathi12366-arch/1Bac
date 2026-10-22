@@ -78,10 +78,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         btnParent.addView(createBtn, at)
         btnParent.addView(listBtn, at + 1)
         btnParent.addView(honorBtn, at + 2)
-                val profileBtn = Button(this)
-        profileBtn.text = "👤 ملفي الشخصي"
-        profileBtn.setOnClickListener { startActivity(Intent(this, TeacherProfileActivity::class.java)) }
-        btnParent.addView(profileBtn, at + 3)
+    
 
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
