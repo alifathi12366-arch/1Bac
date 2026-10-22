@@ -46,25 +46,20 @@ object ChallengeManager {
         }
     }
 
-    // الترتيب: أسئلة أصحاب اليوم ثم تحدي اليوم ثم القديم
+    // أسئلة اليوم فقط: أصحاب اليوم، وإلا تحدي اليوم. مفيش سحب من أيام تانية
     fun pickQuestions(count: Int, onResult: (List<HashMap<String, Any>>) -> Unit) {
         val today = todayKey()
-        db().collection("friendChallenges").get().addOnCompleteListener { f ->
-            val friendDocs: List<DocumentSnapshot> =
-                if (f.isSuccessful) f.result.documents else emptyList()
-            db().collection("dailyChallenges").get().addOnCompleteListener { d ->
-                val dailyDocs: List<DocumentSnapshot> =
-                    if (d.isSuccessful) d.result.documents else emptyList()
-
-                fun qs(list: List<DocumentSnapshot>, todayOnly: Boolean): List<HashMap<String, Any>> =
-                    list.filter { (it.id == today) == todayOnly }
-                        .flatMap { parseQuestions(it.get("questions")) }
-                        .shuffled()
-
-                val ordered = qs(friendDocs, true) + qs(dailyDocs, true) +
-                        qs(friendDocs, false) + qs(dailyDocs, false)
-                val seen = HashSet<String>()
-                onResult(ordered.filter { seen.add(it["text"] as String) }.take(count))
+        db().collection("friendChallenges").document(today).get().addOnCompleteListener { f ->
+            val friendQs = if (f.isSuccessful && f.result.exists())
+                parseQuestions(f.result.get("questions")) else emptyList()
+            if (friendQs.isNotEmpty()) {
+                onResult(friendQs.shuffled())
+                return@addOnCompleteListener
+            }
+            db().collection("dailyChallenges").document(today).get().addOnCompleteListener { d ->
+                val dailyQs = if (d.isSuccessful && d.result.exists())
+                    parseQuestions(d.result.get("questions")) else emptyList()
+                onResult(dailyQs.shuffled())
             }
         }
     }
