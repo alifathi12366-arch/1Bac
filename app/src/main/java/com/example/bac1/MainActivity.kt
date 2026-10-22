@@ -130,7 +130,14 @@ class MainActivity : AppCompatActivity() {
                     val json = org.json.JSONObject(response)
                     val latestVersion = json.getInt("latestVersion")
                     val downloadUrl = json.getString("downloadUrl")
-                    val currentVersion = 2
+                    val currentVersion = packageManager.getPackageInfo(packageName, 0).let {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        it.longVersionCode.toInt()
+    } else {
+        @Suppress("DEPRECATION")
+        it.versionCode
+    }
+}
 
                     if (latestVersion > currentVersion) {
                         val builder = android.app.AlertDialog.Builder(this)
