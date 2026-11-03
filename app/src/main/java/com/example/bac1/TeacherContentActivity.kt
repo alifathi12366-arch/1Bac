@@ -169,6 +169,64 @@ class TeacherContentActivity : AppCompatActivity() {
                 }
                 parent.addView(box, parent.indexOfChild(anchor) + 1)
             }
+    }
+          private fun setupSessionAttendance(btn: Button) {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val name = prefs.getString("student_name", "طالب") ?: "طالب"
+        btn.isEnabled = false
+        btn.text = "لا توجد حصة الآن"
+        val db = FirebaseFirestore.getInstance()
+        db.collection("teacherGroups").whereArrayContains("studentNames", name).get()
+            .addOnSuccessListener { res ->
+                val cal = java.util.Calendar.getInstance()
+                val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
+                val today = cal.get(java.util.Calendar.DAY_OF_WEEK)
+                val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
+                for (g in res.documents) {
+                    if (g.getString("teacherCode") != teacherCode) continue
+                    val dur = (g.getLong("durationMin") ?: 90L).toInt()
+                    val gname = g.getString("name") ?: ""
+                    val slots = g.get("slots") as? List<*> ?: continue
+                    for (s in slots) {
+                        val m = s as? Map<*, *> ?: continue
+                        val day = (m["day"] as? Number)?.toInt() ?: continue
+                        val time = m["time"] as? String ?: continue
+                        val start = try {
+                            val p = time.split(":")
+                            p[0].toInt() * 60 + p[1].toInt()
+                        } catch (e: Exception) { continue }
+                        if (day == today && nowMin in (start - 15)..(start + dur)) {
+                            val safe = name.replace("/", "-")
+                            val ref = db.collection("attendanceSessions")
+                                .document("${teacherCode}_${g.id}_${dateStr}_${time}_$safe")
+                            ref.get().addOnSuccessListener { d ->
+                                if (d.exists()) {
+                                    btn.text = "✅ تم تسجيل حضورك لحصة $gname"
+                                } else {
+                                    btn.isEnabled = true
+                                    btn.text = "✅ سجّل حضورك لحصة $gname"
+                                    btn.setOnClickListener {
+                                        ref.set(hashMapOf(
+                                            "teacherCode" to teacherCode,
+                                            "groupId" to g.id,
+                                            "groupName" to gname,
+                                            "studentName" to name,
+                                            "date" to dateStr,
+                                            "slot" to time,
+                                            "createdAt" to System.currentTimeMillis()
+                                        )).addOnSuccessListener {
+                                            btn.isEnabled = false
+                                            btn.text = "✅ تم تسجيل حضورك لحصة $gname"
+                                            Toast.makeText(this, "تم تسجيل حضورك 👍", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
+                            return@addOnSuccessListener
+                        }
+                    }
+                }
+            }
     } 
 
     private fun ratingDocId(teacherCode: String): String {
