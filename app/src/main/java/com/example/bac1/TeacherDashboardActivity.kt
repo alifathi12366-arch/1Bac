@@ -83,6 +83,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         btnParent.addView(createBtn, at)
         btnParent.addView(listBtn, at + 1)
         btnParent.addView(honorBtn, at + 2)
+                val groupsBtn = Button(this)
+        groupsBtn.text = "👥 مجموعاتي وجدول حصصي"
+        groupsBtn.setOnClickListener { startActivity(Intent(this, TeacherGroupsActivity::class.java)) }
+        btnParent.addView(groupsBtn, at + 3)
 
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
@@ -128,7 +132,8 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
 
         loadComprehensiveStats(teacherCode)
-        loadAbsentToday(teacherCode)
+                findViewById<TextView>(R.id.absentTodayList).text =
+            "الغياب بالحصة: من زرار مجموعاتي ← اختر المجموعة ← سجل الحضور والغياب"
     }
 
     // تحديث خاص بالمدرسين فقط (ملف version_teacher.json)
