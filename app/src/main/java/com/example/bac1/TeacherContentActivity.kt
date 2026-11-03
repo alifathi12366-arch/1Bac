@@ -44,7 +44,6 @@ class TeacherContentActivity : AppCompatActivity() {
         nameView.text = "أستاذ $teacherName"
                 addTeacherCard(nameView, teacherCode)
 
-        markStudentAttendance(teacherCode)
 
         val etQuestion = findViewById<EditText>(R.id.etQuestion)
         val btnSendQuestion = findViewById<Button>(R.id.btnSendQuestion)
@@ -52,8 +51,7 @@ class TeacherContentActivity : AppCompatActivity() {
         val ratingBar = findViewById<RatingBar>(R.id.teacherRatingBar)
         val btnSubmitRating = findViewById<Button>(R.id.btnSubmitRating)
 
-        btnMarkAttendance.text = "✅ تم تسجيل حضورك النهاردة"
-        btnMarkAttendance.isEnabled = false
+                setupSessionAttendance(btnMarkAttendance)
 
         findViewById<Button>(R.id.btnGoToExams).setOnClickListener {
             val i = Intent(this, StudentExamsActivity::class.java)
