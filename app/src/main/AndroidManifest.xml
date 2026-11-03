@@ -72,6 +72,7 @@
         <activity android:name=".TeacherGroupsActivity" android:exported="false" />
 <activity android:name=".GroupEditActivity" android:exported="false" />
 <activity android:name=".GroupAttendanceActivity" android:exported="false" />
+        <activity android:name=".ExamAnalysisActivity" android:exported="false" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
