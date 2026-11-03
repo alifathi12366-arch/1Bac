@@ -87,6 +87,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         groupsBtn.text = "👥 مجموعاتي وجدول حصصي"
         groupsBtn.setOnClickListener { startActivity(Intent(this, TeacherGroupsActivity::class.java)) }
         btnParent.addView(groupsBtn, at + 3)
+                val analysisBtn = Button(this)
+        analysisBtn.text = "📉 أكتر الأسئلة غلطًا"
+        analysisBtn.setOnClickListener { startActivity(Intent(this, ExamAnalysisActivity::class.java)) }
+        btnParent.addView(analysisBtn, at + 4)
 
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
