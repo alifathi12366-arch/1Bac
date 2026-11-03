@@ -14,9 +14,14 @@ import java.util.UUID
 
 class TeacherDashboardActivity : AppCompatActivity() {
 
+    // زوّد الرقم ده مع كل نسخة جديدة للمدرسين
+    private val currentTeacherVersion = 3
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_dashboard)
+
+        checkTeacherUpdate()
 
         findViewById<Button?>(resources.getIdentifier("btnAddExam", "id", packageName))?.setOnClickListener {
             startActivity(Intent(this, AddExamActivity::class.java))
@@ -78,7 +83,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
         btnParent.addView(createBtn, at)
         btnParent.addView(listBtn, at + 1)
         btnParent.addView(honorBtn, at + 2)
-    
 
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
@@ -105,7 +109,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
                 .document(contentId)
                 .set(data)
                 .addOnSuccessListener {
-                                        TeacherActivityLog.post(this, "نزّل محتوى جديد 📚")
+                    TeacherActivityLog.post(this, "نزّل محتوى جديد 📚")
                     Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
                     finish()
                 }
@@ -116,9 +120,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         if (teacherCode.isNotEmpty()) {
             loadStudentQuestions(teacherCode)
-        }
-
-        if (teacherCode.isNotEmpty()) {
             getStudentCount(teacherCode) { count ->
                 studentCountText.text = "عدد الطلاب المسجلين معاك: $count طالب 👥"
             }
@@ -128,6 +129,37 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         loadComprehensiveStats(teacherCode)
         loadAbsentToday(teacherCode)
+    }
+
+    // تحديث خاص بالمدرسين فقط (ملف version_teacher.json)
+    private fun checkTeacherUpdate() {
+        val queue = com.android.volley.toolbox.Volley.newRequestQueue(this)
+        val url = "https://raw.githubusercontent.com/alifathi12366-arch/1Bac/main/version_teacher.json"
+
+        val request = com.android.volley.toolbox.StringRequest(
+            com.android.volley.Request.Method.GET, url,
+            { response ->
+                try {
+                    val json = org.json.JSONObject(response)
+                    val latest = json.getInt("latestVersion")
+                    val downloadUrl = json.getString("downloadUrl")
+                    if (latest > currentTeacherVersion && downloadUrl.startsWith("http")) {
+                        android.app.AlertDialog.Builder(this)
+                            .setTitle("تحديث جديد للمدرسين")
+                            .setMessage("فيه نسخة جديدة فيها مميزات جديدة، حمّلها دلوقتي")
+                            .setPositiveButton("تحميل") { _, _ ->
+                                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(downloadUrl)))
+                            }
+                            .setNegativeButton("لاحقًا", null)
+                            .show()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            },
+            { error -> error.printStackTrace() }
+        )
+        queue.add(request)
     }
 
     private fun loadAbsentToday(teacherCode: String) {
