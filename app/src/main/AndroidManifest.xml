@@ -74,6 +74,9 @@
 <activity android:name=".GroupAttendanceActivity" android:exported="false" />
         <activity android:name=".ExamAnalysisActivity" android:exported="false" />
         <activity android:name=".QuestionBankActivity" android:exported="false" />
+        <activity android:name=".ReviewEditActivity" android:exported="false" />
+<activity android:name=".ReviewListActivity" android:exported="false" />
+<activity android:name=".ReviewViewActivity" android:exported="false" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
