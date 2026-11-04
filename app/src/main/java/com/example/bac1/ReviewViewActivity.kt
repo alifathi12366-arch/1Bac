@@ -93,7 +93,7 @@ class ReviewViewActivity : AppCompatActivity() {
         scroll.addView(box)
     }
 
-    private fun saveImage(v: View) {
+        private fun saveImage(v: View, share: Boolean = false) {
         try {
             val bmp = Bitmap.createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
             v.draw(Canvas(bmp))
@@ -105,9 +105,17 @@ class ReviewViewActivity : AppCompatActivity() {
             val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
                 ?: throw Exception("no uri")
             contentResolver.openOutputStream(uri)?.use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
-            Toast.makeText(this, "تم الحفظ في معرض الصور ✅", Toast.LENGTH_LONG).show()
+            if (share) {
+                val i = android.content.Intent(android.content.Intent.ACTION_SEND)
+                i.type = "image/png"
+                i.putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                i.putExtra(android.content.Intent.EXTRA_TEXT, "مراجعة من تطبيق أولى بكالوريا 📘")
+                i.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                startActivity(android.content.Intent.createChooser(i, "مشاركة المراجعة"))
+            } else {
+                Toast.makeText(this, "تم الحفظ في معرض الصور ✅", Toast.LENGTH_LONG).show()
+            }
         } catch (e: Exception) {
             Toast.makeText(this, "تعذّر الحفظ", Toast.LENGTH_SHORT).show()
         }
     }
-}
