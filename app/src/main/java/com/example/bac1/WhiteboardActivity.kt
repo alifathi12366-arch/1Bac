@@ -3,6 +3,7 @@ package com.example.bac1
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.*
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.Gravity
