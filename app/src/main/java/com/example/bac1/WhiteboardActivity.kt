@@ -4,14 +4,21 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.GradientDrawable
+import android.graphics.pdf.PdfRenderer
+import android.net.Uri
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
+import android.text.InputType
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
+import java.io.FileOutputStream
 import kotlin.math.*
 
 class BoardView(ctx: Context) : View(ctx) {
@@ -22,7 +29,10 @@ class BoardView(ctx: Context) : View(ctx) {
     private class PathItem(val path: Path, val paint: Paint) : Item()
     private class ShapeItem(val tool: Tool, val x1: Float, val y1: Float, val x2: Float, val y2: Float, val paint: Paint) : Item()
 
-    private class Page { val items = mutableListOf<Item>() }
+    private class Page {
+        val items = mutableListOf<Item>()
+        var bgPath: String? = null
+    }
 
     private val pages = mutableListOf(Page())
     var pageIndex = 0
@@ -65,6 +75,44 @@ class BoardView(ctx: Context) : View(ctx) {
     private var lastMidX = 0f
     private var lastMidY = 0f
 
+    // صفحة الكتاب الحالية (بتتحمّل صفحة واحدة بس في الذاكرة)
+    private var curBg: Bitmap? = null
+    private var curBgPath: String? = null
+
+    private fun refreshBg() {
+        val path = pages[pageIndex].bgPath
+        if (path == curBgPath) return
+        curBg = null
+        curBgPath = path
+        if (path != null) {
+            curBg = try { BitmapFactory.decodeFile(path) } catch (e: Throwable) { null }
+        }
+    }
+
+    // يضيف صفحات خلفيتها صور الكتاب
+    fun addBackgrounds(paths: List<String>) {
+        if (paths.isEmpty()) return
+        val first = pages[pageIndex]
+        var start = pageIndex
+        var from = 0
+        if (first.items.isEmpty() && first.bgPath == null) {
+            first.bgPath = paths[0]
+            from = 1
+        } else {
+            start = pages.size
+        }
+        for (i in from until paths.size) {
+            val p = Page()
+            p.bgPath = paths[i]
+            pages.add(p)
+            if (i == from && from == 0) start = pages.size - 1
+        }
+        pageIndex = start
+        refreshBg()
+        onPageChanged?.invoke()
+        invalidate()
+    }
+
     private fun makePaint(): Paint {
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         p.style = Paint.Style.STROKE
@@ -72,7 +120,11 @@ class BoardView(ctx: Context) : View(ctx) {
         p.strokeJoin = Paint.Join.ROUND
         when (tool) {
             Tool.HIGHLIGHT -> { p.color = (color and 0x00FFFFFF) or 0x55000000; p.strokeWidth = strokeW * 3.5f; p.strokeCap = Paint.Cap.SQUARE }
-            Tool.ERASER -> { p.color = bg; p.strokeWidth = strokeW * 3f }
+            Tool.ERASER -> {
+                p.color = Color.TRANSPARENT
+                p.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+                p.strokeWidth = strokeW * 3f
+            }
             else -> { p.color = color; p.strokeWidth = strokeW }
         }
         return p
@@ -93,9 +145,12 @@ class BoardView(ctx: Context) : View(ctx) {
         if (items.isNotEmpty()) { items.removeAt(items.size - 1); invalidate() }
     }
     fun clearPage() { pages[pageIndex].items.clear(); invalidate() }
-    fun newPage() { pages.add(Page()); pageIndex = pages.size - 1; onPageChanged?.invoke(); invalidate() }
-    fun prev() { if (pageIndex > 0) { pageIndex--; onPageChanged?.invoke(); invalidate() } }
-    fun next() { if (pageIndex < pages.size - 1) { pageIndex++; onPageChanged?.invoke(); invalidate() } }
+    fun newPage() {
+        pages.add(Page()); pageIndex = pages.size - 1
+        refreshBg(); onPageChanged?.invoke(); invalidate()
+    }
+    fun prev() { if (pageIndex > 0) { pageIndex--; refreshBg(); onPageChanged?.invoke(); invalidate() } }
+    fun next() { if (pageIndex < pages.size - 1) { pageIndex++; refreshBg(); onPageChanged?.invoke(); invalidate() } }
     fun resetView() { scale = 1f; tx = 0f; ty = 0f; invalidate() }
 
     fun snapshot(): Bitmap {
@@ -129,6 +184,16 @@ class BoardView(ctx: Context) : View(ctx) {
         c.save()
         c.translate(tx, ty)
         c.scale(scale, scale)
+
+        // صفحة الكتاب (بعرض الشاشة)
+        curBg?.let { b ->
+            val w = this.width.toFloat().coerceAtLeast(1f)
+            val h = w * b.height / b.width
+            c.drawBitmap(b, null, RectF(0f, 0f, w, h), null)
+        }
+
+        // الكتابة في طبقة منفصلة عشان الاستيكة تمسح الكتابة بس
+        val layer = c.saveLayer(null, null)
         for (it in pages[pageIndex].items) {
             when (it) {
                 is PathItem -> c.drawPath(it.path, it.paint)
@@ -138,8 +203,10 @@ class BoardView(ctx: Context) : View(ctx) {
         if (withLive) {
             curPath?.let { c.drawPath(it, curPaint!!) }
             if (drawingShape) drawShape(c, tool, sx, sy, ex, ey, makePaint())
-            c.drawRect(0f, 0f, width * boardW, height * boardH, borderPaint)
         }
+        c.restoreToCount(layer)
+
+        if (withLive) c.drawRect(0f, 0f, width * boardW, height * boardH, borderPaint)
         c.restore()
     }
 
@@ -248,6 +315,16 @@ class WhiteboardActivity : AppCompatActivity() {
     private var hidden = false
     private val toolButtons = mutableMapOf<BoardView.Tool, Button>()
     private val colorViews = mutableListOf<Pair<Int, View>>()
+
+    private val maxBookPages = 30
+    private val bookWidth = 1400
+
+    private val pdfPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) startPdf(uri)
+    }
+    private val imgPicker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        if (!uris.isNullOrEmpty()) startImages(uris.take(maxBookPages))
+    }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -360,6 +437,8 @@ class WhiteboardActivity : AppCompatActivity() {
             btn("🗑️ مسح") { board.clearPage() },
             btn("🔍 الحجم الأصلي") { board.resetView() },
             laserBtn,
+            btn("📖 كتاب PDF") { pdfPicker.launch(arrayOf("application/pdf")) },
+            btn("🖼️ صور") { imgPicker.launch("image/*") },
             btn("🎨 خلفية") { pickBg() },
             btn("💾 صورة") { saveImage() },
             btn("🎬 وضع الشرح") { toggleBars() },
@@ -396,6 +475,13 @@ class WhiteboardActivity : AppCompatActivity() {
         setContentView(root)
     }
 
+    override fun onDestroy() {
+        // تنظيف صفحات الكتاب المؤقتة
+        cacheDir.listFiles()?.filter { it.name.startsWith("bg_") || it.name == "book.pdf" }
+            ?.forEach { it.delete() }
+        super.onDestroy()
+    }
+
     private fun updatePage() { pageText.text = "صفحة ${board.pageIndex + 1} / ${board.pageCount}" }
 
     private fun toggleBars() {
@@ -430,4 +516,22 @@ class WhiteboardActivity : AppCompatActivity() {
             Toast.makeText(this, "تعذّر الحفظ", Toast.LENGTH_SHORT).show()
         }
     }
-}
+
+    // ---------------- استيراد الكتاب ----------------
+
+    private fun progress(msg: String): AlertDialog {
+        val d = AlertDialog.Builder(this).setMessage(msg).setCancelable(false).create()
+        d.show()
+        return d
+    }
+
+    private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_LONG).show()
+
+    private fun startPdf(uri: Uri) {
+        val dlg = progress("جارٍ فتح الكتاب...")
+        Thread {
+            try {
+                val f = File(cacheDir, "book.pdf")
+                contentResolver.openInputStream(uri)?.use { i ->
+                    f.outputStream().use { o -> i.copyTo(o) }
+                } ?: throw Exceptio
