@@ -1,6 +1,7 @@
 package com.example.bac1
 
 import android.content.ContentValues
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -84,12 +85,14 @@ class ReviewViewActivity : AppCompatActivity() {
 
         val save = Button(this)
         save.text = "💾 حفظ كصورة"
-        save.setOnClickListener { saveImage(card) }
+        save.setOnClickListener { saveImage(card, false) }
         box.addView(save, LinearLayout.LayoutParams(-1, -2).also { it.topMargin = dp(16) })
-                val share = Button(this)
+
+        val share = Button(this)
         share.text = "📤 مشاركة (واتساب وغيره)"
         share.setOnClickListener { saveImage(card, true) }
         box.addView(share, LinearLayout.LayoutParams(-1, -2))
+
         val back = Button(this)
         back.text = "رجوع"
         back.setOnClickListener { finish() }
@@ -97,7 +100,7 @@ class ReviewViewActivity : AppCompatActivity() {
         scroll.addView(box)
     }
 
-        private fun saveImage(v: View, share: Boolean = false) {
+    private fun saveImage(v: View, share: Boolean) {
         try {
             val bmp = Bitmap.createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
             v.draw(Canvas(bmp))
@@ -110,12 +113,12 @@ class ReviewViewActivity : AppCompatActivity() {
                 ?: throw Exception("no uri")
             contentResolver.openOutputStream(uri)?.use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
             if (share) {
-                val i = android.content.Intent(android.content.Intent.ACTION_SEND)
+                val i = Intent(Intent.ACTION_SEND)
                 i.type = "image/png"
-                i.putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                i.putExtra(android.content.Intent.EXTRA_TEXT, "مراجعة من تطبيق أولى بكالوريا 📘")
-                i.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                startActivity(android.content.Intent.createChooser(i, "مشاركة المراجعة"))
+                i.putExtra(Intent.EXTRA_STREAM, uri)
+                i.putExtra(Intent.EXTRA_TEXT, "مراجعة من تطبيق أولى بكالوريا 📘")
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                startActivity(Intent.createChooser(i, "مشاركة المراجعة"))
             } else {
                 Toast.makeText(this, "تم الحفظ في معرض الصور ✅", Toast.LENGTH_LONG).show()
             }
@@ -123,3 +126,4 @@ class ReviewViewActivity : AppCompatActivity() {
             Toast.makeText(this, "تعذّر الحفظ", Toast.LENGTH_SHORT).show()
         }
     }
+}
