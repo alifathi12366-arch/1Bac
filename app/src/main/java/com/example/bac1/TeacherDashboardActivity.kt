@@ -91,6 +91,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         analysisBtn.text = "📉 أكتر الأسئلة غلطًا"
         analysisBtn.setOnClickListener { startActivity(Intent(this, ExamAnalysisActivity::class.java)) }
         btnParent.addView(analysisBtn, at + 4)
+                val bankBtn = Button(this)
+        bankBtn.text = "🏦 بنك أسئلتي"
+        bankBtn.setOnClickListener { startActivity(Intent(this, QuestionBankActivity::class.java)) }
+        btnParent.addView(bankBtn, at + 5)
 
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
