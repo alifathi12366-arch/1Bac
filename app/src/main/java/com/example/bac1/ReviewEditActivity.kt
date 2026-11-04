@@ -1,5 +1,6 @@
 package com.example.bac1
 
+import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.InputType
@@ -76,6 +77,14 @@ class ReviewEditActivity : AppCompatActivity() {
         container.addView(save)
 
         if (reviewId != null) {
+            val preview = Button(this)
+            preview.text = "👁️ معاينة ومشاركة"
+            preview.setOnClickListener {
+                startActivity(Intent(this, ReviewViewActivity::class.java)
+                    .putExtra("reviewId", reviewId))
+            }
+            container.addView(preview)
+
             db.collection("teacherReviews").document(reviewId!!).get().addOnSuccessListener { d ->
                 etTitle.setText(d.getString("title") ?: "")
                 etBody.setText(d.getString("body") ?: "")
