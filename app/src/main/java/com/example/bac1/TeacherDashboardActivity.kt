@@ -95,6 +95,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         bankBtn.text = "🏦 بنك أسئلتي"
         bankBtn.setOnClickListener { startActivity(Intent(this, QuestionBankActivity::class.java)) }
         btnParent.addView(bankBtn, at + 5)
+               val reviewBtn = Button(this)
+        reviewBtn.text = "📘 مراجعاتي"
+        reviewBtn.setOnClickListener { startActivity(Intent(this, ReviewListActivity::class.java)) }
+        btnParent.addView(reviewBtn, at + 6) 
 
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
