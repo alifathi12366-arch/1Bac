@@ -31,32 +31,36 @@ class BoardView(ctx: Context) : View(ctx) {
 
     var tool = Tool.PEN
     var color = Color.BLACK
-    var width = 6f
+    var strokeW = 6f
     var bg = Color.WHITE
+    var laserWithPen = false
     var onPageChanged: (() -> Unit)? = null
 
-    // تكبير وتحريك
+    private val boardW = 3f
+    private val boardH = 3f
+    private val minScale = 0.3f
+    private val maxScale = 5f
+
     private var scale = 1f
     private var tx = 0f
     private var ty = 0f
-    private val matrix = Matrix()
+    private val m = Matrix()
     private val inv = Matrix()
 
-    // الحالة الحالية
     private var curPath: Path? = null
     private var curPaint: Paint? = null
     private var sx = 0f; private var sy = 0f; private var ex = 0f; private var ey = 0f
     private var drawingShape = false
 
-    // الليزر
     private var laserX = 0f; private var laserY = 0f
     private var laserOn = false
-    private var laserFade = 0L
-
+    private var laserStamp = 0L
     private val laserPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF1744.toInt() }
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x55FF1744 }
+    private val borderPaint = Paint().apply {
+        color = 0x66888888; style = Paint.Style.STROKE; strokeWidth = 3f
+    }
 
-    // قرص
     private var lastDist = 0f
     private var lastMidX = 0f
     private var lastMidY = 0f
@@ -67,19 +71,19 @@ class BoardView(ctx: Context) : View(ctx) {
         p.strokeCap = Paint.Cap.ROUND
         p.strokeJoin = Paint.Join.ROUND
         when (tool) {
-            Tool.HIGHLIGHT -> { p.color = (color and 0x00FFFFFF) or 0x55000000; p.strokeWidth = width * 3.5f; p.strokeCap = Paint.Cap.SQUARE }
-            Tool.ERASER -> { p.color = bg; p.strokeWidth = width * 3f }
-            else -> { p.color = color; p.strokeWidth = width }
+            Tool.HIGHLIGHT -> { p.color = (color and 0x00FFFFFF) or 0x55000000; p.strokeWidth = strokeW * 3.5f; p.strokeCap = Paint.Cap.SQUARE }
+            Tool.ERASER -> { p.color = bg; p.strokeWidth = strokeW * 3f }
+            else -> { p.color = color; p.strokeWidth = strokeW }
         }
         return p
     }
 
     private fun toBoard(x: Float, y: Float): FloatArray {
         val pt = floatArrayOf(x, y)
-        matrix.reset()
-        matrix.postScale(scale, scale)
-        matrix.postTranslate(tx, ty)
-        matrix.invert(inv)
+        m.reset()
+        m.postScale(scale, scale)
+        m.postTranslate(tx, ty)
+        m.invert(inv)
         inv.mapPoints(pt)
         return pt
     }
@@ -88,26 +92,19 @@ class BoardView(ctx: Context) : View(ctx) {
         val items = pages[pageIndex].items
         if (items.isNotEmpty()) { items.removeAt(items.size - 1); invalidate() }
     }
-
     fun clearPage() { pages[pageIndex].items.clear(); invalidate() }
-
     fun newPage() { pages.add(Page()); pageIndex = pages.size - 1; onPageChanged?.invoke(); invalidate() }
     fun prev() { if (pageIndex > 0) { pageIndex--; onPageChanged?.invoke(); invalidate() } }
     fun next() { if (pageIndex < pages.size - 1) { pageIndex++; onPageChanged?.invoke(); invalidate() } }
     fun resetView() { scale = 1f; tx = 0f; ty = 0f; invalidate() }
 
     fun snapshot(): Bitmap {
-        val b = Bitmap.createBitmap(width(), height(), Bitmap.Config.ARGB_8888)
-        val c = Canvas(b)
-        val s = scale; val x = tx; val y = ty
-        scale = 1f; tx = 0f; ty = 0f
-        drawContent(c, false)
-        scale = s; tx = x; ty = y
+        val w = this.width.coerceAtLeast(1)
+        val h = this.height.coerceAtLeast(1)
+        val b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        drawContent(Canvas(b), false)
         return b
     }
-
-    private fun width() = this.getWidth().coerceAtLeast(1)
-    private fun height() = this.getHeight().coerceAtLeast(1)
 
     private fun drawShape(c: Canvas, t: Tool, x1: Float, y1: Float, x2: Float, y2: Float, p: Paint) {
         when (t) {
@@ -122,10 +119,7 @@ class BoardView(ctx: Context) : View(ctx) {
                 }
             }
             Tool.RECT -> c.drawRect(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2), p)
-            Tool.CIRCLE -> {
-                val cx = (x1 + x2) / 2; val cy = (y1 + y2) / 2
-                c.drawOval(RectF(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)), p)
-            }
+            Tool.CIRCLE -> c.drawOval(RectF(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)), p)
             else -> {}
         }
     }
@@ -133,8 +127,8 @@ class BoardView(ctx: Context) : View(ctx) {
     private fun drawContent(c: Canvas, withLive: Boolean) {
         c.drawColor(bg)
         c.save()
+        c.translate(tx, ty)
         c.scale(scale, scale)
-        c.translate(tx / scale, ty / scale)
         for (it in pages[pageIndex].items) {
             when (it) {
                 is PathItem -> c.drawPath(it.path, it.paint)
@@ -144,6 +138,7 @@ class BoardView(ctx: Context) : View(ctx) {
         if (withLive) {
             curPath?.let { c.drawPath(it, curPaint!!) }
             if (drawingShape) drawShape(c, tool, sx, sy, ex, ey, makePaint())
+            c.drawRect(0f, 0f, width * boardW, height * boardH, borderPaint)
         }
         c.restore()
     }
@@ -151,7 +146,7 @@ class BoardView(ctx: Context) : View(ctx) {
     override fun onDraw(canvas: Canvas) {
         drawContent(canvas, true)
         if (laserOn) {
-            val age = System.currentTimeMillis() - laserFade
+            val age = System.currentTimeMillis() - laserStamp
             if (age < 1200) {
                 canvas.drawCircle(laserX, laserY, 28f, glowPaint)
                 canvas.drawCircle(laserX, laserY, 12f, laserPaint)
@@ -160,16 +155,22 @@ class BoardView(ctx: Context) : View(ctx) {
         }
     }
 
+    private fun showLaser(x: Float, y: Float) {
+        laserX = x; laserY = y; laserOn = true; laserStamp = System.currentTimeMillis()
+    }
+
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        // تحريك/تكبير بإصبعين دائمًا، أو بإصبع واحد في وضع MOVE
         if (e.pointerCount >= 2 || tool == Tool.MOVE) {
             handleMove(e)
             return true
         }
+        if (laserWithPen && tool != Tool.LASER && e.actionMasked != MotionEvent.ACTION_UP) {
+            showLaser(e.x, e.y)
+        }
         val p = toBoard(e.x, e.y)
         when (tool) {
             Tool.LASER -> {
-                laserX = e.x; laserY = e.y; laserOn = true; laserFade = System.currentTimeMillis()
+                showLaser(e.x, e.y)
                 invalidate()
                 return true
             }
@@ -212,8 +213,7 @@ class BoardView(ctx: Context) : View(ctx) {
                     val mx = (e.getX(0) + e.getX(1)) / 2
                     val my = (e.getY(0) + e.getY(1)) / 2
                     if (lastDist > 0) {
-                        val f = (d / lastDist)
-                        val ns = (scale * f).coerceIn(0.5f, 5f)
+                        val ns = (scale * (d / lastDist)).coerceIn(minScale, maxScale)
                         val real = ns / scale
                         tx = mx - (mx - tx) * real + (mx - lastMidX)
                         ty = my - (my - ty) * real + (my - lastMidY)
@@ -246,6 +246,8 @@ class WhiteboardActivity : AppCompatActivity() {
     private lateinit var bottom: LinearLayout
     private lateinit var pageText: TextView
     private var hidden = false
+    private val toolButtons = mutableMapOf<BoardView.Tool, Button>()
+    private val colorViews = mutableListOf<Pair<Int, View>>()
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -261,6 +263,26 @@ class WhiteboardActivity : AppCompatActivity() {
         return b
     }
 
+    private fun selectTool(t: BoardView.Tool) {
+        board.tool = t
+        toolButtons.forEach { (k, b) ->
+            b.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                if (k == t) 0xFFFFD600.toInt() else 0xFFBDBDBD.toInt())
+            b.setTextColor(Color.BLACK)
+        }
+    }
+
+    private fun selectColor(c: Int) {
+        board.color = c
+        colorViews.forEach { (col, v) ->
+            val g = GradientDrawable()
+            g.setColor(col)
+            g.shape = GradientDrawable.OVAL
+            if (col == c) g.setStroke(dp(4), Color.WHITE) else g.setStroke(dp(1), Color.GRAY)
+            v.background = g
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         board = BoardView(this)
@@ -268,7 +290,6 @@ class WhiteboardActivity : AppCompatActivity() {
         val root = FrameLayout(this)
         root.addView(board, FrameLayout.LayoutParams(-1, -1))
 
-        // الشريط العلوي (أدوات)
         toolbar = LinearLayout(this)
         toolbar.orientation = LinearLayout.VERTICAL
         toolbar.setBackgroundColor(0xEE303030.toInt())
@@ -290,25 +311,26 @@ class WhiteboardActivity : AppCompatActivity() {
             "◯ دائرة" to BoardView.Tool.CIRCLE, "🔴 ليزر" to BoardView.Tool.LASER,
             "✋ تحريك" to BoardView.Tool.MOVE
         )
-        toolbar.addView(row(*tools.map { (n, t) -> btn(n) { board.tool = t } }.toTypedArray()))
+        val toolViews = tools.map { (n, t) ->
+            val b = btn(n) { selectTool(t) }
+            toolButtons[t] = b
+            b as View
+        }
+        toolbar.addView(row(*toolViews.toTypedArray()))
 
-        // الألوان
         val colors = intArrayOf(
             Color.BLACK, 0xFFE53935.toInt(), 0xFF1E88E5.toInt(), 0xFF43A047.toInt(),
             0xFFFDD835.toInt(), 0xFFFB8C00.toInt(), 0xFF8E24AA.toInt(), Color.WHITE
         )
-        val colorViews = colors.map { c ->
+        val cv = colors.map { c ->
             val v = View(this)
-            val g = GradientDrawable()
-            g.setColor(c); g.setStroke(dp(2), Color.GRAY); g.shape = GradientDrawable.OVAL
-            v.background = g
-            v.setOnClickListener { board.color = c }
+            v.setOnClickListener { selectColor(c) }
             v.layoutParams = LinearLayout.LayoutParams(dp(34), dp(34)).also { it.setMargins(dp(5), dp(4), dp(5), dp(4)) }
+            colorViews.add(c to v)
             v
         }
-        toolbar.addView(row(*colorViews.toTypedArray()))
+        toolbar.addView(row(*cv.toTypedArray()))
 
-        // سُمك الخط
         val sizeRow = LinearLayout(this)
         sizeRow.orientation = LinearLayout.HORIZONTAL
         sizeRow.gravity = Gravity.CENTER_VERTICAL
@@ -320,26 +342,31 @@ class WhiteboardActivity : AppCompatActivity() {
         seek.max = 40
         seek.progress = 6
         seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(s: SeekBar?, p: Int, u: Boolean) { board.width = max(1, p).toFloat() }
+            override fun onProgressChanged(s: SeekBar?, p: Int, u: Boolean) { board.strokeW = max(1, p).toFloat() }
             override fun onStartTrackingTouch(s: SeekBar?) {}
             override fun onStopTrackingTouch(s: SeekBar?) {}
         })
         sizeRow.addView(seek, LinearLayout.LayoutParams(0, -2, 1f))
         toolbar.addView(sizeRow)
 
-        // إجراءات
+        val laserBtn = btn("🔴 ليزر مع القلم: موقوف") { }
+        laserBtn.setOnClickListener {
+            board.laserWithPen = !board.laserWithPen
+            laserBtn.text = if (board.laserWithPen) "🔴 ليزر مع القلم: شغال" else "🔴 ليزر مع القلم: موقوف"
+        }
+
         toolbar.addView(row(
             btn("↩️ تراجع") { board.undo() },
             btn("🗑️ مسح") { board.clearPage() },
-            btn("🔍 إعادة") { board.resetView() },
+            btn("🔍 الحجم الأصلي") { board.resetView() },
+            laserBtn,
             btn("🎨 خلفية") { pickBg() },
             btn("💾 صورة") { saveImage() },
-            btn("👁️ إخفاء") { toggleBars() },
+            btn("🎬 وضع الشرح") { toggleBars() },
             btn("✖ خروج") { finish() }
         ))
         root.addView(toolbar, FrameLayout.LayoutParams(-1, -2, Gravity.TOP))
 
-        // شريط الصفحات
         bottom = LinearLayout(this)
         bottom.orientation = LinearLayout.HORIZONTAL
         bottom.gravity = Gravity.CENTER
@@ -354,17 +381,18 @@ class WhiteboardActivity : AppCompatActivity() {
         bottom.addView(btn("➕ صفحة") { board.newPage() })
         root.addView(bottom, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
 
-        // زرار صغير يرجّع الأدوات
         val show = Button(this)
-        show.text = "👁️"
+        show.text = "🎬"
         show.visibility = View.GONE
-        show.alpha = 0.25f
+        show.alpha = 0.3f
         show.setOnClickListener { toggleBars() }
         show.tag = "showBtn"
         root.addView(show, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.TOP or Gravity.END))
 
         board.onPageChanged = { updatePage() }
         updatePage()
+        selectTool(BoardView.Tool.PEN)
+        selectColor(Color.BLACK)
         setContentView(root)
     }
 
@@ -375,7 +403,7 @@ class WhiteboardActivity : AppCompatActivity() {
         val v = if (hidden) View.GONE else View.VISIBLE
         toolbar.visibility = v
         bottom.visibility = v
-        (window.decorView.findViewWithTag<View>("showBtn")).visibility = if (hidden) View.VISIBLE else View.GONE
+        window.decorView.findViewWithTag<View>("showBtn").visibility = if (hidden) View.VISIBLE else View.GONE
     }
 
     private fun pickBg() {
