@@ -68,6 +68,13 @@ class AddExamActivity : AppCompatActivity() {
         btnAddQuestion.setOnClickListener {
             addQuestionBlock()
         }
+               val bankBtn = Button(this)
+        bankBtn.text = "🏦 سحب من البنك"
+        bankBtn.setOnClickListener {
+            pickLauncher.launch(Intent(this, QuestionBankActivity::class.java).putExtra("pick", true))
+        }
+        (btnAddQuestion.parent as LinearLayout).addView(
+            bankBtn, (btnAddQuestion.parent as LinearLayout).indexOfChild(btnAddQuestion) + 1) 
 
         tvDeadline.setOnClickListener { pickDeadline(tvDeadline) }
         tvDeadline.setOnLongClickListener {
