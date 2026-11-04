@@ -68,6 +68,12 @@ class TeacherContentActivity : AppCompatActivity() {
             startActivity(i)
         }
         examsParent.addView(challengesBtn, examsParent.indexOfChild(examsBtn) + 1)
+               val reviewsBtn = Button(this)
+        reviewsBtn.text = "📘 المراجعات"
+        reviewsBtn.setOnClickListener {
+            startActivity(Intent(this, ReviewListActivity::class.java).putExtra("teacherCode", teacherCode))
+        }
+        examsParent.addView(reviewsBtn, examsParent.indexOfChild(examsBtn) + 2) 
 
         findViewById<Button>(R.id.btnMyMistakes).setOnClickListener {
             val i = Intent(this, MyMistakesActivity::class.java)
