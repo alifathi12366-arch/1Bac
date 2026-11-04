@@ -86,6 +86,10 @@ class ReviewViewActivity : AppCompatActivity() {
         save.text = "💾 حفظ كصورة"
         save.setOnClickListener { saveImage(card) }
         box.addView(save, LinearLayout.LayoutParams(-1, -2).also { it.topMargin = dp(16) })
+                val share = Button(this)
+        share.text = "📤 مشاركة (واتساب وغيره)"
+        share.setOnClickListener { saveImage(card, true) }
+        box.addView(share, LinearLayout.LayoutParams(-1, -2))
         val back = Button(this)
         back.text = "رجوع"
         back.setOnClickListener { finish() }
