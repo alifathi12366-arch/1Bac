@@ -27,6 +27,30 @@ class AddExamActivity : AppCompatActivity() {
     private lateinit var questionsContainer: LinearLayout
     private val questionBlocks = mutableListOf<View>()
     private var deadlineMs = 0L
+        private val pickLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { r ->
+        if (r.resultCode == Activity.RESULT_OK) {
+            r.data?.getStringArrayListExtra("picked")?.forEach { line ->
+                val p = line.split("\u0001")
+                if (p.size >= 6) addPickedQuestion(p)
+            }
+        }
+    }
+
+    private fun addPickedQuestion(p: List<String>) {
+        addQuestionBlock()
+        val block = questionBlocks.last()
+        block.findViewById<RadioGroup>(R.id.rgQuestionType).check(R.id.rbTypeMcq)
+        block.findViewById<LinearLayout>(R.id.mcqFieldsContainer).visibility = View.VISIBLE
+        block.findViewById<EditText>(R.id.etQuestionText).setText(p[0])
+        block.findViewById<EditText>(R.id.etOption1).setText(p[1])
+        block.findViewById<EditText>(R.id.etOption2).setText(p[2])
+        block.findViewById<EditText>(R.id.etOption3).setText(p[3])
+        block.findViewById<EditText>(R.id.etOption4).setText(p[4])
+        block.findViewById<EditText>(R.id.etCorrectAnswer).setText(p[5])
+        block.findViewById<EditText>(R.id.etQuestionScore).setText("1")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
