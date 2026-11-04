@@ -77,8 +77,9 @@
         <activity android:name=".ReviewEditActivity" android:exported="false" />
 <activity android:name=".ReviewListActivity" android:exported="false" />
 <activity android:name=".ReviewViewActivity" android:exported="false" />
-        <activity android:name=".WhiteboardActivity" android:exported="false"
-    android:screenOrientation="sensor" />
+    <activity android:name=".WhiteboardActivity" android:exported="false"
+    android:screenOrientation="sensor"
+    android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" />
 
         <!-- الشاشات الجديدة الخاصة بالامتحانات -->
         <activity android:name=".AddExamActivity" />
