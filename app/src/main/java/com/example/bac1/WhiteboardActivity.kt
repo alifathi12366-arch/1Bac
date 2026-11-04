@@ -512,7 +512,140 @@ class WhiteboardActivity : AppCompatActivity() {
                 ?: throw Exception("no uri")
             contentResolver.openOutputStream(uri)?.use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
             Toast.makeText(this, "تم حفظ الصفحة في المعرض ✅", Toast.LENGTH_LONG).show()
-                } catch (e: Throwable) {
+        } catch (e: Exception) {
+            Toast.makeText(this, "تعذّر الحفظ", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ---------------- استيراد الكتاب ----------------
+
+    private fun progress(msg: String): AlertDialog {
+        val d = AlertDialog.Builder(this).setMessage(msg).setCancelable(false).create()
+        d.show()
+        return d
+    }
+
+    private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_LONG).show()
+
+    private fun startPdf(uri: Uri) {
+        val dlg = progress("جارٍ فتح الكتاب...")
+        Thread {
+            try {
+                val f = File(cacheDir, "book.pdf")
+                contentResolver.openInputStream(uri)?.use { i ->
+                    f.outputStream().use { o -> i.copyTo(o) }
+                } ?: throw Exception("no stream")
+                val pfd = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY)
+                val r = PdfRenderer(pfd)
+                val n = r.pageCount
+                r.close()
+                pfd.close()
+                runOnUiThread { dlg.dismiss(); askRange(f, n) }
+            } catch (e: Throwable) {
+                runOnUiThread { dlg.dismiss(); toast("تعذّر فتح الملف (قد يكون محميًا أو تالفًا)") }
+            }
+        }.start()
+    }
+
+    private fun askRange(file: File, total: Int) {
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(dp(20), dp(8), dp(20), 0)
+        val info = TextView(this)
+        info.text = "الكتاب فيه $total صفحة. اختر النطاق (حتى $maxBookPages صفحة في المرة)"
+        box.addView(info)
+        fun et(hint: String, v: String): EditText {
+            val e = EditText(this)
+            e.hint = hint
+            e.inputType = InputType.TYPE_CLASS_NUMBER
+            e.setText(v)
+            box.addView(e)
+            return e
+        }
+        val from = et("من صفحة", "1")
+        val to = et("إلى صفحة", minOf(total, maxBookPages).toString())
+
+        AlertDialog.Builder(this)
+            .setTitle("📖 اختر الصفحات")
+            .setView(box)
+            .setPositiveButton("استيراد", null)
+            .setNegativeButton("إلغاء", null)
+            .create().also { d ->
+                d.show()
+                d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                    val a = from.text.toString().toIntOrNull() ?: 0
+                    val b = to.text.toString().toIntOrNull() ?: 0
+                    if (a < 1 || b > total || a > b || b - a + 1 > maxBookPages) {
+                        toast("النطاق غير صحيح (من 1 إلى $total، وبحد أقصى $maxBookPages صفحة)")
+                    } else {
+                        d.dismiss()
+                        renderPdf(file, a, b)
+                    }
+                }
+            }
+    }
+
+    private fun renderPdf(file: File, from: Int, to: Int) {
+        val dlg = progress("جارٍ تجهيز الصفحات...")
+        Thread {
+            val paths = mutableListOf<String>()
+            try {
+                val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+                val r = PdfRenderer(pfd)
+                for (i in from..to) {
+                    val page = r.openPage(i - 1)
+                    val h = (bookWidth.toLong() * page.height / page.width).toInt().coerceAtLeast(1)
+                    val bmp = Bitmap.createBitmap(bookWidth, h, Bitmap.Config.ARGB_8888)
+                    bmp.eraseColor(Color.WHITE)
+                    page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    page.close()
+                    paths.add(saveJpeg(bmp))
+                    bmp.recycle()
+                    val k = i - from + 1
+                    runOnUiThread { dlg.setMessage("جارٍ تجهيز الصفحة $k من ${to - from + 1}") }
+                }
+                r.close()
+                pfd.close()
+                runOnUiThread {
+                    dlg.dismiss()
+                    board.addBackgrounds(paths)
+                    toast("تم استيراد ${paths.size} صفحة ✅ اكتب فوقها بحرية")
+                }
+            } catch (e: Throwable) {
+                runOnUiThread {
+                    dlg.dismiss()
+                    if (paths.isNotEmpty()) board.addBackgrounds(paths)
+                    toast("حدث خطأ أثناء تجهيز الصفحات")
+                }
+            }
+        }.start()
+    }
+
+    private fun startImages(uris: List<Uri>) {
+        val dlg = progress("جارٍ تجهيز الصور...")
+        Thread {
+            val paths = mutableListOf<String>()
+            try {
+                uris.forEachIndexed { idx, uri ->
+                    val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+                    var s = 1
+                    while (opts.outWidth / s > bookWidth * 2) s *= 2
+                    val o2 = BitmapFactory.Options().apply { inSampleSize = s }
+                    var bmp = contentResolver.openInputStream(uri)?.use {
+                        BitmapFactory.decodeStream(it, null, o2)
+                    } ?: return@forEachIndexed
+                    if (bmp.width > bookWidth) {
+                        val nh = (bookWidth.toLong() * bmp.height / bmp.width).toInt().coerceAtLeast(1)
+                        val scaled = Bitmap.createScaledBitmap(bmp, bookWidth, nh, true)
+                        if (scaled != bmp) bmp.recycle()
+                        bmp = scaled
+                    }
+                    paths.add(saveJpeg(bmp))
+                    bmp.recycle()
+                    runOnUiThread { dlg.setMessage("جارٍ تجهيز الصورة ${idx + 1} من ${uris.size}") }
+                }
+            } catch (e: Throwable) {
                 // نكمل بما تم تجهيزه
             }
             runOnUiThread {
