@@ -98,8 +98,12 @@ class TeacherDashboardActivity : AppCompatActivity() {
                val reviewBtn = Button(this)
         reviewBtn.text = "📘 مراجعاتي"
         reviewBtn.setOnClickListener { startActivity(Intent(this, ReviewListActivity::class.java)) }
-        btnParent.addView(reviewBtn, at + 6) 
-
+        btnParent.addView(reviewBtn, at + 6)
+        
+        val boardBtn = Button(this)
+        boardBtn.text = "🖊️ السبورة الذكية"
+        boardBtn.setOnClickListener { startActivity(Intent(this, WhiteboardActivity::class.java)) }
+        btnParent.addView(boardBtn, at + 7)
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
             val description = etDescription.text.toString().trim()
