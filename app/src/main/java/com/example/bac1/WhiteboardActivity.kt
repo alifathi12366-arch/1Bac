@@ -512,26 +512,23 @@ class WhiteboardActivity : AppCompatActivity() {
                 ?: throw Exception("no uri")
             contentResolver.openOutputStream(uri)?.use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
             Toast.makeText(this, "تم حفظ الصفحة في المعرض ✅", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "تعذّر الحفظ", Toast.LENGTH_SHORT).show()
-        }
+                } catch (e: Throwable) {
+                // نكمل بما تم تجهيزه
+            }
+            runOnUiThread {
+                dlg.dismiss()
+                if (paths.isEmpty()) toast("تعذّر استيراد الصور")
+                else {
+                    board.addBackgrounds(paths)
+                    toast("تم استيراد ${paths.size} صفحة ✅")
+                }
+            }
+        }.start()
     }
 
-    // ---------------- استيراد الكتاب ----------------
-
-    private fun progress(msg: String): AlertDialog {
-        val d = AlertDialog.Builder(this).setMessage(msg).setCancelable(false).create()
-        d.show()
-        return d
+    private fun saveJpeg(bmp: Bitmap): String {
+        val f = File(cacheDir, "bg_${System.nanoTime()}.jpg")
+        FileOutputStream(f).use { bmp.compress(Bitmap.CompressFormat.JPEG, 88, it) }
+        return f.absolutePath
     }
-
-    private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_LONG).show()
-
-    private fun startPdf(uri: Uri) {
-        val dlg = progress("جارٍ فتح الكتاب...")
-        Thread {
-            try {
-                val f = File(cacheDir, "book.pdf")
-                contentResolver.openInputStream(uri)?.use { i ->
-                    f.outputStream().use { o -> i.copyTo(o) }
-                } ?: throw Exceptio
+}
