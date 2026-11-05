@@ -75,7 +75,6 @@ class BoardView(ctx: Context) : View(ctx) {
     private var lastMidX = 0f
     private var lastMidY = 0f
 
-    // صفحة الكتاب الحالية (بتتحمّل صفحة واحدة بس في الذاكرة)
     private var curBg: Bitmap? = null
     private var curBgPath: String? = null
 
@@ -89,7 +88,6 @@ class BoardView(ctx: Context) : View(ctx) {
         }
     }
 
-    // يضيف صفحات خلفيتها صور الكتاب
     fun addBackgrounds(paths: List<String>) {
         if (paths.isEmpty()) return
         val first = pages[pageIndex]
@@ -105,7 +103,6 @@ class BoardView(ctx: Context) : View(ctx) {
             val p = Page()
             p.bgPath = paths[i]
             pages.add(p)
-            if (i == from && from == 0) start = pages.size - 1
         }
         pageIndex = start
         refreshBg()
@@ -185,14 +182,12 @@ class BoardView(ctx: Context) : View(ctx) {
         c.translate(tx, ty)
         c.scale(scale, scale)
 
-        // صفحة الكتاب (بعرض الشاشة)
         curBg?.let { b ->
             val w = this.width.toFloat().coerceAtLeast(1f)
             val h = w * b.height / b.width
             c.drawBitmap(b, null, RectF(0f, 0f, w, h), null)
         }
 
-        // الكتابة في طبقة منفصلة عشان الاستيكة تمسح الكتابة بس
         val layer = c.saveLayer(null, null)
         for (it in pages[pageIndex].items) {
             when (it) {
@@ -305,7 +300,6 @@ class BoardView(ctx: Context) : View(ctx) {
         return sqrt(dx * dx + dy * dy)
     }
 }
-
 class WhiteboardActivity : AppCompatActivity() {
 
     private lateinit var board: BoardView
@@ -313,6 +307,7 @@ class WhiteboardActivity : AppCompatActivity() {
     private lateinit var bottom: LinearLayout
     private lateinit var pageText: TextView
     private var hidden = false
+    private var floating: LinearLayout? = null
     private val toolButtons = mutableMapOf<BoardView.Tool, Button>()
     private val colorViews = mutableListOf<Pair<Int, View>>()
 
@@ -371,7 +366,6 @@ class WhiteboardActivity : AppCompatActivity() {
         toolbar.orientation = LinearLayout.VERTICAL
         toolbar.setBackgroundColor(0xEE303030.toInt())
         toolbar.setPadding(dp(2), dp(2), dp(2), dp(2))
-toolbar.alpha = 0.92f
 
         fun row(vararg v: View): HorizontalScrollView {
             val h = HorizontalScrollView(this)
@@ -403,7 +397,7 @@ toolbar.alpha = 0.92f
         val cv = colors.map { c ->
             val v = View(this)
             v.setOnClickListener { selectColor(c) }
-            v.layoutParams = LinearLayout.LayoutParams(dp(34), dp(34)).also { it.setMargins(dp(5), dp(4), dp(5), dp(4)) }
+            v.layoutParams = LinearLayout.LayoutParams(dp(28), dp(28)).also { it.setMargins(dp(4), dp(2), dp(4), dp(2)) }
             colorViews.add(c to v)
             v
         }
@@ -464,10 +458,13 @@ toolbar.alpha = 0.92f
         val show = Button(this)
         show.text = "🎬"
         show.visibility = View.GONE
-        show.alpha = 0.3f
+        show.alpha = 0.5f
         show.setOnClickListener { toggleBars() }
         show.tag = "showBtn"
-        root.addView(show, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.TOP or Gravity.END))
+        root.addView(show, FrameLayout.LayoutParams(dp(56), dp(56), Gravity.BOTTOM or Gravity.END)
+            .also { it.bottomMargin = dp(24); it.rightMargin = dp(12) })
+
+        buildFloating(root)
 
         board.onPageChanged = { updatePage() }
         updatePage()
@@ -476,8 +473,73 @@ toolbar.alpha = 0.92f
         setContentView(root)
     }
 
+    private fun buildFloating(root: FrameLayout) {
+        val f = LinearLayout(this)
+        f.orientation = LinearLayout.VERTICAL
+        f.setBackgroundColor(0xDD303030.toInt())
+        f.setPadding(dp(4), dp(4), dp(4), dp(4))
+        f.visibility = View.GONE
+
+        val handle = TextView(this)
+        handle.text = "✥ اسحب من هنا"
+        handle.setTextColor(Color.WHITE)
+        handle.textSize = 12f
+        handle.gravity = Gravity.CENTER
+        handle.setPadding(0, dp(4), 0, dp(4))
+        f.addView(handle)
+
+        fun mini(text: String, onClick: () -> Unit): Button {
+            val b = btn(text, onClick)
+            b.textSize = 12f
+            b.layoutParams = LinearLayout.LayoutParams(-1, dp(38))
+            return b
+        }
+        f.addView(mini("✏️ قلم") { selectTool(BoardView.Tool.PEN) })
+        f.addView(mini("🖍️ تظليل") { selectTool(BoardView.Tool.HIGHLIGHT) })
+        f.addView(mini("🧽 استيكة") { selectTool(BoardView.Tool.ERASER) })
+        f.addView(mini("🔴 ليزر") { selectTool(BoardView.Tool.LASER) })
+        f.addView(mini("✋ تحريك") { selectTool(BoardView.Tool.MOVE) })
+        f.addView(mini("↩️ تراجع") { board.undo() })
+
+        val cr = LinearLayout(this)
+        cr.orientation = LinearLayout.HORIZONTAL
+        cr.gravity = Gravity.CENTER
+        intArrayOf(Color.BLACK, 0xFFE53935.toInt(), 0xFF1E88E5.toInt()).forEach { c ->
+            val v = View(this)
+            val g = GradientDrawable()
+            g.setColor(c); g.shape = GradientDrawable.OVAL; g.setStroke(dp(2), Color.WHITE)
+            v.background = g
+            v.setOnClickListener { selectColor(c) }
+            cr.addView(v, LinearLayout.LayoutParams(dp(28), dp(28)).also { it.setMargins(dp(4), dp(4), dp(4), dp(4)) })
+        }
+        f.addView(cr)
+
+        val pr = LinearLayout(this)
+        pr.orientation = LinearLayout.HORIZONTAL
+        pr.addView(mini("◀") { board.prev() }, LinearLayout.LayoutParams(0, dp(38), 1f))
+        pr.addView(mini("▶") { board.next() }, LinearLayout.LayoutParams(0, dp(38), 1f))
+        f.addView(pr)
+
+        f.addView(mini("📋 الأدوات كاملة") { toggleBars() })
+
+        var dx = 0f
+        var dy = 0f
+        handle.setOnTouchListener { _, e ->
+            when (e.actionMasked) {
+                MotionEvent.ACTION_DOWN -> { dx = f.x - e.rawX; dy = f.y - e.rawY }
+                MotionEvent.ACTION_MOVE -> {
+                    f.x = (e.rawX + dx).coerceIn(0f, (root.width - f.width).toFloat().coerceAtLeast(0f))
+                    f.y = (e.rawY + dy).coerceIn(0f, (root.height - f.height).toFloat().coerceAtLeast(0f))
+                }
+            }
+            true
+        }
+        root.addView(f, FrameLayout.LayoutParams(dp(110), -2, Gravity.TOP or Gravity.START)
+            .also { it.leftMargin = dp(8); it.topMargin = dp(80) })
+        floating = f
+    }
+
     override fun onDestroy() {
-        // تنظيف صفحات الكتاب المؤقتة
         cacheDir.listFiles()?.filter { it.name.startsWith("bg_") || it.name == "book.pdf" }
             ?.forEach { it.delete() }
         super.onDestroy()
@@ -490,6 +552,7 @@ toolbar.alpha = 0.92f
         val v = if (hidden) View.GONE else View.VISIBLE
         toolbar.visibility = v
         bottom.visibility = v
+        floating?.visibility = if (hidden) View.VISIBLE else View.GONE
         window.decorView.findViewWithTag<View>("showBtn").visibility = if (hidden) View.VISIBLE else View.GONE
     }
 
@@ -517,8 +580,6 @@ toolbar.alpha = 0.92f
             Toast.makeText(this, "تعذّر الحفظ", Toast.LENGTH_SHORT).show()
         }
     }
-
-    // ---------------- استيراد الكتاب ----------------
 
     private fun progress(msg: String): AlertDialog {
         val d = AlertDialog.Builder(this).setMessage(msg).setCancelable(false).create()
@@ -647,7 +708,6 @@ toolbar.alpha = 0.92f
                     runOnUiThread { dlg.setMessage("جارٍ تجهيز الصورة ${idx + 1} من ${uris.size}") }
                 }
             } catch (e: Throwable) {
-                // نكمل بما تم تجهيزه
             }
             runOnUiThread {
                 dlg.dismiss()
