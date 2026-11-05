@@ -521,6 +521,7 @@ class WhiteboardActivity : AppCompatActivity() {
         f.addView(pr)
 
         f.addView(mini("📋 الأدوات كاملة") { toggleBars() })
+                f.addView(mini("✖ إخفاء اللوحة") { setFloatingShown(false) })
 
         var dx = 0f
         var dy = 0f
