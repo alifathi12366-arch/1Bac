@@ -444,7 +444,7 @@ class WhiteboardActivity : AppCompatActivity() {
             btn("🎬 وضع الشرح") { toggleBars() },
             btn("✖ خروج") { finish() }
         ))
-        root.addView(toolbar, FrameLayout.LayoutParams(-1, -2, Gravity.TOP))
+        root.addView(toolbar, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).also { it.bottomMargin = dp(48) })
 
         bottom = LinearLayout(this)
         bottom.orientation = LinearLayout.HORIZONTAL
