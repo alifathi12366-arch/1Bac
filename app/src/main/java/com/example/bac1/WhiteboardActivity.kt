@@ -553,6 +553,14 @@ class WhiteboardActivity : AppCompatActivity() {
             ?.forEach { it.delete() }
         super.onDestroy()
     }
+        private var floatingWanted = true
+
+    private fun setFloatingShown(show: Boolean) {
+        floatingWanted = show
+        floating?.visibility = if (show && hidden) View.VISIBLE else View.GONE
+        window.decorView.findViewWithTag<View>("reopenBtn")?.visibility =
+            if (!show && hidden) View.VISIBLE else View.GONE
+    }
 
     private fun updatePage() { pageText.text = "صفحة ${board.pageIndex + 1} / ${board.pageCount}" }
 
