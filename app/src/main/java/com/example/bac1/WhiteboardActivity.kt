@@ -537,6 +537,14 @@ class WhiteboardActivity : AppCompatActivity() {
         }
         root.addView(f, FrameLayout.LayoutParams(dp(110), -2, Gravity.TOP or Gravity.START)
             .also { it.leftMargin = dp(8); it.topMargin = dp(80) })
+                val reopen = Button(this)
+        reopen.text = "🛠️"
+        reopen.alpha = 0.6f
+        reopen.visibility = View.GONE
+        reopen.setOnClickListener { setFloatingShown(true) }
+        reopen.tag = "reopenBtn"
+        root.addView(reopen, FrameLayout.LayoutParams(dp(52), dp(52), Gravity.END or Gravity.CENTER_VERTICAL)
+            .also { it.rightMargin = dp(4) })
         floating = f
     }
 
