@@ -563,15 +563,17 @@ class WhiteboardActivity : AppCompatActivity() {
     }
 
     private fun updatePage() { pageText.text = "صفحة ${board.pageIndex + 1} / ${board.pageCount}" }
-
     private fun toggleBars() {
         hidden = !hidden
         val v = if (hidden) View.GONE else View.VISIBLE
         toolbar.visibility = v
         bottom.visibility = v
-        floating?.visibility = if (hidden) View.VISIBLE else View.GONE
+        floating?.visibility = if (hidden && floatingWanted) View.VISIBLE else View.GONE
+        window.decorView.findViewWithTag<View>("reopenBtn")?.visibility =
+            if (hidden && !floatingWanted) View.VISIBLE else View.GONE
         window.decorView.findViewWithTag<View>("showBtn").visibility = if (hidden) View.VISIBLE else View.GONE
     }
+    
 
     private fun pickBg() {
         AlertDialog.Builder(this).setTitle("لون الخلفية")
