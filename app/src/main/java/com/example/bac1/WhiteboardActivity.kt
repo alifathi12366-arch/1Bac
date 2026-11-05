@@ -370,7 +370,8 @@ class WhiteboardActivity : AppCompatActivity() {
         toolbar = LinearLayout(this)
         toolbar.orientation = LinearLayout.VERTICAL
         toolbar.setBackgroundColor(0xEE303030.toInt())
-        toolbar.setPadding(dp(4), dp(4), dp(4), dp(4))
+        toolbar.setPadding(dp(2), dp(2), dp(2), dp(2))
+toolbar.alpha = 0.92f
 
         fun row(vararg v: View): HorizontalScrollView {
             val h = HorizontalScrollView(this)
