@@ -46,6 +46,8 @@ class MainActivity : AppCompatActivity() {
         checkTeacherStatus()
 
         val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
+        // المكتبة اتنقلت جوه أدوات المذاكرة
+        bottomNav?.menu?.removeItem(R.id.nav_library)
         bottomNav?.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_schedule -> {
@@ -55,12 +57,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_teachers -> {
                     val i = Intent(this, InterstitialActivity::class.java)
                     i.putExtra("TARGET_CLASS", TeachersListActivity::class.java.name)
-                    startActivity(i)
-                    true
-                }
-                R.id.nav_library -> {
-                    val i = Intent(this, InterstitialActivity::class.java)
-                    i.putExtra("TARGET_CLASS", LibraryActivity::class.java.name)
                     startActivity(i)
                     true
                 }
@@ -89,6 +85,11 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.cardFriends).setOnClickListener {
             startActivity(Intent(this, ChallengeHomeActivity::class.java))
+        }
+        findViewById<View>(R.id.cardStudyTools).setOnClickListener {
+            val i = Intent(this, InterstitialActivity::class.java)
+            i.putExtra("TARGET_CLASS", StudyToolsActivity::class.java.name)
+            startActivity(i)
         }
         findViewById<View>(R.id.cardHonors).setOnClickListener {
             startActivity(Intent(this, MyHonorsActivity::class.java))
@@ -131,13 +132,13 @@ class MainActivity : AppCompatActivity() {
                     val latestVersion = json.getInt("latestVersion")
                     val downloadUrl = json.getString("downloadUrl")
                     val currentVersion = packageManager.getPackageInfo(packageName, 0).let {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        it.longVersionCode.toInt()
-    } else {
-        @Suppress("DEPRECATION")
-        it.versionCode
-    }
-}
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            it.longVersionCode.toInt()
+                        } else {
+                            @Suppress("DEPRECATION")
+                            it.versionCode
+                        }
+                    }
 
                     if (latestVersion > currentVersion) {
                         val builder = android.app.AlertDialog.Builder(this)
@@ -228,7 +229,7 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val codes = prefs.getStringSet("joined_teacher_codes", emptySet()) ?: emptySet()
         if (codes.isEmpty()) return
-        val parent = findViewById<View>(R.id.cardSubjects).parent as? ViewGroup ?: return
+        val parent = findViewById<ViewGroup>(R.id.bannerContainer) ?: return
 
         for (code in codes) {
             com.google.firebase.firestore.FirebaseFirestore.getInstance()
@@ -291,7 +292,7 @@ class MainActivity : AppCompatActivity() {
 
         LeaderboardManager.getHomeSummary(key) { _, rank, pts ->
             findViewById<TextView>(R.id.tvMyRank).text =
-                if (rank > 0) "ترتيبك: #$rank · $pts نقطة · اضغط للتفاصيل"
+                if (rank > 0) "ترتيبك: #$rank\n$pts نقطة"
                 else "اضغط للتفاصيل"
         }
     }
