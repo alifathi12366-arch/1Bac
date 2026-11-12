@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
-            <activity android:name=".StudyToolsActivity" android:exported="false" />
+    
 
     <application
         android:allowBackup="true"
@@ -103,6 +103,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 <activity android:name=".ImageViewerActivity" android:exported="false" />
+                <activity android:name=".StudyToolsActivity" android:exported="false" />
     </application>
 
 </manifest>
