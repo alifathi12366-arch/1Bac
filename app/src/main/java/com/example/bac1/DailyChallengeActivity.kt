@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -41,7 +40,6 @@ class DailyChallengeActivity : AppCompatActivity() {
     private var answered = false
     private var startMs = 0L
     private var timer: CountDownTimer? = null
-    private var boardBtn: Button? = null
 
     private lateinit var panelInfo: View
     private lateinit var panelQuestion: View
@@ -120,15 +118,15 @@ class DailyChallengeActivity : AppCompatActivity() {
                 val opts = (m["options"] as? List<*>)?.mapNotNull { it as? String } ?: return@mapNotNull null
                 val c = (m["correctIndex"] as? Number)?.toInt() ?: return@mapNotNull null
                 if (opts.size < 2 || c !in opts.indices) return@mapNotNull null
-                val correctText = opts[c]
-                val shuffled = opts.shuffled()
-                Q(text, shuffled, shuffled.indexOf(correctText))
+                // الاختيارات بنفس ترتيبها الأصلي بدون خلط
+                Q(text, opts, c)
             }
             if (parsed.isEmpty()) {
                 showInfo("🔥 تحدي اليوم", "لا يوجد تحدٍّ لهذا اليوم بعد.", false)
                 return@addOnSuccessListener
             }
-            questions = parsed.shuffled()
+            // الأسئلة بنفس الترتيب اللي اتحطت بيه
+            questions = parsed
             val rules = "المادة: $subject\n" +
                 "عدد الأسئلة: ${questions.size}، ولكل سؤال $timerSeconds ثانية.\n" +
                 "لكل إجابة صحيحة نقطة واحدة.\n\n" +
@@ -273,19 +271,5 @@ class DailyChallengeActivity : AppCompatActivity() {
         panelResult.visibility = View.VISIBLE
         findViewById<TextView>(R.id.tvResultTitle).text = title
         findViewById<TextView>(R.id.tvResultDetail).text = detail
-
-        if (boardBtn == null && today.isNotEmpty()) {
-            val b = Button(this)
-            b.text = "🏆 ترتيب اليوم والرسائل"
-            b.setTextColor(Color.WHITE)
-            b.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#283593"))
-            b.setOnClickListener {
-                val i = android.content.Intent(this, DailyBoardActivity::class.java)
-                i.putExtra("date", today)
-                startActivity(i)
-            }
-            (panelResult as LinearLayout).addView(b, 2)
-            boardBtn = b
-        }
     }
 }
