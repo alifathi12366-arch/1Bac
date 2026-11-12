@@ -20,13 +20,14 @@ import java.util.TimeZone
 class AdminQuestionsActivity : AppCompatActivity() {
 
     private val fields = mutableListOf<List<EditText>>()
+    private val notes = mutableListOf<EditText>()
     private val groups = mutableListOf<RadioGroup>()
     private lateinit var etDate: EditText
     private lateinit var etSubject: EditText
     private lateinit var etTimer: EditText
     private lateinit var etCount: EditText
     private lateinit var questionsBox: LinearLayout
-        private val col by lazy { intent.getStringExtra("collection") ?: "dailyChallenges" }
+    private val col by lazy { intent.getStringExtra("collection") ?: "dailyChallenges" }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -60,6 +61,7 @@ class AdminQuestionsActivity : AppCompatActivity() {
     private fun buildQuestions(count: Int) {
         questionsBox.removeAllViews()
         fields.clear()
+        notes.clear()
         groups.clear()
         for (n in 1..count) {
             questionsBox.addView(label("السؤال $n", 18f))
@@ -78,7 +80,10 @@ class AdminQuestionsActivity : AppCompatActivity() {
                 rg.addView(rb)
             }
             questionsBox.addView(rg)
+            val note = edit("💡 ملاحظة توضيحية بعد الإجابة (اختياري)", true)
+            questionsBox.addView(note)
             fields.add(listOf(q) + o)
+            notes.add(note)
             groups.add(rg)
         }
     }
@@ -88,7 +93,9 @@ class AdminQuestionsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin_questions)
         val container = findViewById<LinearLayout>(R.id.adminContainer)
 
-        container.addView(label("➕ إضافة / تعديل أسئلة تحدي اليوم", 20f))
+        val title = if (col == "dailyChallenges") "➕ إضافة / تعديل أسئلة تحدي اليوم"
+        else "➕ إضافة / تعديل أسئلة ($col)"
+        container.addView(label(title, 20f))
         container.addView(label("التاريخ (yyyy-MM-dd)"))
         etDate = edit("2026-10-17")
         etDate.setText(dateString(0))
@@ -176,14 +183,18 @@ class AdminQuestionsActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
                 val correct = g.indexOfChild(g.findViewById(g.checkedRadioButtonId))
-                questions.add(hashMapOf("text" to text, "options" to opts, "correctIndex" to correct))
+                val q = hashMapOf<String, Any>("text" to text, "options" to opts, "correctIndex" to correct)
+                // الملاحظة تتحفظ بس لو اتكتبت
+                val note = notes[i].text.toString().trim()
+                if (note.isNotEmpty()) q["explanation"] = note
+                questions.add(q)
             }
 
             btn.isEnabled = false
-            FirebaseFirestore.getInstance().collection("dailyChallenges").document(date)
+            FirebaseFirestore.getInstance().collection(col).document(date)
                 .set(hashMapOf("subject" to subject, "timerSeconds" to timer, "questions" to questions))
                 .addOnSuccessListener {
-                    Toast.makeText(this, "تم الحفظ ✅ تحدي $date (${questions.size} أسئلة)", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "تم الحفظ ✅ $date (${questions.size} أسئلة)", Toast.LENGTH_LONG).show()
                     finish()
                 }
                 .addOnFailureListener {
@@ -199,7 +210,7 @@ class AdminQuestionsActivity : AppCompatActivity() {
             Toast.makeText(this, "اكتب التاريخ بشكل صحيح", Toast.LENGTH_SHORT).show()
             return
         }
-        FirebaseFirestore.getInstance().collection("dailyChallenges").document(date).get()
+        FirebaseFirestore.getInstance().collection(col).document(date).get()
             .addOnSuccessListener { d ->
                 if (!d.exists()) {
                     Toast.makeText(this, "لا توجد أسئلة محفوظة بهذا التاريخ", Toast.LENGTH_SHORT).show()
@@ -222,6 +233,7 @@ class AdminQuestionsActivity : AppCompatActivity() {
                     if (c in 0 until groups[i].childCount) {
                         (groups[i].getChildAt(c) as RadioButton).isChecked = true
                     }
+                    notes[i].setText(m["explanation"] as? String ?: "")
                 }
                 Toast.makeText(this, "تم التحميل ✏️ عدّل ثم اضغط حفظ", Toast.LENGTH_SHORT).show()
             }
