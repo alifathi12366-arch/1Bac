@@ -196,7 +196,11 @@ class DailyChallengeActivity : AppCompatActivity() {
         answered = true
         timer?.cancel()
         val q = questions[index]
-        if (chosen == q.correct) score++
+        val isCorrect = chosen == q.correct
+        if (isCorrect) score++
+
+        // تسجيل نتيجة السؤال لبنك الأسئلة
+        QBankStore.save(this, today, q.text, isCorrect, if (chosen >= 0) q.options[chosen] else "")
 
         optionButtons.forEach { it.isEnabled = false }
         optionButtons[q.correct].backgroundTintList = ColorStateList.valueOf(Color.parseColor("#2E7D32"))
@@ -211,6 +215,14 @@ class DailyChallengeActivity : AppCompatActivity() {
         state = State.DONE
         timer?.cancel()
         handler.removeCallbacksAndMessages(null)
+
+        // الأسئلة اللي ما اتحلتش بسبب الخروج من التطبيق تتسجل غلط
+        if (forced) {
+            val from = if (answered) index + 1 else index
+            for (i in from until questions.size) {
+                QBankStore.save(this, today, questions[i].text, false, "")
+            }
+        }
 
         val total = questions.size
         val timeMs = System.currentTimeMillis() - startMs
