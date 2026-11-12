@@ -105,6 +105,7 @@
 <activity android:name=".ImageViewerActivity" android:exported="false" />
                 <activity android:name=".StudyToolsActivity" android:exported="false" />
                 <activity android:name=".TasksActivity" android:exported="false" />
+                <activity android:name=".FocusTimerActivity" android:exported="false" />
     </application>
 
 </manifest>
