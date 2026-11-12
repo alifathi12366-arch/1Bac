@@ -13,9 +13,11 @@ class StudyToolsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_study_tools)
 
         findViewById<View>(R.id.cardEnglish).setOnClickListener { comingSoon() }
-        findViewById<View>(R.id.cardTasks).setOnClickListener { comingSoon() }
         findViewById<View>(R.id.cardFocus).setOnClickListener { comingSoon() }
 
+        findViewById<View>(R.id.cardTasks).setOnClickListener {
+            startActivity(Intent(this, TasksActivity::class.java))
+        }
         findViewById<View>(R.id.cardLibrary).setOnClickListener {
             startActivity(Intent(this, LibraryActivity::class.java))
         }
