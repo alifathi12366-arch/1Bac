@@ -17,11 +17,7 @@ class StudentRegisterActivity : AppCompatActivity() {
 
         val etName = findViewById<EditText>(R.id.etStudentName)
         val etPhone = findViewById<EditText>(R.id.etStudentPhone)
-        
-        // لو حبيت تضيف EditText جديد في ملف الـ XML باسم etReferralCode، هتعرفه هنا:
-        // (لو مش حابب تلعب في الـ XML، هوريك طريقة سهلة حالا)
-        // val etReferralCode = findViewById<EditText>(R.id.etReferralCode)
-
+        val etReferralCode = findViewById<EditText>(R.id.etReferralCode)
         val btnSubmit = findViewById<Button>(R.id.btnSubmitStudent)
         val tvContact = findViewById<TextView>(R.id.tvContactUs)
 
@@ -34,19 +30,19 @@ class StudentRegisterActivity : AppCompatActivity() {
         btnSubmit.setOnClickListener {
             val name = etName.text.toString().trim()
             val rawPhone = etPhone.text.toString().trim()
-            // val referralCode = etReferralCode.text.toString().trim() // لو أضفت الخانة في الـ XML
+            val referralCode = etReferralCode.text.toString().trim()
 
             val phone = if (rawPhone.startsWith("0")) "+20" + rawPhone.substring(1)
             else if (!rawPhone.startsWith("+")) "+20$rawPhone"
             else rawPhone
 
             if (name.isEmpty() || phone.isEmpty()) {
-                Toast.makeText(this, "من فضلك املأ كل الخانات", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "من فضلك املأ كل الخانات الأساسية", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-            
+
             // توليد كود الطالب الخاص به لو مش موجود
             var studentId = prefs.getString("student_id", "") ?: ""
             if (studentId.isEmpty()) {
@@ -60,38 +56,45 @@ class StudentRegisterActivity : AppCompatActivity() {
                 .putString("student_id", studentId)
                 .apply()
 
-            // حفظ بيانات الطالب في فايرستور مع كوده الخاص
-            FirebaseFirestore.getInstance().collection("students").add(
+            val db = FirebaseFirestore.getInstance()
+
+            // حفظ بيانات الطالب الجديد في فايرستور مع كوده الخاص
+            db.collection("students").add(
                 hashMapOf(
                     "studentId" to studentId,
                     "name" to name,
                     "phone" to phone,
+                    "invited_count" to 0L,
+                    "monthly_points" to 0L,
                     "timestamp" to System.currentTimeMillis()
                 )
             )
 
-            // 🎁 منطق مكافأة دعوة الأصدقاء (لو كتب كود صحيح لصاحبه)
-            /* 
-            if (referralCode.isNotEmpty()) {
-                val db = FirebaseFirestore.getInstance()
+            // منطق التحقق من كود الداعي ومكافأته
+            if (referralCode.isNotEmpty() && referralCode != studentId) {
                 db.collection("students").whereEqualTo("studentId", referralCode).get()
                     .addOnSuccessListener { documents ->
                         if (!documents.isEmpty) {
-                            val docId = documents.documents[0].id
-                            val currentCount = documents.documents[0].getLong("invited_count") ?: 0L
+                            val doc = documents.documents[0]
+                            val docId = doc.id
+                            val currentCount = doc.getLong("invited_count") ?: 0L
                             
-                            // الشرط: الحد الأقصى 5 أصدقاء فقط
+                            // التحقق من أن الطالب الداعي لم يتخطى الحد الأقصى (5 أصدقاء)
                             if (currentCount < 5) {
+                                val currentPoints = doc.getLong("monthly_points") ?: 0L
                                 db.collection("students").document(docId)
-                                    .update("invited_count", currentCount + 1)
-                                
-                                // ملاحظة: يمكنك تحديث نقاط المسابقة الشهرية للطالب الداعي هنا أو عبر قاعدة البيانات
+                                    .update(
+                                        mapOf(
+                                            "invited_count" to (currentCount + 1),
+                                            "monthly_points" to (currentPoints + 1)
+                                        )
+                                    )
                             }
                         }
                     }
             }
-            */
 
+            Toast.makeText(this, "تم التسجيل بنجاح أهلاً بك يا $name 🚀", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
