@@ -22,7 +22,12 @@ import java.util.TimeZone
 
 class DailyChallengeActivity : AppCompatActivity() {
 
-    private data class Q(val text: String, val options: List<String>, val correct: Int)
+    private data class Q(
+        val text: String,
+        val options: List<String>,
+        val correct: Int,
+        val explanation: String
+    )
     private enum class State { LOADING, INFO, RUNNING, DONE }
 
     private val db = FirebaseFirestore.getInstance()
@@ -45,6 +50,8 @@ class DailyChallengeActivity : AppCompatActivity() {
     private lateinit var panelQuestion: View
     private lateinit var panelResult: View
     private lateinit var optionButtons: List<Button>
+    private lateinit var tvExplanation: TextView
+    private lateinit var btnNext: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +61,8 @@ class DailyChallengeActivity : AppCompatActivity() {
         panelInfo = findViewById(R.id.panelInfo)
         panelQuestion = findViewById(R.id.panelQuestion)
         panelResult = findViewById(R.id.panelResult)
+        tvExplanation = findViewById(R.id.tvExplanation)
+        btnNext = findViewById(R.id.btnNext)
         optionButtons = listOf(
             findViewById(R.id.btnOpt1), findViewById(R.id.btnOpt2),
             findViewById(R.id.btnOpt3), findViewById(R.id.btnOpt4)
@@ -118,14 +127,14 @@ class DailyChallengeActivity : AppCompatActivity() {
                 val opts = (m["options"] as? List<*>)?.mapNotNull { it as? String } ?: return@mapNotNull null
                 val c = (m["correctIndex"] as? Number)?.toInt() ?: return@mapNotNull null
                 if (opts.size < 2 || c !in opts.indices) return@mapNotNull null
-                // الاختيارات بنفس ترتيبها الأصلي بدون خلط
-                Q(text, opts, c)
+                val exp = (m["explanation"] as? String)?.trim() ?: ""
+                // الأسئلة والاختيارات بنفس ترتيبها الأصلي بدون خلط
+                Q(text, opts, c, exp)
             }
             if (parsed.isEmpty()) {
                 showInfo("🔥 تحدي اليوم", "لا يوجد تحدٍّ لهذا اليوم بعد.", false)
                 return@addOnSuccessListener
             }
-            // الأسئلة بنفس الترتيب اللي اتحطت بيه
             questions = parsed
             val rules = "المادة: $subject\n" +
                 "عدد الأسئلة: ${questions.size}، ولكل سؤال $timerSeconds ثانية.\n" +
@@ -165,6 +174,8 @@ class DailyChallengeActivity : AppCompatActivity() {
         if (index >= questions.size) { finishChallenge(false); return }
         answered = false
         val q = questions[index]
+        tvExplanation.visibility = View.GONE
+        btnNext.visibility = View.GONE
         findViewById<TextView>(R.id.tvProgress).text = "السؤال ${index + 1} من ${questions.size}"
         findViewById<ProgressBar>(R.id.progressBar).apply {
             max = questions.size
@@ -207,7 +218,22 @@ class DailyChallengeActivity : AppCompatActivity() {
         if (chosen >= 0 && chosen != q.correct) {
             optionButtons[chosen].backgroundTintList = ColorStateList.valueOf(Color.parseColor("#C62828"))
         }
-        handler.postDelayed({ index++; showQuestion() }, 1200)
+
+        if (q.explanation.isNotEmpty()) {
+            // فيه ملاحظة: تظهر مع زرار التالي عشان الطالب يقرأها براحته
+            tvExplanation.text = "💡 ${q.explanation}"
+            tvExplanation.visibility = View.VISIBLE
+            btnNext.text = if (index + 1 >= questions.size) "إنهاء ✔" else "التالي ◀"
+            btnNext.isEnabled = true
+            btnNext.visibility = View.VISIBLE
+            btnNext.setOnClickListener {
+                btnNext.isEnabled = false
+                index++
+                showQuestion()
+            }
+        } else {
+            handler.postDelayed({ index++; showQuestion() }, 1200)
+        }
     }
 
     private fun finishChallenge(forced: Boolean) {
