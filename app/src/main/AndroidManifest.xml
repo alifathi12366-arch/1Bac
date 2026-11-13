@@ -107,6 +107,8 @@
                 <activity android:name=".TasksActivity" android:exported="false" />
                 <activity android:name=".FocusTimerActivity" android:exported="false" />
                         <activity android:name=".StudentQuestionBankActivity" android:exported="false" />
+        <activity android:name=".EnglishWordsActivity" android:exported="false" />
+        
     </application>
 
 </manifest>
