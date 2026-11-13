@@ -512,7 +512,7 @@ class MainActivity : AppCompatActivity() {
         LeaderboardManager.getHomeSummary(key) { _, rank, pts ->
             tvMyRank.text =
                 if (rank > 0) "ترتيبك #$rank · $pts نقطة"
-                else "زد نقاطك واربح الجوائز"
+                                else "زد نقاطك واربح الجوائز"
         }
     }
 }
