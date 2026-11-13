@@ -19,6 +19,14 @@
         android:inputType="phone"
         android:layout_marginTop="12dp"/>
 
+    <EditText
+        android:id="@+id/etReferralCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="كود صديقك الداعي (اختياري)"
+        android:inputType="number"
+        android:layout_marginTop="12dp"/>
+
     <Button
         android:id="@+id/btnSubmitStudent"
         android:layout_width="match_parent"
