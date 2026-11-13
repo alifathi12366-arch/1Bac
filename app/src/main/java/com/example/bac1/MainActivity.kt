@@ -37,14 +37,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
-    // قص جزء من ملف الصور home_sprites.png
     private fun spr(x: Int, y: Int, w: Int, h: Int): Bitmap = Bitmap.createBitmap(sheet, x, y, w, h)
 
     private fun open(target: Class<*>) {
         startActivity(Intent(this, target))
     }
 
-    // فتح الشاشة بعد إعلان الـ5 ثواني
     private fun openWithAd(target: Class<*>) {
         val i = Intent(this, InterstitialActivity::class.java)
         i.putExtra("TARGET_CLASS", target.name)
@@ -95,7 +93,7 @@ class MainActivity : AppCompatActivity() {
         setupNav()
     }
 
-    // ---------- الهيدر ----------
+    // ---------- الهيدر (بدون زر الجرس) ----------
     private fun setupHeader() {
         findViewById<ImageView>(R.id.ivLogo).setImageBitmap(spr(299, 325, 270, 193))
         findViewById<ImageView>(R.id.ivBanner).setImageBitmap(spr(0, 0, 810, 321))
@@ -103,17 +101,6 @@ class MainActivity : AppCompatActivity() {
         val avatar = findViewById<ImageView>(R.id.ivAvatar)
         avatar.setImageBitmap(spr(583, 551, 139, 139))
         avatar.setOnClickListener { open(AccountActivity::class.java) }
-
-        val bell = findViewById<ImageView>(R.id.ivBell)
-        bell.setImageBitmap(spr(463, 715, 94, 92))
-        bell.setOnClickListener {
-            val box = findViewById<ViewGroup>(R.id.bannerContainer)
-            if (box.childCount > 0) {
-                findViewById<ScrollView>(R.id.homeScroll).smoothScrollTo(0, 0)
-            } else {
-                Toast.makeText(this, "لا توجد إشعارات جديدة", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     // ---------- الكروت ----------
@@ -128,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         // الصف 1
         var row = newRow()
         tvMyRank = addCard(
-            row, "المسابقة الشهرية", "زد نقاطك واربح الجوائز",
+            row, "المسابقة الشهرية", "جاري تحميل النقاط...",
             spr(573, 325, 156, 165), null, "#FCE9C8", "#FDDA96", "#F08A24"
         ) { openWithAd(LeaderboardActivity::class.java) }
 
@@ -176,17 +163,13 @@ class MainActivity : AppCompatActivity() {
             spr(140, 715, 164, 128), null, "#FDE8DC", "#FDD5BD", "#E5413A"
         ) { open(SuggestionActivity::class.java) }
 
-        // الصف 5
+        // الصف 5 (تم حذف زر امتحاناتي الفارغ نهائياً وبقى التقسيم سليم)
         row = newRow()
         addCard(
             row, "التقييمات الأسبوعية", "حل التقييمات وقيّم مستواك",
             spr(0, 325, 295, 222), null, "#7A33E0", "#4F1AA0", "#5A2BC8",
             dark = true, size = 76
         ) { open(WeeklyUpdatesActivity::class.java) }
-        addCard(
-            row, "امتحاناتي", "امتحانات مدرسيك",
-            null, "📝", "#D8F3F8", "#B5E6F0", "#0E8FA8"
-        ) { open(StudentExamsActivity::class.java) }
     }
 
     private fun addCard(
@@ -197,8 +180,8 @@ class MainActivity : AppCompatActivity() {
         onClick: () -> Unit
     ): TextView {
         val card = FrameLayout(this)
-        val lp = LinearLayout.LayoutParams(0, dp(124), 1f)
-        lp.setMargins(dp(5), dp(5), dp(5), dp(5))
+        val lp = LinearLayout.LayoutParams(0, dp(130), 1f) // تكبير الارتفاع لمنع أي تقطيع للنصوص
+        lp.setMargins(dp(6), dp(6), dp(6), dp(6))
         card.layoutParams = lp
 
         val bg = GradientDrawable(
@@ -213,51 +196,50 @@ class MainActivity : AppCompatActivity() {
         card.isClickable = true
         card.setOnClickListener { onClick() }
 
-        // الاستيكر (أو إيموجي لو مفيش صورة)
         if (sticker != null) {
             val iv = ImageView(this)
             iv.setImageBitmap(sticker)
             iv.scaleType = ImageView.ScaleType.FIT_CENTER
             val ilp = FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END or Gravity.TOP)
-            ilp.marginEnd = dp(8)
-            ilp.topMargin = dp(12)
+            ilp.marginEnd = dp(6)
+            ilp.topMargin = dp(10)
             card.addView(iv, ilp)
         } else if (emoji != null) {
             val e = TextView(this)
             e.text = emoji
-            e.textSize = 44f
+            e.textSize = 40f
             e.gravity = Gravity.CENTER
             val elp = FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END or Gravity.TOP)
-            elp.marginEnd = dp(8)
-            elp.topMargin = dp(12)
+            elp.marginEnd = dp(6)
+            elp.topMargin = dp(10)
             card.addView(e, elp)
         }
 
-        // العنوان
+        // العنوان (مع زيادة مساحة لعدم التقطيع)
         val titleTv = TextView(this)
         titleTv.text = title
-        titleTv.textSize = 15f
+        titleTv.textSize = 14.5f
         titleTv.setTypeface(null, Typeface.BOLD)
         titleTv.setTextColor(Color.parseColor(if (dark) "#FFFFFF" else "#241B4E"))
         titleTv.maxLines = 2
         titleTv.gravity = Gravity.START
         val tlp = FrameLayout.LayoutParams(-1, -2, Gravity.START or Gravity.TOP)
-        tlp.marginStart = dp(14)
-        tlp.marginEnd = dp(size + 12)
-        tlp.topMargin = dp(if (badge) 30 else 16)
+        tlp.marginStart = dp(12)
+        tlp.marginEnd = dp(size + 8)
+        tlp.topMargin = dp(if (badge) 28 else 14)
         card.addView(titleTv, tlp)
 
-        // الوصف الصغير
+        // الوصف الصغير (تحت العنوان بمسافة مريحة ومقاومة للتقطيع)
         val subTv = TextView(this)
         subTv.text = sub
-        subTv.textSize = 10.5f
+        subTv.textSize = 10f
         subTv.setTextColor(Color.parseColor(if (dark) "#D8CCFF" else "#5E5A7E"))
-        subTv.maxLines = 2
+        subTv.maxLines = 3
         subTv.gravity = Gravity.START
-        val slp = FrameLayout.LayoutParams(-1, -2, Gravity.START or Gravity.BOTTOM)
-        slp.marginStart = dp(14)
-        slp.marginEnd = dp(48)
-        slp.bottomMargin = dp(12)
+        val slp = FrameLayout.LayoutParams(-1, -2, Gravity.START or Gravity.TOP)
+        slp.marginStart = dp(12)
+        slp.marginEnd = dp(44)
+        slp.topMargin = dp(56)
         card.addView(subTv, slp)
 
         // دايرة السهم
@@ -273,19 +255,18 @@ class MainActivity : AppCompatActivity() {
         abg.shape = GradientDrawable.OVAL
         abg.setColor(Color.WHITE)
         arrow.background = abg
-        val alp = FrameLayout.LayoutParams(dp(28), dp(28), Gravity.END or Gravity.BOTTOM)
+        val alp = FrameLayout.LayoutParams(dp(26), dp(26), Gravity.END or Gravity.BOTTOM)
         alp.marginEnd = dp(10)
         alp.bottomMargin = dp(10)
         card.addView(arrow, alp)
 
-        // شارة "جديد"
         if (badge) {
             val b = TextView(this)
             b.text = "🔥 جديد"
-            b.textSize = 10f
+            b.textSize = 9.5f
             b.setTypeface(null, Typeface.BOLD)
             b.setTextColor(Color.WHITE)
-            b.setPadding(dp(10), dp(3), dp(10), dp(3))
+            b.setPadding(dp(8), dp(2), dp(8), dp(2))
             val bb = GradientDrawable()
             bb.setColor(Color.parseColor("#E53935"))
             val r = dp(14).toFloat()
@@ -447,7 +428,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // شريط تنبيه لنشاط المدرسين المربوط بيهم الطالب
     private fun showTeacherBanners() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val codes = prefs.getStringSet("joined_teacher_codes", emptySet()) ?: emptySet()
@@ -512,10 +492,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+        // كارت المسابقة الشهرية: إظهار النقاط في سطر والمركز في سطر تحت بعضه بشكل مرتب وشيك
         LeaderboardManager.getHomeSummary(key) { _, rank, pts ->
-            tvMyRank.text =
-                if (rank > 0) "ترتيبك #$rank · $pts نقطة"
-                else "زد نقاطك واربح الجوائز"
+            tvMyRank.text = if (rank > 0) {
+                "🌟 النقاط: $pts نقطة\n🏆 المركز: #$rank"
+            } else {
+                "🌟 النقاط: $pts نقطة\n🏆 المركز: لم يتم الترتيب بعد"
+            }
         }
     }
 }
