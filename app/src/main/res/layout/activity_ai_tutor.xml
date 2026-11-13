@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F6FA"
+    android:padding="16dp">
+
+    <!-- العنوان -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🤖 المدرس الذكي (أولى ثانوي)"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1565C0"
+        android:gravity="center"
+        android:paddingBottom="12dp"/>
+
+    <!-- مكان كتابة السؤال -->
+    <EditText
+        android:id="@+id/etQuestion"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:hint="اسأل في أي مادة (رياضيات، تاريخ، علوم متكاملة...)"
+        android:gravity="top|start"
+        android:padding="12dp"
+        android:background="@android:drawable/editbox_background_normal"
+        android:textSize="15sp"
+        android:textColor="#333333"/>
+
+    <!-- زر الإرسال -->
+    <Button
+        android:id="@+id/btnAsk"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="اسأل المدرس"
+        android:textColor="@android:color/white"
+        android:backgroundTint="#1565C0"
+        android:layout_marginTop="12dp"/>
+
+    <!-- شريط التحميل -->
+    <ProgressBar
+        android:id="@+id/progressAi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"/>
+
+    <!-- مكان عرض الإجابة -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/tvAnswer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="إجابة المدرس الذكي هتظهر هنا..."
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:padding="12dp"
+            android:background="@android:color/white"
+            android:textIsSelectable="true"/>
+    </ScrollView>
+
+</LinearLayout>
