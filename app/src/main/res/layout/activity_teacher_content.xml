@@ -18,7 +18,7 @@
         android:gravity="center"
         android:layout_marginBottom="8dp" />
 
-    <!-- زرار تسجيل الحضور -->
+    <!-- أزرار الخدمات السريعة -->
     <Button
         android:id="@+id/btnMarkAttendance"
         android:layout_width="match_parent"
@@ -26,7 +26,8 @@
         android:text="✋ تسجيل حضور الحصة"
         android:backgroundTint="#2196F3"
         android:textColor="#FFFFFF"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="8dp" />
+    
     <Button
         android:id="@+id/btnGoToExams"
         android:layout_width="match_parent"
@@ -34,7 +35,8 @@
         android:text="📝 امتحانات أستاذي"
         android:backgroundTint="#9C27B0"
         android:textColor="#FFFFFF"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="8dp" />
+
     <Button
         android:id="@+id/btnMyMistakes"
         android:layout_width="match_parent"
@@ -42,7 +44,7 @@
         android:text="🎯 أخطائي"
         android:backgroundTint="#E65100"
         android:textColor="#FFFFFF"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="8dp" />
 
     <!-- رسالة عدم وجود محتوى -->
     <TextView
@@ -54,20 +56,23 @@
         android:textSize="16sp"
         android:gravity="center"
         android:visibility="gone"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="8dp" />
 
-    <!-- قائمة دروس ومحتوى المدرس -->
+    <!-- قائمة دروس ومحتوى المدرس (تم تكبيرها وأخذها المساحة الأكبر لتكون واسعة ومريحة) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/contentRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:layout_marginBottom="8dp" />
+
+    <!-- التقييم -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="8dp">
+        android:layout_marginBottom="8dp">
 
         <RatingBar
             android:id="@+id/teacherRatingBar"
@@ -92,7 +97,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:layout_marginBottom="4dp">
 
         <EditText
             android:id="@+id/etQuestion"
@@ -112,13 +117,13 @@
             android:text="إرسال"
             android:layout_marginStart="8dp" />
     </LinearLayout>
+
     <Button
         android:id="@+id/btnMyQuestions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="💬 أسئلتي وردود المدرس"
         android:backgroundTint="#607D8B"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="10dp" />
+        android:textColor="#FFFFFF" />
 
 </LinearLayout>
