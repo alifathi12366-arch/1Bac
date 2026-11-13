@@ -131,7 +131,8 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     ))
                     .put("generationConfig", JSONObject().put("responseMimeType", "application/json"))
 
-                val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")
+                val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent")
+
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.connectTimeout = 15000
