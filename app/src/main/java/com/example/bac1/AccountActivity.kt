@@ -3,11 +3,11 @@ package com.example.bac1
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class AccountActivity : AppCompatActivity() {
@@ -117,17 +117,35 @@ class AccountActivity : AppCompatActivity() {
             startActivity(Intent(this, TeacherCodeActivity::class.java))
         }
 
-        // زرار مستواي الدراسي (بنستخدم الزرار القديم)
-        val reportBtn = findViewById<Button>(R.id.leaderboardButton)
-        reportBtn.text = "📊 مستواي الدراسي"
-        reportBtn.visibility = View.VISIBLE
-        reportBtn.setOnClickListener { startActivity(Intent(this, ReportActivity::class.java)) }
+        // 🎁 زرار دعوة الأصدقاء (مكان زرار مستواي الدراسي القديم)
+        val inviteBtn = findViewById<Button>(R.id.leaderboardButton)
+        inviteBtn.text = "🎁 دعوة الأصدقاء (اكسب نقاط)"
+        inviteBtn.visibility = View.VISIBLE
+        inviteBtn.setOnClickListener {
+            val invitedCount = prefs.getInt("invited_friends_count", 0)
+            val message = "ادع أصدقاءك لتحميل تطبيق 1Bac واكسب نقطة في المسابقة الشهرية لكل صديق!\n\n" +
+                    "كود الدعوة الخاص بك: $studentId\n" +
+                    "أصدقاؤك الذين انضموا: $invitedCount من 5\n\n" +
+                    "اطلب من صديقك إدخال هذا الكود عند تسجيله لأول مرة في التطبيق."
 
-        // زرار الاقتراحات (يُضاف برمجيًا تحت زرار مستواي)
+            android.app.AlertDialog.Builder(this)
+                .setTitle("دعوة الأصدقاء 🤝")
+                .setMessage(message)
+                .setPositiveButton("نسخ الكود") { _, _ ->
+                    val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    val clip = android.content.ClipData.newPlainText("Student Code", studentId)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.LENGTHId(this, "تم نسخ الكود بنجاح! ابعته لأصحابك 🚀", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("إغلاق", null)
+                .show()
+        }
+
+        // زرار الاقتراحات (يُضاف برمجيًا تحت زرار دعوة الأصدقاء)
         val sugBtn = Button(this)
         sugBtn.text = "💡 اقتراح أو شكوى"
         sugBtn.setOnClickListener { startActivity(Intent(this, SuggestionActivity::class.java)) }
-        val p = reportBtn.parent as ViewGroup
-        p.addView(sugBtn, p.indexOfChild(reportBtn) + 1)
+        val p = inviteBtn.parent as ViewGroup
+        p.addView(sugBtn, p.indexOfChild(inviteBtn) + 1)
     }
 }
