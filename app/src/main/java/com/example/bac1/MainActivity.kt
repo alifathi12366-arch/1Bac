@@ -131,13 +131,20 @@ class MainActivity : AppCompatActivity() {
             row, "المسابقة الشهرية", "زد نقاطك واربح الجوائز",
             spr(573, 325, 156, 165), null, "#FCE9C8", "#FDDA96", "#F08A24"
         ) { openWithAd(LeaderboardActivity::class.java) }
+
+        // كارت المدرس الذكي الجديد 🤖
+        addCard(
+            row, "المدرس الذكي", "اسأل في أي مادة لأولى ثانوي",
+            null, "🤖", "#FFF3E0", "#FFE0B2", "#F57C00",
+            badge = true
+        ) { open(AiTutorActivity::class.java) }
+
+        // الصف 2
+        row = newRow()
         addCard(
             row, "كل الكتب و المواد", "كل ما تحتاجه في مكان واحد",
             spr(276, 551, 147, 145), null, "#E7E2FE", "#D6CEFB", "#4B3FD1"
         ) { open(SubjectsActivity::class.java) }
-
-        // الصف 2
-        row = newRow()
         tvDailySub = addCard(
             row, "تحدي اليوم", "اختبر نفسك الآن",
             spr(124, 551, 148, 157), null, "#FFD9EE", "#FDC4E6", "#E5365A",
@@ -146,10 +153,6 @@ class MainActivity : AppCompatActivity() {
             if (challengeDoneToday) open(DailyChallengeActivity::class.java)
             else openWithAd(DailyChallengeActivity::class.java)
         }
-        addCard(
-            row, "أدوات المذاكرة", "ذاكر بذكاء وتنظم وقتك",
-            spr(427, 551, 152, 144), null, "#D2F6DE", "#B9EFCD", "#2F7BD8"
-        ) { openWithAd(StudyToolsActivity::class.java) }
 
         // الصف 3
         row = newRow()
@@ -505,15 +508,14 @@ class MainActivity : AppCompatActivity() {
                             val n = (c.get("questions") as? List<*>)?.size ?: 0
                             tvDailySub.text = if (n > 0) "اختبر نفسك الآن ($n أسئلة)"
                             else "لا يوجد تحدٍّ لليوم بعد"
-                
+                        }
                 }
             }
 
         LeaderboardManager.getHomeSummary(key) { _, rank, pts ->
             tvMyRank.text =
                 if (rank > 0) "ترتيبك #$rank · $pts نقطة"
-                                else "زد نقاطك واربح الجوائز"
+                else "زد نقاطك واربح الجوائز"
         }
     }
-}
 }
