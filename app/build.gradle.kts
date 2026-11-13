@@ -14,7 +14,7 @@ android {
         targetSdk = 35
         versionCode = 3
         versionName = "3.0"
-
+buildConfigField("String", "GEMINI_API_KEY", "\"${System.getenv("GEMINI_API_KEY") ?: ""}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
