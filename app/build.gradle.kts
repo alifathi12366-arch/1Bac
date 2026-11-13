@@ -13,10 +13,13 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 3
-versionName = "3.0"
-
+        versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -52,9 +55,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
-implementation("com.google.firebase:firebase-analytics")
-implementation("com.google.firebase:firebase-storage-ktx")
-implementation("com.github.bumptech.glide:glide:4.16.0")
-implementation("com.github.chrisbanes:PhotoView:2.3.0")
-
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
 }
