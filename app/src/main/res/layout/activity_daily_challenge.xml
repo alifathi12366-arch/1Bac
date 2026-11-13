@@ -102,6 +102,27 @@
         <Button android:id="@+id/btnOpt2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:textSize="17sp" android:textColor="#FFFFFF" android:backgroundTint="#5C7CFA" />
         <Button android:id="@+id/btnOpt3" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:textSize="17sp" android:textColor="#FFFFFF" android:backgroundTint="#5C7CFA" />
         <Button android:id="@+id/btnOpt4" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:textSize="17sp" android:textColor="#FFFFFF" android:backgroundTint="#5C7CFA" />
+                <TextView
+            android:id="@+id/tvExplanation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:padding="12dp"
+            android:textSize="15sp"
+            android:lineSpacingExtra="3dp"
+            android:textColor="#4E342E"
+            android:background="#FFF8E1"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="التالي ◀"
+            android:backgroundTint="#E65100"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- شاشة النتيجة -->
