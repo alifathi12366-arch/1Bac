@@ -1,5 +1,6 @@
 package com.example.bac1
 
+import android.graphics.Color
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.LayoutInflater
@@ -50,16 +51,20 @@ class TakeExamActivity : AppCompatActivity() {
                 FirebaseFirestore.getInstance().collection("results").document(resultId).get()
                     .addOnSuccessListener { resultDoc ->
                         if (resultDoc.exists()) {
-                            tvExamTitle.text = "${exam.title}\n(تم التقديم بالفعل)"
+                            val autoScore = resultDoc.getLong("autoScore")?.toInt() ?: 0
+                            tvExamTitle.text = "${exam.title}\n✅ تم التقديم مسبقاً (الدرجة: $autoScore / ${exam.totalScore})"
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "تم التقديم من قبل"
-                            renderQuestions(exam, questionsContainer, readOnly = true)
+                            
+                            // استخراج الإجابات المحفوظة مسبقاً لعرضها للطالب مع التصحيح
+                            val savedMcq = resultDoc.get("mcqAnswers") as? List> ?: emptyList()
+                            renderQuestions(exam, questionsContainer, readOnly = true, savedAnswers = savedMcq)
                         } else if (deadline > 0L && System.currentTimeMillis() > deadline) {
                             tvExamTitle.text = "${exam.title}\n(انتهى موعد هذا الامتحان)"
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "الامتحان مغلق"
                         } else {
-                            renderQuestions(exam, questionsContainer, readOnly = false)
+                            renderQuestions(exam, questionsContainer, readOnly = false, savedAnswers = emptyList())
                             running = true
                             btnSubmit.setOnClickListener { submitExam(auto = false) }
                             startTimer(tvExamTitle, durationMin, deadline)
@@ -99,7 +104,12 @@ class TakeExamActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun renderQuestions(exam: ExamModel, container: LinearLayout, readOnly: Boolean) {
+    private fun renderQuestions(
+        exam: ExamModel, 
+        container: LinearLayout, 
+        readOnly: Boolean, 
+        savedAnswers: List>
+    ) {
         exam.questions.forEachIndexed { index, q ->
             val block = LayoutInflater.from(this).inflate(R.layout.item_take_question, container, false)
 
@@ -109,11 +119,12 @@ class TakeExamActivity : AppCompatActivity() {
             val rgOptions = block.findViewById<RadioGroup>(R.id.rgAnswerOptions)
             val etEssay = block.findViewById<EditText>(R.id.etEssayAnswer)
 
+            val radioIds = listOf(R.id.rbAns1, R.id.rbAns2, R.id.rbAns3, R.id.rbAns4)
+
             if (q.type == "mcq") {
                 rgOptions.visibility = View.VISIBLE
                 etEssay.visibility = View.GONE
 
-                val radioIds = listOf(R.id.rbAns1, R.id.rbAns2, R.id.rbAns3, R.id.rbAns4)
                 q.options.forEachIndexed { i, optionText ->
                     val rb = block.findViewById<RadioButton>(radioIds[i])
                     rb.text = optionText
@@ -122,15 +133,42 @@ class TakeExamActivity : AppCompatActivity() {
                 for (i in q.options.size until radioIds.size) {
                     block.findViewById<RadioButton>(radioIds[i]).visibility = View.GONE
                 }
+
+                // لو القراءة فقط (الطالب دخل يراجع امتحانه القديم)
+                if (readOnly) {
+                    val match = savedAnswers.find { it["qId"] == q.qId }
+                    val chosenIndex = (match?.get("chosenIndex") as? Number)?.toInt() ?: -1
+
+                    q.options.forEachIndexed { i, _ ->
+                        val rb = block.findViewById<RadioButton>(radioIds[i])
+                        rb.isEnabled = false
+
+                        // تلوين الإجابة الصحيحة بالأخضر، واختيار الطالب الخاطئ بالأحمر
+                        when {
+                            i == q.correctIndex -> {
+                                rb.setTextColor(Color.parseColor("#4CAF50")) // أخضر للإجابة الصحيحة
+                                rb.text = "${rb.text} (✅ الإجابة الصحيحة)"
+                            }
+                            i == chosenIndex && i != q.correctIndex -> {
+                                rb.setTextColor(Color.parseColor("#E53935")) // أحمر لاختيار الطالب الخطأ
+                                rb.text = "${rb.text} (❌ اختيارك)"
+                            }
+                        }
+                    }
+                    if (chosenIndex >= 0 && chosenIndex < radioIds.size) {
+                        rgOptions.check(radioIds[chosenIndex])
+                    }
+                }
             } else {
                 rgOptions.visibility = View.GONE
                 etEssay.visibility = View.VISIBLE
-            }
-
-            if (readOnly) {
-                rgOptions.isEnabled = false
-                for (i in 0 until rgOptions.childCount) rgOptions.getChildAt(i).isEnabled = false
-                etEssay.isEnabled = false
+                if (readOnly) {
+                    etEssay.isEnabled = false
+                    val matchEssay = savedAnswers.find { it["qId"] == q.qId }
+                    // لو مقالي بنعرض إجابة الطالب اللي كتبها
+                    val savedText = matchEssay?.get("answerText") as? String ?: ""
+                    etEssay.setText(savedText)
+                }
             }
 
             container.addView(block)
