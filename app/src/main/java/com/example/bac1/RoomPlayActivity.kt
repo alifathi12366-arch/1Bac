@@ -17,7 +17,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class RoomPlayActivity : AppCompatActivity() {
 
-    private data class Q(val text: String, val options: List<String>, val correct: Int)
+    private data class Q(
+        val text: String,
+        val options: List<String>,
+        val correct: Int,
+        val explanation: String
+    )
     private enum class State { LOADING, INFO, RUNNING, DONE }
 
     private val db = FirebaseFirestore.getInstance()
@@ -39,6 +44,8 @@ class RoomPlayActivity : AppCompatActivity() {
     private lateinit var panelQuestion: View
     private lateinit var panelResult: View
     private lateinit var optionButtons: List<Button>
+    private lateinit var tvExplanation: TextView
+    private lateinit var btnNext: Button
 
     private fun resultRef() = db.collection("roomResults").document("${code}_$studentId")
 
@@ -50,6 +57,8 @@ class RoomPlayActivity : AppCompatActivity() {
         panelInfo = findViewById(R.id.panelInfo)
         panelQuestion = findViewById(R.id.panelQuestion)
         panelResult = findViewById(R.id.panelResult)
+        tvExplanation = findViewById(R.id.tvExplanation)
+        btnNext = findViewById(R.id.btnNext)
         optionButtons = listOf(
             findViewById(R.id.btnOpt1), findViewById(R.id.btnOpt2),
             findViewById(R.id.btnOpt3), findViewById(R.id.btnOpt4)
@@ -93,9 +102,10 @@ class RoomPlayActivity : AppCompatActivity() {
                     ?: return@mapNotNull null
                 val c = (m["correctIndex"] as? Number)?.toInt() ?: return@mapNotNull null
                 if (opts.size < 2 || c !in opts.indices) return@mapNotNull null
+                val exp = (m["explanation"] as? String)?.trim() ?: ""
                 val correctText = opts[c]
                 val shuffled = opts.shuffled()
-                Q(text, shuffled, shuffled.indexOf(correctText))
+                Q(text, shuffled, shuffled.indexOf(correctText), exp)
             }
             if (parsed.isEmpty()) {
                 showInfo("لا توجد أسئلة", "هذه الغرفة بدون أسئلة.", false)
@@ -147,6 +157,8 @@ class RoomPlayActivity : AppCompatActivity() {
         if (index >= questions.size) { finishChallenge(false); return }
         answered = false
         val q = questions[index]
+        tvExplanation.visibility = View.GONE
+        btnNext.visibility = View.GONE
         findViewById<TextView>(R.id.tvProgress).text = "السؤال ${index + 1} من ${questions.size}"
         findViewById<ProgressBar>(R.id.progressBar).apply {
             max = questions.size
@@ -186,7 +198,21 @@ class RoomPlayActivity : AppCompatActivity() {
         if (chosen >= 0 && chosen != q.correct) {
             optionButtons[chosen].backgroundTintList = ColorStateList.valueOf(Color.parseColor("#C62828"))
         }
-        handler.postDelayed({ index++; showQuestion() }, 1500)
+
+        if (q.explanation.isNotEmpty()) {
+            tvExplanation.text = "💡 ${q.explanation}"
+            tvExplanation.visibility = View.VISIBLE
+            btnNext.text = if (index + 1 >= questions.size) "إنهاء ✔" else "التالي ◀"
+            btnNext.isEnabled = true
+            btnNext.visibility = View.VISIBLE
+            btnNext.setOnClickListener {
+                btnNext.isEnabled = false
+                index++
+                showQuestion()
+            }
+        } else {
+            handler.postDelayed({ index++; showQuestion() }, 1500)
+        }
     }
 
     private fun finishChallenge(forced: Boolean) {
