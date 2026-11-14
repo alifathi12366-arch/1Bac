@@ -51,8 +51,16 @@ class GamesHubActivity : AppCompatActivity() {
         }
         CardKit.addCard(
             this, row, "عجلة الحظ", "لفّ العجلة وجاوب السؤال", "🎡",
-            "#FFD9EE", "#FDC4E6", "#E5365A", soon
-        )
+            "#FFD9EE", "#FDC4E6", "#E5365A"
+        ) {
+            if (isTeacher) {
+                startActivity(Intent(this, WheelTeacherHomeActivity::class.java))
+            } else {
+                startActivity(
+                    Intent(this, WheelPlayActivity::class.java).putExtra("teacherCode", teacherCode)
+                )
+            }
+        }
 
         row = CardKit.newRow(this, grid)
         CardKit.addCard(
