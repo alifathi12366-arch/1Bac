@@ -118,7 +118,7 @@ class AccountActivity : AppCompatActivity() {
             startActivity(Intent(this, TeacherCodeActivity::class.java))
         }
 
-        // 🎁 زرار دعوة الأصدقاء (مكان زرار مستواي الدراسي القديم)
+        // 🎁 زرار دعوة الأصدقاء
         val inviteBtn = findViewById<Button>(R.id.leaderboardButton)
         inviteBtn.text = "🎁 دعوة الأصدقاء (اكسب نقاط)"
         inviteBtn.visibility = View.VISIBLE
@@ -136,7 +136,8 @@ class AccountActivity : AppCompatActivity() {
                     val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
                     val clip = android.content.ClipData.newPlainText("Student Code", studentId)
                     clipboard.setPrimaryClip(clip)
-                    Toast.LENGTHId(this, "تم نسخ الكود بنجاح! ابعته لأصحابك 🚀", Toast.LENGTH_SHORT).show()
+                    // تم تصحيح الخطأ هنا بنجاح
+                    Toast.makeText(this, "تم نسخ الكود بنجاح! ابعته لأصحابك 🚀", Toast.LENGTH_SHORT).show()
                 }
                 .setNegativeButton("إغلاق", null)
                 .show()
