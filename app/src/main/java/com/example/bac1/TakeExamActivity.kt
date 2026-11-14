@@ -57,13 +57,13 @@ class TakeExamActivity : AppCompatActivity() {
                             btnSubmit.text = "تم التقديم من قبل"
                             
                             val savedMcq = resultDoc.get("mcqAnswers") as? List> ?: emptyList()
-                            renderQuestions(questionsContainer, readOnly = true, savedAnswers = savedMcq)
+                            renderQuestions(questionsContainer, true, savedMcq)
                         } else if (deadline > 0L && System.currentTimeMillis() > deadline) {
                             tvExamTitle.text = "${exam.title}\n(انتهى موعد هذا الامتحان)"
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "الامتحان مغلق"
                         } else {
-                            renderQuestions(questionsContainer, readOnly = false, savedAnswers = emptyList())
+                            renderQuestions(questionsContainer, false, emptyList())
                             running = true
                             btnSubmit.setOnClickListener { submitExam(auto = false) }
                             startTimer(tvExamTitle, durationMin, deadline)
