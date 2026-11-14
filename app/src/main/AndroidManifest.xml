@@ -117,6 +117,10 @@
                 <activity android:name=".WheelCreateActivity" android:exported="false" />
         <activity android:name=".WheelTeacherHomeActivity" android:exported="false" />
         <activity android:name=".WheelPlayActivity" android:exported="false" />
+                <activity android:name=".MillionCreateActivity" android:exported="false" />
+        <activity android:name=".MillionTeacherHomeActivity" android:exported="false" />
+        <activity android:name=".MillionBoardActivity" android:exported="false" />
+        <activity android:name=".MillionStudentActivity" android:exported="false" android:screenOrientation="portrait" />
         
     </application>
 
