@@ -1,5 +1,6 @@
 package com.example.bac1
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
@@ -21,7 +22,13 @@ class GamesHubActivity : AppCompatActivity() {
             insets
         }
 
-        findViewById<TextView>(R.id.contentTeacherName).text = "🎮 الألعاب"
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val isTeacher = prefs.getBoolean("is_teacher", false)
+        val teacherCode = if (isTeacher) prefs.getString("teacher_code", "") ?: ""
+        else intent.getStringExtra("teacherCode") ?: ""
+
+        findViewById<TextView>(R.id.contentTeacherName).text =
+            if (isTeacher) "🎮 ألعاب الحصة" else "🎮 الألعاب"
         findViewById<View>(R.id.btnMarkAttendance).visibility = View.GONE
 
         val grid = findViewById<LinearLayout>(R.id.gridContainer)
@@ -32,8 +39,16 @@ class GamesHubActivity : AppCompatActivity() {
         var row = CardKit.newRow(this, grid)
         CardKit.addCard(
             this, row, "دوري الأبطال", "تنافس مباشر والأعلى نقاطًا يكسب", "🏆",
-            "#FCE9C8", "#FDDA96", "#F08A24", soon
-        )
+            "#FCE9C8", "#FDDA96", "#F08A24"
+        ) {
+            if (isTeacher) {
+                startActivity(Intent(this, LeagueTeacherHomeActivity::class.java))
+            } else {
+                startActivity(
+                    Intent(this, LeagueStudentActivity::class.java).putExtra("teacherCode", teacherCode)
+                )
+            }
+        }
         CardKit.addCard(
             this, row, "عجلة الحظ", "لفّ العجلة وجاوب السؤال", "🎡",
             "#FFD9EE", "#FDC4E6", "#E5365A", soon
