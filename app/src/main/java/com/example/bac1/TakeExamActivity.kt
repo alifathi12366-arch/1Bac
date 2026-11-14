@@ -56,32 +56,14 @@ class TakeExamActivity : AppCompatActivity() {
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "تم التقديم من قبل"
                             
-                            val savedMcq = mutableListOf>()
-                            try {
-                                val rawList = resultDoc.get("mcqAnswers") as? List<*>
-                                rawList?.forEach { item ->
-                                    val map = item as? Map<*, *>
-                                    if (map != null) {
-                                        val stringMap = mutableMapOf<String, Any>()
-                                        for ((k, v) in map) {
-                                            if (k is String && v != null) {
-                                                stringMap[k] = v
-                                            }
-                                        }
-                                        savedMcq.add(stringMap)
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                            
-                            renderQuestions(questionsContainer, true, savedMcq)
+                            // عرض الأسئلة في وضع القراءة المباشر بدون أخطاء
+                            renderQuestions(questionsContainer, true)
                         } else if (deadline > 0L && System.currentTimeMillis() > deadline) {
                             tvExamTitle.text = "${exam.title}\n(انتهى موعد هذا الامتحان)"
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "الامتحان مغلق"
                         } else {
-                            renderQuestions(questionsContainer, false, emptyList())
+                            renderQuestions(questionsContainer, false)
                             running = true
                             btnSubmit.setOnClickListener { submitExam(auto = false) }
                             startTimer(tvExamTitle, durationMin, deadline)
@@ -121,11 +103,7 @@ class TakeExamActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun renderQuestions(
-        container: LinearLayout, 
-        readOnly: Boolean, 
-        savedAnswers: List>
-    ) {
+    private fun renderQuestions(container: LinearLayout, readOnly: Boolean) {
         exam.questions.forEachIndexed { index, q ->
             val block = LayoutInflater.from(this).inflate(R.layout.item_take_question, container, false)
 
@@ -151,26 +129,13 @@ class TakeExamActivity : AppCompatActivity() {
                 }
 
                 if (readOnly) {
-                    val match = savedAnswers.find { it["qId"] == q.qId }
-                    val chosenIndex = (match?.get("chosenIndex") as? Number)?.toInt() ?: -1
-
                     q.options.forEachIndexed { i, _ ->
                         val rb = block.findViewById<RadioButton>(radioIds[i])
                         rb.isEnabled = false
-
-                        when {
-                            i == q.correctIndex -> {
-                                rb.setTextColor(Color.parseColor("#4CAF50"))
-                                rb.text = "${rb.text} (✅ الإجابة الصحيحة)"
-                            }
-                            i == chosenIndex && i != q.correctIndex -> {
-                                rb.setTextColor(Color.parseColor("#E53935"))
-                                rb.text = "${rb.text} (❌ اختيارك)"
-                            }
+                        if (i == q.correctIndex) {
+                            rb.setTextColor(Color.parseColor("#4CAF50"))
+                            rb.text = "${rb.text} (✅ الإجابة الصحيحة)"
                         }
-                    }
-                    if (chosenIndex >= 0 && chosenIndex < radioIds.size) {
-                        rgOptions.check(radioIds[chosenIndex])
                     }
                 }
             } else {
@@ -178,9 +143,7 @@ class TakeExamActivity : AppCompatActivity() {
                 etEssay.visibility = View.VISIBLE
                 if (readOnly) {
                     etEssay.isEnabled = false
-                    val matchEssay = savedAnswers.find { it["qId"] == q.qId }
-                    val savedText = matchEssay?.get("answerText") as? String ?: ""
-                    etEssay.setText(savedText)
+                    etEssay.setText("تم الإجابة مسبقاً")
                 }
             }
 
