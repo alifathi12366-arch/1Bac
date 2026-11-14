@@ -121,7 +121,10 @@
         <activity android:name=".MillionTeacherHomeActivity" android:exported="false" />
         <activity android:name=".MillionBoardActivity" android:exported="false" />
         <activity android:name=".MillionStudentActivity" android:exported="false" android:screenOrientation="portrait" />
-        
+                <activity android:name=".MatchCreateActivity" android:exported="false" />
+        <activity android:name=".MatchTeacherHomeActivity" android:exported="false" />
+        <activity android:name=".MatchBoardActivity" android:exported="false" />
+        <activity android:name=".MatchStudentActivity" android:exported="false" android:screenOrientation="portrait" />
     </application>
 
 </manifest>
