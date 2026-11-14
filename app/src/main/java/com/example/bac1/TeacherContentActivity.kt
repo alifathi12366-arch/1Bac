@@ -2,238 +2,200 @@ package com.example.bac1
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class TeacherContentActivity : AppCompatActivity() {
 
-    private lateinit var teacherCode: String
-    private lateinit var teacherName: String
+    private var teacherCode = ""
+    private var teacherName = ""
+    private lateinit var gridContainer: LinearLayout
+
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_teacher_content)
+        setContentView(R.layout.activity_teacher_hub)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<View>(R.id.hubRoot)) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         teacherCode = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_CODE) ?: ""
         teacherName = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_NAME) ?: ""
 
         val nameView = findViewById<TextView>(R.id.contentTeacherName)
-        val noContentText = findViewById<TextView>(R.id.noContentText)
-        val recyclerView = findViewById<RecyclerView>(R.id.contentRecyclerView)
-
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        gridContainer = findViewById(R.id.gridContainer)
 
         if (teacherCode.isEmpty()) {
             nameView.text = "حدث خطأ، ارجع واختار المدرس تاني"
-            noContentText.visibility = View.VISIBLE
             return
         }
 
         nameView.text = "أستاذ $teacherName"
-                addTeacherCard(nameView, teacherCode)
+        addTeacherCard(nameView, teacherCode)
+        setupSessionAttendance(findViewById<Button>(R.id.btnMarkAttendance))
+        buildCards()
+    }
 
-
-        val etQuestion = findViewById<EditText>(R.id.etQuestion)
-        val btnSendQuestion = findViewById<Button>(R.id.btnSendQuestion)
-        val btnMarkAttendance = findViewById<Button>(R.id.btnMarkAttendance)
-        val ratingBar = findViewById<RatingBar>(R.id.teacherRatingBar)
-        val btnSubmitRating = findViewById<Button>(R.id.btnSubmitRating)
-
-                setupSessionAttendance(btnMarkAttendance)
-
-        findViewById<Button>(R.id.btnGoToExams).setOnClickListener {
-            val i = Intent(this, StudentExamsActivity::class.java)
-            i.putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
-            startActivity(i)
+    // ---------- الكروت ----------
+    private fun buildCards() {
+        var row = CardKit.newRow(this, gridContainer)
+        CardKit.addCard(
+            this, row, "المحتوى", "دروس وفيديوهات المدرس", "📚",
+            "#E7E2FE", "#D6CEFB", "#4B3FD1"
+        ) {
+            startActivity(
+                Intent(this, TeacherLessonsActivity::class.java)
+                    .putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
+                    .putExtra(MyTeachersActivity.EXTRA_TEACHER_NAME, teacherName)
+            )
         }
-                val examsBtn = findViewById<Button>(R.id.btnGoToExams)
-        val examsParent = examsBtn.parent as android.view.ViewGroup
-        val challengesBtn = Button(this)
-        challengesBtn.text = "🎯 تحديات المدرس"
-        challengesBtn.setOnClickListener {
-            val i = Intent(this, TeacherChallengesActivity::class.java)
-            i.putExtra("teacherCode", teacherCode)
-            startActivity(i)
-        }
-        examsParent.addView(challengesBtn, examsParent.indexOfChild(examsBtn) + 1)
-               val reviewsBtn = Button(this)
-        reviewsBtn.text = "📘 المراجعات"
-        reviewsBtn.setOnClickListener {
-            startActivity(Intent(this, ReviewListActivity::class.java).putExtra("teacherCode", teacherCode))
-        }
-        examsParent.addView(reviewsBtn, examsParent.indexOfChild(examsBtn) + 2) 
-
-        findViewById<Button>(R.id.btnMyMistakes).setOnClickListener {
-            val i = Intent(this, MyMistakesActivity::class.java)
-            i.putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
-            startActivity(i)
+        CardKit.addCard(
+            this, row, "الألعاب", "العب وتنافس مع زمايلك", "🎮",
+            "#D2F6DE", "#B9EFCD", "#2F7BD8"
+        ) {
+            startActivity(
+                Intent(this, GamesHubActivity::class.java)
+                    .putExtra("teacherCode", teacherCode)
+                    .putExtra("teacherName", teacherName)
+            )
         }
 
-        findViewById<Button>(R.id.btnMyQuestions).setOnClickListener {
-            val i = Intent(this, MyQuestionsActivity::class.java)
-            i.putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
-            startActivity(i)
+        row = CardKit.newRow(this, gridContainer)
+        CardKit.addCard(
+            this, row, "امتحانات أستاذي", "امتحانات بمدة وموعد", "📝",
+            "#E3D8FE", "#D0BCFC", "#6A3CD6"
+        ) {
+            startActivity(
+                Intent(this, StudentExamsActivity::class.java)
+                    .putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
+            )
+        }
+        CardKit.addCard(
+            this, row, "تحديات المدرس", "تحدى وكسب جوائز", "🎯",
+            "#FFE6CC", "#FFD2A8", "#E65100"
+        ) {
+            startActivity(
+                Intent(this, TeacherChallengesActivity::class.java)
+                    .putExtra("teacherCode", teacherCode)
+            )
         }
 
-        loadExistingRating(teacherCode, ratingBar, btnSubmitRating)
-
-        btnSubmitRating.setOnClickListener {
-            val stars = ratingBar.rating.toDouble()
-            if (stars <= 0.0) {
-                Toast.makeText(this, "اختار نجوم الأول", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            submitRating(teacherCode, stars, btnSubmitRating)
+        row = CardKit.newRow(this, gridContainer)
+        CardKit.addCard(
+            this, row, "المراجعات", "مراجعات قبل الامتحان", "📘",
+            "#D3E8FF", "#BEDDFD", "#2F6BEA"
+        ) {
+            startActivity(
+                Intent(this, ReviewListActivity::class.java)
+                    .putExtra("teacherCode", teacherCode)
+            )
+        }
+        CardKit.addCard(
+            this, row, "أخطائي", "راجع أسئلتك الغلط", "❌",
+            "#FFD9EE", "#FDC4E6", "#E5365A"
+        ) {
+            startActivity(
+                Intent(this, MyMistakesActivity::class.java)
+                    .putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
+            )
         }
 
-        btnSendQuestion.setOnClickListener {
-            val questionText = etQuestion.text?.toString()?.trim() ?: ""
-            if (questionText.isNotEmpty()) {
-                sendStudentQuestion(teacherCode, questionText)
-                etQuestion.setText("")
-            } else {
-                Toast.makeText(this, "اكتب سؤالك الأول", Toast.LENGTH_SHORT).show()
-            }
+        row = CardKit.newRow(this, gridContainer)
+        CardKit.addCard(
+            this, row, "اسأل المستر", "اكتب سؤالك عن الدرس", "💬",
+            "#CDF2E5", "#BDEBE3", "#1FAE7C"
+        ) { showAskDialog() }
+        CardKit.addCard(
+            this, row, "ردود المدرس", "أسئلتك وإجاباتها", "📨",
+            "#FDE8DC", "#FDD5BD", "#E5413A"
+        ) {
+            startActivity(
+                Intent(this, MyQuestionsActivity::class.java)
+                    .putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
+            )
         }
 
-        FirebaseFirestore.getInstance()
-            .collection("teacherContent")
-            .whereEqualTo("teacherCode", teacherCode)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .get()
-            .addOnSuccessListener { result ->
-                val items = result.documents.map { doc ->
-                    TeacherContentItem(
-                        type = doc.getString("type") ?: "message",
-                        text = doc.getString("text") ?: ""
-                    )
-                }
-                if (items.isEmpty()) {
-                    noContentText.visibility = View.VISIBLE
+        row = CardKit.newRow(this, gridContainer)
+        CardKit.addCard(
+            this, row, "قيّم أستاذك", "رأيك يفرق", "⭐",
+            "#FCE9C8", "#FDDA96", "#F08A24"
+        ) { showRatingDialog() }
+    }
+
+    // ---------- اسأل المستر ----------
+    private fun showAskDialog() {
+        val et = EditText(this)
+        et.hint = "اكتب سؤالك للمدرس..."
+        et.minLines = 3
+        et.gravity = Gravity.TOP or Gravity.START
+        val box = FrameLayout(this)
+        box.setPadding(dp(20), dp(8), dp(20), 0)
+        box.addView(et, FrameLayout.LayoutParams(-1, -2))
+
+        AlertDialog.Builder(this)
+            .setTitle("اسأل المستر 💬")
+            .setView(box)
+            .setPositiveButton("إرسال") { _, _ ->
+                val q = et.text.toString().trim()
+                if (q.isEmpty()) {
+                    Toast.makeText(this, "اكتب سؤالك الأول", Toast.LENGTH_SHORT).show()
                 } else {
-                    recyclerView.adapter = TeacherContentAdapter(items)
+                    sendStudentQuestion(teacherCode, q)
                 }
             }
+            .setNegativeButton("إلغاء", null)
+            .show()
     }
-       private fun addTeacherCard(anchor: TextView, code: String) {
-        FirebaseFirestore.getInstance().collection("teachers").document(code).get()
-            .addOnSuccessListener { d ->
-                val photo = d.getString("photoUrl") ?: ""
-                val subject = d.getString("profileSubject") ?: ""
-                val bio = d.getString("bio") ?: ""
-                val phone = d.getString("whatsapp") ?: ""
-                if (photo.isEmpty() && subject.isEmpty() && bio.isEmpty() && phone.isEmpty()) return@addOnSuccessListener
 
-                val parent = anchor.parent as? android.view.ViewGroup ?: return@addOnSuccessListener
-                val box = android.widget.LinearLayout(this)
-                box.orientation = android.widget.LinearLayout.VERTICAL
-                box.gravity = android.view.Gravity.CENTER_HORIZONTAL
-                val pad = (12 * resources.displayMetrics.density).toInt()
-                box.setPadding(pad, pad, pad, pad)
+    // ---------- التقييم ----------
+    private fun showRatingDialog() {
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.gravity = Gravity.CENTER_HORIZONTAL
+        box.setPadding(dp(20), dp(16), dp(20), 0)
+        val bar = RatingBar(this)
+        bar.numStars = 5
+        bar.stepSize = 1f
+        box.addView(bar, LinearLayout.LayoutParams(-2, -2))
 
-                if (photo.startsWith("http")) {
-                    val img = android.widget.ImageView(this)
-                    val size = (110 * resources.displayMetrics.density).toInt()
-                    box.addView(img, android.widget.LinearLayout.LayoutParams(size, size))
-                    com.bumptech.glide.Glide.with(this).load(photo).circleCrop().into(img)
-                }
-                if (subject.isNotEmpty()) {
-                    val t = TextView(this)
-                    t.text = "مادة: $subject"
-                    t.textSize = 15f
-                    box.addView(t)
-                }
-                if (bio.isNotEmpty()) {
-                    val t = TextView(this)
-                    t.text = bio
-                    t.textSize = 13f
-                    t.gravity = android.view.Gravity.CENTER
-                    box.addView(t)
-                }
-                if (phone.isNotEmpty()) {
-                    val b = Button(this)
-                    b.text = "💬 تواصل واتساب"
-                    b.setOnClickListener {
-                        var digits = phone.filter { it.isDigit() }
-                        if (digits.startsWith("0")) digits = "20" + digits.substring(1)
-                        startActivity(Intent(Intent.ACTION_VIEW,
-                            android.net.Uri.parse("https://wa.me/$digits")))
-                    }
-                    box.addView(b)
-                }
-                parent.addView(box, parent.indexOfChild(anchor) + 1)
+        FirebaseFirestore.getInstance().collection("ratings").document(ratingDocId(teacherCode)).get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) bar.rating = (doc.getDouble("stars") ?: 0.0).toFloat()
             }
+
+        AlertDialog.Builder(this)
+            .setTitle("قيّم أستاذك ⭐")
+            .setView(box)
+            .setPositiveButton("حفظ") { _, _ ->
+                val stars = bar.rating.toDouble()
+                if (stars <= 0.0) {
+                    Toast.makeText(this, "اختار نجوم الأول", Toast.LENGTH_SHORT).show()
+                } else {
+                    submitRating(teacherCode, stars)
+                }
+            }
+            .setNegativeButton("إلغاء", null)
+            .show()
     }
-          private fun setupSessionAttendance(btn: Button) {
-        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val name = prefs.getString("student_name", "طالب") ?: "طالب"
-        btn.isEnabled = false
-        btn.text = "لا توجد حصة الآن"
-        val db = FirebaseFirestore.getInstance()
-        db.collection("teacherGroups").whereArrayContains("studentNames", name).get()
-            .addOnSuccessListener { res ->
-                val cal = java.util.Calendar.getInstance()
-                val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
-                val today = cal.get(java.util.Calendar.DAY_OF_WEEK)
-                val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
-                for (g in res.documents) {
-                    if (g.getString("teacherCode") != teacherCode) continue
-                    val dur = (g.getLong("durationMin") ?: 90L).toInt()
-                    val gname = g.getString("name") ?: ""
-                    val slots = g.get("slots") as? List<*> ?: continue
-                    for (s in slots) {
-                        val m = s as? Map<*, *> ?: continue
-                        val day = (m["day"] as? Number)?.toInt() ?: continue
-                        val time = m["time"] as? String ?: continue
-                        val start = try {
-                            val p = time.split(":")
-                            p[0].toInt() * 60 + p[1].toInt()
-                        } catch (e: Exception) { continue }
-                        if (day == today && nowMin in (start - 15)..(start + dur)) {
-                            val safe = name.replace("/", "-")
-                            val ref = db.collection("attendanceSessions")
-                                .document("${teacherCode}_${g.id}_${dateStr}_${time}_$safe")
-                            ref.get().addOnSuccessListener { d ->
-                                if (d.exists()) {
-                                    btn.text = "✅ تم تسجيل حضورك لحصة $gname"
-                                } else {
-                                    btn.isEnabled = true
-                                    btn.text = "✅ سجّل حضورك لحصة $gname"
-                                    btn.setOnClickListener {
-                                        ref.set(hashMapOf(
-                                            "teacherCode" to teacherCode,
-                                            "groupId" to g.id,
-                                            "groupName" to gname,
-                                            "studentName" to name,
-                                            "date" to dateStr,
-                                            "slot" to time,
-                                            "createdAt" to System.currentTimeMillis()
-                                        )).addOnSuccessListener {
-                                            btn.isEnabled = false
-                                            btn.text = "✅ تم تسجيل حضورك لحصة $gname"
-                                            Toast.makeText(this, "تم تسجيل حضورك 👍", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                }
-                            }
-                            return@addOnSuccessListener
-                        }
-                    }
-                }
-            }
-    } 
 
     private fun ratingDocId(teacherCode: String): String {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
@@ -241,24 +203,10 @@ class TeacherContentActivity : AppCompatActivity() {
         return "${teacherCode}_$studentName"
     }
 
-    private fun loadExistingRating(teacherCode: String, ratingBar: RatingBar, btnSubmitRating: Button) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("ratings").document(ratingDocId(teacherCode)).get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    val stars = doc.getDouble("stars") ?: 0.0
-                    ratingBar.rating = stars.toFloat()
-                    btnSubmitRating.text = "تعديل تقييمك"
-                }
-            }
-    }
-
-    private fun submitRating(teacherCode: String, newStars: Double, btnSubmitRating: Button) {
+    private fun submitRating(teacherCode: String, newStars: Double) {
         val db = FirebaseFirestore.getInstance()
         val ratingRef = db.collection("ratings").document(ratingDocId(teacherCode))
         val teacherRef = db.collection("teachers").document(teacherCode)
-
-        btnSubmitRating.isEnabled = false
 
         ratingRef.get().addOnSuccessListener { ratingDoc ->
             val oldStars = if (ratingDoc.exists()) ratingDoc.getDouble("stars") else null
@@ -285,34 +233,124 @@ class TeacherContentActivity : AppCompatActivity() {
                 transaction.update(teacherRef, "ratingCount", newCount)
                 transaction.set(ratingRef, hashMapOf("stars" to newStars, "teacherCode" to teacherCode))
             }.addOnSuccessListener {
-                btnSubmitRating.isEnabled = true
-                btnSubmitRating.text = "تعديل تقييمك"
                 Toast.makeText(this, "تم حفظ تقييمك، شكرًا لك 🌟", Toast.LENGTH_SHORT).show()
             }.addOnFailureListener { e ->
-                btnSubmitRating.isEnabled = true
                 Toast.makeText(this, "فشل حفظ التقييم: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun markStudentAttendance(teacherCode: String) {
+    // ---------- كارت بيانات المدرس ----------
+    private fun addTeacherCard(anchor: TextView, code: String) {
+        FirebaseFirestore.getInstance().collection("teachers").document(code).get()
+            .addOnSuccessListener { d ->
+                val photo = d.getString("photoUrl") ?: ""
+                val subject = d.getString("profileSubject") ?: ""
+                val bio = d.getString("bio") ?: ""
+                val phone = d.getString("whatsapp") ?: ""
+                if (photo.isEmpty() && subject.isEmpty() && bio.isEmpty() && phone.isEmpty()) return@addOnSuccessListener
+
+                val parent = anchor.parent as? ViewGroup ?: return@addOnSuccessListener
+                val box = LinearLayout(this)
+                box.orientation = LinearLayout.VERTICAL
+                box.gravity = Gravity.CENTER_HORIZONTAL
+                box.setPadding(dp(12), dp(4), dp(12), dp(12))
+
+                if (photo.startsWith("http")) {
+                    val img = android.widget.ImageView(this)
+                    box.addView(img, LinearLayout.LayoutParams(dp(110), dp(110)))
+                    com.bumptech.glide.Glide.with(this).load(photo).circleCrop().into(img)
+                }
+                if (subject.isNotEmpty()) {
+                    val t = TextView(this)
+                    t.text = "مادة: $subject"
+                    t.textSize = 15f
+                    t.setTextColor(0xFF241B4E.toInt())
+                    box.addView(t)
+                }
+                if (bio.isNotEmpty()) {
+                    val t = TextView(this)
+                    t.text = bio
+                    t.textSize = 13f
+                    t.setTextColor(0xFF5E5A7E.toInt())
+                    t.gravity = Gravity.CENTER
+                    box.addView(t)
+                }
+                if (phone.isNotEmpty()) {
+                    val b = Button(this)
+                    b.text = "💬 تواصل واتساب"
+                    b.setOnClickListener {
+                        var digits = phone.filter { it.isDigit() }
+                        if (digits.startsWith("0")) digits = "20" + digits.substring(1)
+                        startActivity(
+                            Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://wa.me/$digits"))
+                        )
+                    }
+                    box.addView(b)
+                }
+                parent.addView(box, parent.indexOfChild(anchor) + 1)
+            }
+    }
+
+    // ---------- تسجيل حضور الحصة (بيظهر بس لو فيه حصة دلوقتي) ----------
+    private fun setupSessionAttendance(btn: Button) {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val name = prefs.getString("student_name", "طالب") ?: "طالب"
+        btn.visibility = View.GONE
         val db = FirebaseFirestore.getInstance()
-        val sharedPref = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val studentName = sharedPref.getString("student_name", "طالب") ?: "طالب"
-
-        val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val attendanceId = "${teacherCode}_${studentName}_$todayDate"
-
-        val attendanceData = hashMapOf(
-            "studentName" to studentName,
-            "teacherCode" to teacherCode,
-            "date" to todayDate,
-            "timestamp" to com.google.firebase.Timestamp.now()
-        )
-
-        db.collection("attendance")
-            .document(attendanceId)
-            .set(attendanceData)
+        db.collection("teacherGroups").whereArrayContains("studentNames", name).get()
+            .addOnSuccessListener { res ->
+                val cal = java.util.Calendar.getInstance()
+                val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
+                val today = cal.get(java.util.Calendar.DAY_OF_WEEK)
+                val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
+                for (g in res.documents) {
+                    if (g.getString("teacherCode") != teacherCode) continue
+                    val dur = (g.getLong("durationMin") ?: 90L).toInt()
+                    val gname = g.getString("name") ?: ""
+                    val slots = g.get("slots") as? List<*> ?: continue
+                    for (s in slots) {
+                        val m = s as? Map<*, *> ?: continue
+                        val day = (m["day"] as? Number)?.toInt() ?: continue
+                        val time = m["time"] as? String ?: continue
+                        val start = try {
+                            val p = time.split(":")
+                            p[0].toInt() * 60 + p[1].toInt()
+                        } catch (e: Exception) { continue }
+                        if (day == today && nowMin in (start - 15)..(start + dur)) {
+                            val safe = name.replace("/", "-")
+                            val ref = db.collection("attendanceSessions")
+                                .document("${teacherCode}_${g.id}_${dateStr}_${time}_$safe")
+                            ref.get().addOnSuccessListener { d ->
+                                btn.visibility = View.VISIBLE
+                                if (d.exists()) {
+                                    btn.isEnabled = false
+                                    btn.text = "✅ تم تسجيل حضورك لحصة $gname"
+                                } else {
+                                    btn.isEnabled = true
+                                    btn.text = "✋ سجّل حضورك لحصة $gname"
+                                    btn.setOnClickListener {
+                                        ref.set(hashMapOf(
+                                            "teacherCode" to teacherCode,
+                                            "groupId" to g.id,
+                                            "groupName" to gname,
+                                            "studentName" to name,
+                                            "date" to dateStr,
+                                            "slot" to time,
+                                            "createdAt" to System.currentTimeMillis()
+                                        )).addOnSuccessListener {
+                                            btn.isEnabled = false
+                                            btn.text = "✅ تم تسجيل حضورك لحصة $gname"
+                                            Toast.makeText(this, "تم تسجيل حضورك 👍", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
+                            return@addOnSuccessListener
+                        }
+                    }
+                }
+            }
     }
 
     private fun sendStudentQuestion(teacherCode: String, questionText: String) {
