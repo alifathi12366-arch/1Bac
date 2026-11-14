@@ -56,15 +56,23 @@ class TakeExamActivity : AppCompatActivity() {
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "تم التقديم من قبل"
                             
-                            val rawList = resultDoc.get("mcqAnswers") as? List<*>
                             val savedMcq = mutableListOf>()
-                            rawList?.forEach { item ->
-                                val map = item as? Map<*, *>
-                                if (map != null) {
-                                    val stringMap = mutableMapOf<String, Any>()
-                                    map.forEach { (k, v) -> if (k is String && v != null) stringMap[k] = v }
-                                    savedMcq.add(stringMap)
+                            try {
+                                val rawList = resultDoc.get("mcqAnswers") as? List<*>
+                                rawList?.forEach { item ->
+                                    val map = item as? Map<*, *>
+                                    if (map != null) {
+                                        val stringMap = mutableMapOf<String, Any>()
+                                        for ((k, v) in map) {
+                                            if (k is String && v != null) {
+                                                stringMap[k] = v
+                                            }
+                                        }
+                                        savedMcq.add(stringMap)
+                                    }
                                 }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
                             
                             renderQuestions(questionsContainer, true, savedMcq)
