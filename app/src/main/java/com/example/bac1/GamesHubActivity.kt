@@ -65,8 +65,16 @@ class GamesHubActivity : AppCompatActivity() {
         row = CardKit.newRow(this, grid)
         CardKit.addCard(
             this, row, "من سيربح التحدي", "أسئلة بمستويات زي المليون", "💰",
-            "#D2F6DE", "#B9EFCD", "#2F7BD8", soon
-        )
+            "#D2F6DE", "#B9EFCD", "#2F7BD8"
+        ) {
+            if (isTeacher) {
+                startActivity(Intent(this, MillionTeacherHomeActivity::class.java))
+            } else {
+                startActivity(
+                    Intent(this, MillionStudentActivity::class.java).putExtra("teacherCode", teacherCode)
+                )
+            }
+        }
         CardKit.addCard(
             this, row, "وصّل الكلمة بمعناها", "وصّل كل كلمة بمعناها", "🔗",
             "#D3E8FF", "#BEDDFD", "#2F6BEA", soon
