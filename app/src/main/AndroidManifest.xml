@@ -108,6 +108,8 @@
                 <activity android:name=".FocusTimerActivity" android:exported="false" />
                         <activity android:name=".StudentQuestionBankActivity" android:exported="false" />
         <activity android:name=".EnglishWordsActivity" android:exported="false" />
+                <activity android:name=".TeacherLessonsActivity" android:exported="false" />
+        <activity android:name=".GamesHubActivity" android:exported="false" />
         
     </application>
 
