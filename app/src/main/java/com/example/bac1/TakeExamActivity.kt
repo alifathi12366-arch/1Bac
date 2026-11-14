@@ -56,15 +56,14 @@ class TakeExamActivity : AppCompatActivity() {
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "تم التقديم من قبل"
                             
-                            // استخراج الإجابات المحفوظة مسبقاً لعرضها للطالب مع التصحيح
                             val savedMcq = resultDoc.get("mcqAnswers") as? List> ?: emptyList()
-                            renderQuestions(exam, questionsContainer, readOnly = true, savedAnswers = savedMcq)
+                            renderQuestions(questionsContainer, readOnly = true, savedAnswers = savedMcq)
                         } else if (deadline > 0L && System.currentTimeMillis() > deadline) {
                             tvExamTitle.text = "${exam.title}\n(انتهى موعد هذا الامتحان)"
                             btnSubmit.isEnabled = false
                             btnSubmit.text = "الامتحان مغلق"
                         } else {
-                            renderQuestions(exam, questionsContainer, readOnly = false, savedAnswers = emptyList())
+                            renderQuestions(questionsContainer, readOnly = false, savedAnswers = emptyList())
                             running = true
                             btnSubmit.setOnClickListener { submitExam(auto = false) }
                             startTimer(tvExamTitle, durationMin, deadline)
@@ -105,7 +104,6 @@ class TakeExamActivity : AppCompatActivity() {
     }
 
     private fun renderQuestions(
-        exam: ExamModel, 
         container: LinearLayout, 
         readOnly: Boolean, 
         savedAnswers: List>
@@ -134,7 +132,6 @@ class TakeExamActivity : AppCompatActivity() {
                     block.findViewById<RadioButton>(radioIds[i]).visibility = View.GONE
                 }
 
-                // لو القراءة فقط (الطالب دخل يراجع امتحانه القديم)
                 if (readOnly) {
                     val match = savedAnswers.find { it["qId"] == q.qId }
                     val chosenIndex = (match?.get("chosenIndex") as? Number)?.toInt() ?: -1
@@ -143,14 +140,13 @@ class TakeExamActivity : AppCompatActivity() {
                         val rb = block.findViewById<RadioButton>(radioIds[i])
                         rb.isEnabled = false
 
-                        // تلوين الإجابة الصحيحة بالأخضر، واختيار الطالب الخاطئ بالأحمر
                         when {
                             i == q.correctIndex -> {
-                                rb.setTextColor(Color.parseColor("#4CAF50")) // أخضر للإجابة الصحيحة
+                                rb.setTextColor(Color.parseColor("#4CAF50"))
                                 rb.text = "${rb.text} (✅ الإجابة الصحيحة)"
                             }
                             i == chosenIndex && i != q.correctIndex -> {
-                                rb.setTextColor(Color.parseColor("#E53935")) // أحمر لاختيار الطالب الخطأ
+                                rb.setTextColor(Color.parseColor("#E53935"))
                                 rb.text = "${rb.text} (❌ اختيارك)"
                             }
                         }
@@ -165,7 +161,6 @@ class TakeExamActivity : AppCompatActivity() {
                 if (readOnly) {
                     etEssay.isEnabled = false
                     val matchEssay = savedAnswers.find { it["qId"] == q.qId }
-                    // لو مقالي بنعرض إجابة الطالب اللي كتبها
                     val savedText = matchEssay?.get("answerText") as? String ?: ""
                     etEssay.setText(savedText)
                 }
