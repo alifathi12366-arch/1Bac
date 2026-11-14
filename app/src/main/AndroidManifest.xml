@@ -110,6 +110,10 @@
         <activity android:name=".EnglishWordsActivity" android:exported="false" />
                 <activity android:name=".TeacherLessonsActivity" android:exported="false" />
         <activity android:name=".GamesHubActivity" android:exported="false" />
+                <activity android:name=".LeagueTeacherHomeActivity" android:exported="false" />
+        <activity android:name=".LeagueCreateActivity" android:exported="false" />
+        <activity android:name=".LeagueControlActivity" android:exported="false" />
+        <activity android:name=".LeagueStudentActivity" android:exported="false" />
         
     </application>
 
