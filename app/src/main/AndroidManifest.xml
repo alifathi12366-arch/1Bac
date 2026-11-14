@@ -114,6 +114,9 @@
         <activity android:name=".LeagueCreateActivity" android:exported="false" />
         <activity android:name=".LeagueControlActivity" android:exported="false" />
         <activity android:name=".LeagueStudentActivity" android:exported="false" />
+                <activity android:name=".WheelCreateActivity" android:exported="false" />
+        <activity android:name=".WheelTeacherHomeActivity" android:exported="false" />
+        <activity android:name=".WheelPlayActivity" android:exported="false" />
         
     </application>
 
