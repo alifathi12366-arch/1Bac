@@ -76,9 +76,17 @@ class GamesHubActivity : AppCompatActivity() {
             }
         }
         CardKit.addCard(
-            this, row, "وصّل الكلمة بمعناها", "وصّل كل كلمة بمعناها", "🔗",
-            "#D3E8FF", "#BEDDFD", "#2F6BEA", soon
-        )
+            this, row, "وصّل الكلمة بمعناها", "وصّل كل عنصر بمقابله", "🔗",
+            "#D3E8FF", "#BEDDFD", "#2F6BEA"
+        ) {
+            if (isTeacher) {
+                startActivity(Intent(this, MatchTeacherHomeActivity::class.java))
+            } else {
+                startActivity(
+                    Intent(this, MatchStudentActivity::class.java).putExtra("teacherCode", teacherCode)
+                )
+            }
+        }
 
         row = CardKit.newRow(this, grid)
         CardKit.addCard(
