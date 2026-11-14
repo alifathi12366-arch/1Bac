@@ -104,6 +104,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         boardBtn.text = "🖊️ السبورة الذكية"
         boardBtn.setOnClickListener { startActivity(Intent(this, WhiteboardActivity::class.java)) }
         btnParent.addView(boardBtn, at + 7)
+                val gamesBtn = Button(this)
+        gamesBtn.text = "🎮 ألعاب الحصة"
+        gamesBtn.setOnClickListener { startActivity(Intent(this, GamesHubActivity::class.java)) }
+        btnParent.addView(gamesBtn, at + 8)
         btnPublish.setOnClickListener {
             val title = etTitle.text.toString().trim()
             val description = etDescription.text.toString().trim()
