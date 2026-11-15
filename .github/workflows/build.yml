@@ -25,13 +25,39 @@ jobs:
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
 
+      - name: Check Gemini key
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::GEMINI_API_KEY is empty or missing in Repository secrets"
+            exit 1
+          fi
+          echo "GEMINI_API_KEY found (${#GEMINI_API_KEY} chars)"
+
       - name: Build Signed APK
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           ./gradlew assembleRelease \
           -Pandroid.injected.signing.store.file=release.keystore \
           -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
           -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
           -Pandroid.injected.signing.key.password=${{ secrets.KEYSTORE_PASSWORD }}
+
+      - name: Verify key inside build
+        run: |
+          F=$(find app/build/generated -name BuildConfig.java | head -n 1)
+          echo "BuildConfig: $F"
+          if [ -z "$F" ]; then
+            echo "::error::BuildConfig.java not found"
+            exit 1
+          fi
+          if grep -q 'GEMINI_API_KEY = "";' "$F"; then
+            echo "::error::GEMINI_API_KEY is empty inside BuildConfig - check app/build.gradle.kts"
+            exit 1
+          fi
+          echo "Key injected into the app"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
