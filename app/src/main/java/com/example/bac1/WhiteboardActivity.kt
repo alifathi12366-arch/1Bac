@@ -24,20 +24,28 @@ import kotlin.math.*
 class BoardView(ctx: Context) : View(ctx) {
 
     enum class Tool { PEN, HIGHLIGHT, ERASER, LINE, ARROW, RECT, CIRCLE, LASER, MOVE }
+        enum class Paper { PLAIN, ENGLISH, ARABIC, GRAPH }
 
     private abstract class Item
     private class PathItem(val path: Path, val paint: Paint) : Item()
     private class ShapeItem(val tool: Tool, val x1: Float, val y1: Float, val x2: Float, val y2: Float, val paint: Paint) : Item()
 
-    private class Page {
+        private class Page {
         val items = mutableListOf<Item>()
         var bgPath: String? = null
-    }
+        var paper: Paper = Paper.PLAIN
+        }
 
     private val pages = mutableListOf(Page())
     var pageIndex = 0
         private set
     val pageCount get() = pages.size
+        var paper: Paper
+        get() = pages[pageIndex].paper
+        set(v) {
+            pages[pageIndex].paper = v
+            invalidate()
+        }
 
     var tool = Tool.PEN
     var color = Color.BLACK
@@ -143,7 +151,7 @@ class BoardView(ctx: Context) : View(ctx) {
     }
     fun clearPage() { pages[pageIndex].items.clear(); invalidate() }
     fun newPage() {
-        pages.add(Page()); pageIndex = pages.size - 1
+                pages.add(Page().also { it.paper = pages[pageIndex].paper }); pageIndex = pages.size - 1
         refreshBg(); onPageChanged?.invoke(); invalidate()
     }
     fun prev() { if (pageIndex > 0) { pageIndex--; refreshBg(); onPageChanged?.invoke(); invalidate() } }
@@ -175,12 +183,126 @@ class BoardView(ctx: Context) : View(ctx) {
             else -> {}
         }
     }
+        private val paperPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+    private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val dash = DashPathEffect(floatArrayOf(14f, 10f), 0f)
+
+    private fun isDarkBg(): Boolean {
+        val lum = 0.299 * Color.red(bg) + 0.587 * Color.green(bg) + 0.114 * Color.blue(bg)
+        return lum < 128
+    }
+
+    private fun drawPaper(c: Canvas) {
+        val type = pages[pageIndex].paper
+        if (type == Paper.PLAIN) return
+        val w = width.toFloat()
+        val h = height.toFloat()
+        if (w <= 0f || h <= 0f) return
+        val bw = w * boardW
+        val bh = h * boardH
+        val dark = isDarkBg()
+        val soft = if (dark) Color.argb(80, 255, 255, 255) else Color.argb(100, 63, 81, 181)
+        val strong = if (dark) Color.argb(170, 255, 255, 255) else Color.argb(190, 63, 81, 181)
+        val marginLine = if (dark) Color.argb(170, 255, 138, 128) else Color.argb(190, 229, 57, 53)
+        val axis = if (dark) Color.WHITE else Color.BLACK
+
+        when (type) {
+            Paper.ENGLISH -> {
+                val gap = h / 18f
+                val pitch = gap * 4.6f
+                var y = gap * 1.5f
+                while (y < bh) {
+                    paperPaint.pathEffect = null
+                    paperPaint.color = soft
+                    paperPaint.strokeWidth = 2f
+                    c.drawLine(0f, y, bw, y, paperPaint)
+                    paperPaint.pathEffect = dash
+                    c.drawLine(0f, y + gap, bw, y + gap, paperPaint)
+                    paperPaint.pathEffect = null
+                    paperPaint.color = strong
+                    paperPaint.strokeWidth = 3.5f
+                    c.drawLine(0f, y + gap * 2, bw, y + gap * 2, paperPaint)
+                    paperPaint.color = soft
+                    paperPaint.strokeWidth = 2f
+                    c.drawLine(0f, y + gap * 3, bw, y + gap * 3, paperPaint)
+                    y += pitch
+                }
+                paperPaint.pathEffect = null
+                paperPaint.color = marginLine
+                paperPaint.strokeWidth = 4f
+                c.drawLine(w * 0.08f, 0f, w * 0.08f, bh, paperPaint)
+            }
+            Paper.ARABIC -> {
+                val pitch = h / 12f
+                paperPaint.pathEffect = null
+                paperPaint.color = soft
+                paperPaint.strokeWidth = 2.5f
+                var y = pitch
+                while (y < bh) {
+                    c.drawLine(0f, y, bw, y, paperPaint)
+                    y += pitch
+                }
+                paperPaint.color = marginLine
+                paperPaint.strokeWidth = 4f
+                c.drawLine(w * 0.92f, 0f, w * 0.92f, bh, paperPaint)
+            }
+            Paper.GRAPH -> {
+                val cell = w / 22f
+                val ox = w / 2f
+                val oy = h / 2f
+                paperPaint.pathEffect = null
+                val k0 = ceil((0f - ox) / cell).toInt()
+                val k1 = floor((bw - ox) / cell).toInt()
+                val j0 = ceil((0f - oy) / cell).toInt()
+                val j1 = floor((bh - oy) / cell).toInt()
+
+                for (k in k0..k1) {
+                    if (k == 0) continue
+                    val x = ox + k * cell
+                    val major = k % 5 == 0
+                    paperPaint.color = if (major) strong else soft
+                    paperPaint.strokeWidth = if (major) 2.5f else 1.2f
+                    c.drawLine(x, 0f, x, bh, paperPaint)
+                }
+                for (j in j0..j1) {
+                    if (j == 0) continue
+                    val y = oy + j * cell
+                    val major = j % 5 == 0
+                    paperPaint.color = if (major) strong else soft
+                    paperPaint.strokeWidth = if (major) 2.5f else 1.2f
+                    c.drawLine(0f, y, bw, y, paperPaint)
+                }
+
+                paperPaint.color = axis
+                paperPaint.strokeWidth = 5f
+                c.drawLine(ox, 0f, ox, bh, paperPaint)
+                c.drawLine(0f, oy, bw, oy, paperPaint)
+
+                labelPaint.color = axis
+                labelPaint.textSize = cell * 0.55f
+                labelPaint.textAlign = Paint.Align.CENTER
+                for (k in k0..k1) {
+                    if (k != 0 && k % 5 == 0) c.drawText("$k", ox + k * cell, oy + cell * 0.75f, labelPaint)
+                }
+                labelPaint.textAlign = Paint.Align.RIGHT
+                for (j in j0..j1) {
+                    if (j != 0 && j % 5 == 0) c.drawText("${-j}", ox - cell * 0.2f, oy + j * cell + cell * 0.2f, labelPaint)
+                }
+                c.drawText("0", ox - cell * 0.2f, oy + cell * 0.75f, labelPaint)
+                labelPaint.textAlign = Paint.Align.CENTER
+                c.drawText("x", w - cell * 0.6f, oy - cell * 0.4f, labelPaint)
+                c.drawText("y", ox + cell * 0.6f, cell * 0.8f, labelPaint)
+            }
+            else -> {}
+        }
+    }
 
     private fun drawContent(c: Canvas, withLive: Boolean) {
         c.drawColor(bg)
         c.save()
         c.translate(tx, ty)
         c.scale(scale, scale)
+                drawPaper(c)
 
         curBg?.let { b ->
             val w = this.width.toFloat().coerceAtLeast(1f)
@@ -435,6 +557,7 @@ class WhiteboardActivity : AppCompatActivity() {
             btn("📖 كتاب PDF") { pdfPicker.launch(arrayOf("application/pdf")) },
             btn("🖼️ صور") { imgPicker.launch("image/*") },
             btn("🎨 خلفية") { pickBg() },
+            btn("📝 نوع السبورة") { pickPaper() },
             btn("💾 صورة") { saveImage() },
             btn("🎬 وضع الشرح") { toggleBars() },
             btn("✖ خروج") { finish() }
@@ -472,7 +595,18 @@ class WhiteboardActivity : AppCompatActivity() {
         selectColor(Color.BLACK)
         setContentView(root)
     }
-
+    private fun pickPaper() {
+        val names = arrayOf("⬜ بيضاء", "📝 سطور إنجليزي", "📜 سطور عربي", "📈 رسم بياني")
+        val values = BoardView.Paper.values()
+        AlertDialog.Builder(this)
+            .setTitle("اختر نوع السبورة")
+            .setSingleChoiceItems(names, board.paper.ordinal) { d, which ->
+                board.paper = values[which]
+                d.dismiss()
+            }
+            .show()
+    }
+    
     private fun buildFloating(root: FrameLayout) {
         val f = LinearLayout(this)
         f.orientation = LinearLayout.VERTICAL
