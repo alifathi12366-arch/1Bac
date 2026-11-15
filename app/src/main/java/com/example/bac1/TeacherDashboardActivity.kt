@@ -1,159 +1,363 @@
 package com.example.bac1
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import java.util.UUID
+import java.util.Locale
 
 class TeacherDashboardActivity : AppCompatActivity() {
 
     // زوّد الرقم ده مع كل نسخة جديدة للمدرسين
     private val currentTeacherVersion = 3
 
+    private lateinit var sheet: Bitmap
+    private lateinit var grid: LinearLayout
+    private lateinit var tvWelcome: TextView
+    private lateinit var tvSubject: TextView
+    private lateinit var tvJoinCode: TextView
+    private lateinit var tvExpiry: TextView
+    private lateinit var tvStudents: TextView
+    private lateinit var tvAttendance: TextView
+    private lateinit var tvRating: TextView
+    private lateinit var tvRatingLabel: TextView
+
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    private fun spr(x: Int, y: Int, w: Int, h: Int): Bitmap = Bitmap.createBitmap(sheet, x, y, w, h)
+
+    private fun open(target: Class<*>) {
+        startActivity(Intent(this, target))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_teacher_dashboard)
+        enableEdgeToEdge()
+        setContentView(R.layout.activity_teacher_home)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<View>(R.id.teacherRoot)) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         checkTeacherUpdate()
 
-        findViewById<Button?>(resources.getIdentifier("btnAddExam", "id", packageName))?.setOnClickListener {
-            startActivity(Intent(this, AddExamActivity::class.java))
-        }
+        val opts = BitmapFactory.Options()
+        opts.inScaled = false
+        sheet = BitmapFactory.decodeResource(resources, R.drawable.home_sprites, opts)
 
-        val etTitle = findViewById<EditText>(R.id.etTitle)
-        val etDescription = findViewById<EditText>(R.id.etDescription)
-        val etYoutubeUrl = findViewById<EditText>(R.id.etYoutubeUrl)
-        val btnPublish = findViewById<Button>(R.id.sendMessageButton)
-        val studentCountText = findViewById<TextView>(R.id.studentCountText)
+        findViewById<ImageView>(R.id.ivLogo).setImageBitmap(spr(299, 325, 270, 193))
 
+        tvWelcome = findViewById(R.id.tvWelcome)
+        tvSubject = findViewById(R.id.tvSubject)
+        tvJoinCode = findViewById(R.id.tvJoinCode)
+        tvExpiry = findViewById(R.id.tvExpiry)
+        tvStudents = findViewById(R.id.tvStatStudents)
+        tvAttendance = findViewById(R.id.tvStatAttendance)
+        tvRating = findViewById(R.id.tvStatRating)
+        tvRatingLabel = findViewById(R.id.tvRatingLabel)
+
+        // خلفيات الكروت
+        val wbg = GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            intArrayOf(Color.parseColor("#7A33E0"), Color.parseColor("#4F1AA0"))
+        )
+        wbg.cornerRadius = dp(22).toFloat()
+        findViewById<View>(R.id.welcomeCard).background = wbg
+        findViewById<View>(R.id.welcomeCard).elevation = dp(3).toFloat()
+
+        val sbg = GradientDrawable()
+        sbg.setColor(Color.WHITE)
+        sbg.cornerRadius = dp(22).toFloat()
+        sbg.setStroke(dp(1), Color.parseColor("#DDD7FA"))
+        findViewById<View>(R.id.statsCard).background = sbg
+        findViewById<View>(R.id.statsCard).elevation = dp(2).toFloat()
+
+        val cbg = GradientDrawable()
+        cbg.setColor(Color.parseColor("#33FFFFFF"))
+        cbg.cornerRadius = dp(14).toFloat()
+        tvJoinCode.background = cbg
+        tvJoinCode.setOnClickListener { open(SetJoinCodeActivity::class.java) }
+
+        val ebg = GradientDrawable()
+        ebg.setColor(Color.parseColor("#FFE0B2"))
+        ebg.cornerRadius = dp(14).toFloat()
+        tvExpiry.background = ebg
+
+        grid = findViewById(R.id.gridContainer)
+        buildGrid()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshInfo()
+    }
+
+    // ---------- بيانات المدرس والإحصائيات ----------
+    private fun refreshInfo() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
-        val teacherName = prefs.getString("teacher_name", "") ?: ""
-        val teacherSubject = prefs.getString("teacher_subject", "") ?: ""
-        val teacherCode = prefs.getString("teacher_code", "") ?: ""
+        val name = prefs.getString("teacher_name", "") ?: ""
+        val subject = prefs.getString("teacher_subject", "") ?: ""
+        val code = prefs.getString("teacher_code", "") ?: ""
+        val join = prefs.getString("teacher_join_code", "") ?: ""
         val expired = prefs.getBoolean("teacher_expired", false)
         val expiringSoon = prefs.getBoolean("teacher_expiring_soon", false)
 
-        findViewById<TextView>(R.id.teacherWelcomeText).text = "أهلاً بيك أستاذ $teacherName 👋"
-        findViewById<TextView>(R.id.teacherSubjectText).text = "مادة: $teacherSubject"
+        tvWelcome.text = "مرحباً أستاذ $name 👋"
+        tvSubject.text = if (subject.isNotEmpty()) "مادة: $subject" else "معاً نصنع فرقاً في تعليم أولى ثانوي"
+        tvJoinCode.text = if (join.isNotEmpty()) "🔑 كود طلابك: $join  ✏️"
+        else "🔑 لسه محددتش كود لطلابك، اضغط للتحديد"
 
-        val expiryText = findViewById<TextView>(R.id.teacherExpiryText)
         when {
-            expired -> expiryText.text = "⚠️ اشتراكك انتهى، تواصل معانا لتجديده"
-            expiringSoon -> expiryText.text = "⚠️ اشتراكك هينتهي قريبًا، جدد عشان طلابك يفضلوا شايفين المحتوى"
-            else -> expiryText.text = ""
-        }
-
-        val currentJoinCode = prefs.getString("teacher_join_code", "") ?: ""
-        findViewById<TextView>(R.id.currentJoinCodeText).text =
-            if (currentJoinCode.isNotEmpty()) "كود طلابك الحالي: $currentJoinCode" else "لسه محددتش كود لطلابك"
-
-        findViewById<Button>(R.id.setJoinCodeButton).setOnClickListener {
-            startActivity(Intent(this, SetJoinCodeActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnMyContent).setOnClickListener {
-            startActivity(Intent(this, TeacherMyContentActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnTeacherQuestions).setOnClickListener {
-            startActivity(Intent(this, TeacherQuestionsActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnViewResults).setOnClickListener {
-            startActivity(Intent(this, TeacherResultsActivity::class.java))
-        }
-
-        // أزرار التحدي والتكريم (تُضاف برمجيًا تحت زرار النتائج)
-        val resultsBtn = findViewById<Button>(R.id.btnViewResults)
-        val btnParent = resultsBtn.parent as ViewGroup
-        val at = btnParent.indexOfChild(resultsBtn) + 1
-        val createBtn = Button(this)
-        createBtn.text = "🎯 إنشاء تحدي للطلاب"
-        createBtn.setOnClickListener { startActivity(Intent(this, AddTeacherChallengeActivity::class.java)) }
-        val listBtn = Button(this)
-        listBtn.text = "🏅 تحدياتي ونتائجها"
-        listBtn.setOnClickListener { startActivity(Intent(this, TeacherChallengesActivity::class.java)) }
-        val honorBtn = Button(this)
-        honorBtn.text = "🏅 تكريم طالب"
-        honorBtn.setOnClickListener { startActivity(Intent(this, HonorActivity::class.java)) }
-        btnParent.addView(createBtn, at)
-        btnParent.addView(listBtn, at + 1)
-        btnParent.addView(honorBtn, at + 2)
-                val groupsBtn = Button(this)
-        groupsBtn.text = "👥 مجموعاتي وجدول حصصي"
-        groupsBtn.setOnClickListener { startActivity(Intent(this, TeacherGroupsActivity::class.java)) }
-        btnParent.addView(groupsBtn, at + 3)
-                val analysisBtn = Button(this)
-        analysisBtn.text = "📉 أكتر الأسئلة غلطًا"
-        analysisBtn.setOnClickListener { startActivity(Intent(this, ExamAnalysisActivity::class.java)) }
-        btnParent.addView(analysisBtn, at + 4)
-                val bankBtn = Button(this)
-        bankBtn.text = "🏦 بنك أسئلتي"
-        bankBtn.setOnClickListener { startActivity(Intent(this, QuestionBankActivity::class.java)) }
-        btnParent.addView(bankBtn, at + 5)
-               val reviewBtn = Button(this)
-        reviewBtn.text = "📘 مراجعاتي"
-        reviewBtn.setOnClickListener { startActivity(Intent(this, ReviewListActivity::class.java)) }
-        btnParent.addView(reviewBtn, at + 6)
-        
-        val boardBtn = Button(this)
-        boardBtn.text = "🖊️ السبورة الذكية"
-        boardBtn.setOnClickListener { startActivity(Intent(this, WhiteboardActivity::class.java)) }
-        btnParent.addView(boardBtn, at + 7)
-                val gamesBtn = Button(this)
-        gamesBtn.text = "🎮 ألعاب الحصة"
-        gamesBtn.setOnClickListener { startActivity(Intent(this, GamesHubActivity::class.java)) }
-        btnParent.addView(gamesBtn, at + 8)
-        btnPublish.setOnClickListener {
-            val title = etTitle.text.toString().trim()
-            val description = etDescription.text.toString().trim()
-            val youtubeUrl = etYoutubeUrl.text.toString().trim()
-
-            if (title.isEmpty()) {
-                Toast.makeText(this, "يرجى كتابة عنوان الدرس", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            expired -> {
+                tvExpiry.text = "⚠️ اشتراكك انتهى، تواصل معانا لتجديده"
+                tvExpiry.visibility = View.VISIBLE
             }
+            expiringSoon -> {
+                tvExpiry.text = "⚠️ اشتراكك هينتهي قريبًا، جدد عشان طلابك يفضلوا شايفين المحتوى"
+                tvExpiry.visibility = View.VISIBLE
+            }
+            else -> tvExpiry.visibility = View.GONE
+        }
 
-            val contentId = UUID.randomUUID().toString()
-            val data = hashMapOf(
-                "teacherCode" to teacherCode,
-                "type" to "message",
-                "text" to "$title\n\n$description",
-                "youtubeUrl" to youtubeUrl,
-                "pdfUrl" to "",
-                "directVideoUrl" to "",
-                "createdAt" to System.currentTimeMillis()
-            )
+        if (code.isNotEmpty()) loadStats(code)
+    }
 
-            FirebaseFirestore.getInstance().collection("teacherContent")
-                .document(contentId)
-                .set(data)
+    private fun fmt(n: Long): String = when {
+        n >= 1_000_000L -> String.format(Locale.US, "%.1fM", n / 1_000_000.0).replace(".0M", "M")
+        n >= 1000L -> String.format(Locale.US, "%.1fK", n / 1000.0).replace(".0K", "K")
+        else -> n.toString()
+    }
+
+    private fun loadStats(code: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users").whereEqualTo("joined_teacher_code", code)
+            .count().get(AggregateSource.SERVER)
+            .addOnSuccessListener { tvStudents.text = fmt(it.count) }
+            .addOnFailureListener { tvStudents.text = "0" }
+
+        var total = 0L
+        var pending = 2
+        for (col in listOf("attendance", "attendanceSessions")) {
+            db.collection(col).whereEqualTo("teacherCode", code)
+                .count().get(AggregateSource.SERVER)
                 .addOnSuccessListener {
-                    TeacherActivityLog.post(this, "نزّل محتوى جديد 📚")
-                    Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
-                    finish()
+                    total += it.count
+                    pending -= 1
+                    if (pending == 0) tvAttendance.text = fmt(total)
                 }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this, "فشل النشر: ${e.message}", Toast.LENGTH_SHORT).show()
+                .addOnFailureListener {
+                    pending -= 1
+                    if (pending == 0) tvAttendance.text = fmt(total)
                 }
         }
 
-        if (teacherCode.isNotEmpty()) {
-            loadStudentQuestions(teacherCode)
-            getStudentCount(teacherCode) { count ->
-                studentCountText.text = "عدد الطلاب المسجلين معاك: $count طالب 👥"
+        db.collection("teachers").document(code).get()
+            .addOnSuccessListener { doc ->
+                val rating = doc.getDouble("rating") ?: 0.0
+                val count = (doc.getLong("ratingCount") ?: 0L).toInt()
+                if (count > 0) {
+                    tvRating.text = String.format(Locale.US, "%.1f", rating)
+                    tvRatingLabel.text = "متوسط تقييمك ($count)"
+                } else {
+                    tvRating.text = "—"
+                    tvRatingLabel.text = "لسه مفيش تقييمات"
+                }
             }
-        } else {
-            studentCountText.text = "عدد الطلاب المسجلين معاك: 0"
+    }
+
+    // ---------- الكروت ----------
+    private fun newRow(): LinearLayout {
+        val r = LinearLayout(this)
+        r.orientation = LinearLayout.HORIZONTAL
+        r.isBaselineAligned = false
+        grid.addView(r, LinearLayout.LayoutParams(-1, -2))
+        return r
+    }
+
+    private fun buildGrid() {
+        var row = newRow()
+        addCard(
+            row, "الامتحانات", "أضف امتحاناً جديداً",
+            spr(427, 551, 152, 144), null, "#E3D8FE", "#D0BCFC", "#6A3CD6"
+        ) { open(AddExamActivity::class.java) }
+        addCard(
+            row, "نتائج الامتحانات", "درجات طلابك وتصحيح المقالي",
+            spr(0, 715, 136, 131), null, "#D3E8FF", "#BEDDFD", "#2F6BEA"
+        ) { open(TeacherResultsActivity::class.java) }
+
+        row = newRow()
+        addCard(
+            row, "نشر المحتوى لطلابي", "شارك الدروس والملخصات",
+            null, "📢", "#CDF2E5", "#BDEBE3", "#1FAE7C"
+        ) { open(TeacherPublishActivity::class.java) }
+        addCard(
+            row, "محتواي", "اللي نشرته لطلابك",
+            spr(276, 551, 147, 145), null, "#E7E2FE", "#D6CEFB", "#4B3FD1"
+        ) { open(TeacherMyContentActivity::class.java) }
+
+        row = newRow()
+        addCard(
+            row, "التحديات", "أنشئ تحدي جديد لطلابك",
+            spr(124, 551, 148, 157), null, "#FFD9EE", "#FDC4E6", "#E5365A"
+        ) { open(AddTeacherChallengeActivity::class.java) }
+        addCard(
+            row, "تحدياتي ونتائجها", "تابع نتائج التحديات",
+            spr(573, 325, 156, 165), null, "#FCE9C8", "#FDDA96", "#F08A24"
+        ) { open(TeacherChallengesActivity::class.java) }
+
+        row = newRow()
+        addCard(
+            row, "الألعاب", "دوري الأبطال وعجلة الحظ والمزيد",
+            null, "🎮", "#D2F6DE", "#B9EFCD", "#2F7BD8"
+        ) { open(GamesHubActivity::class.java) }
+        addCard(
+            row, "تكريم طلابي", "كافئ الطلاب المميزين",
+            spr(0, 551, 120, 160), null, "#FFF1C9", "#FFE08A", "#B8860B"
+        ) { open(HonorActivity::class.java) }
+
+        row = newRow()
+        addCard(
+            row, "مجموعاتي", "إدارة المجموعات والحصص",
+            spr(308, 715, 151, 125), null, "#E3D8FE", "#D0BCFC", "#6A3CD6"
+        ) { open(TeacherGroupsActivity::class.java) }
+        addCard(
+            row, "أكتر الأسئلة غلطًا", "راجع الأخطاء الشائعة",
+            null, "❌", "#FDE8DC", "#FDD5BD", "#E5413A"
+        ) { open(ExamAnalysisActivity::class.java) }
+
+        row = newRow()
+        addCard(
+            row, "بنك أسئلتي", "أضف أسئلتك الخاصة",
+            null, "🏦", "#D2F6DE", "#B9EFCD", "#2F7BD8"
+        ) { open(QuestionBankActivity::class.java) }
+        addCard(
+            row, "مراجعاتي", "تابع مراجعاتك المنشورة",
+            null, "📘", "#D3E8FF", "#BEDDFD", "#2F6BEA"
+        ) { open(ReviewListActivity::class.java) }
+
+        row = newRow()
+        addCard(
+            row, "أسئلة الطلاب", "اقرأ أسئلتهم وردّ عليهم",
+            spr(140, 715, 164, 128), null, "#FFD9EE", "#FDC4E6", "#E5365A"
+        ) { open(TeacherQuestionsActivity::class.java) }
+        addCard(
+            row, "ملفي الشخصي", "صورتك ونبذتك وواتساب",
+            null, "👤", "#E7E2FE", "#D6CEFB", "#4B3FD1"
+        ) { open(TeacherProfileActivity::class.java) }
+
+        row = newRow()
+        addCard(
+            row, "السبورة الذكية", "اكتب وشرح درسك بكل سهولة",
+            null, "🖊️", "#7A33E0", "#4F1AA0", "#5A2BC8",
+            dark = true
+        ) { open(WhiteboardActivity::class.java) }
+    }
+
+    // الكارت بيكبر على حسب النص، فمفيش حاجة بتتقطع
+    private fun addCard(
+        row: LinearLayout, title: String, sub: String,
+        sticker: Bitmap?, emoji: String?,
+        c1: String, c2: String, accent: String,
+        dark: Boolean = false, size: Int = 64,
+        onClick: () -> Unit
+    ) {
+        val card = FrameLayout(this)
+        val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+        lp.setMargins(dp(6), dp(6), dp(6), dp(6))
+        card.layoutParams = lp
+        card.minimumHeight = dp(120)
+
+        val bg = GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            intArrayOf(Color.parseColor(c1), Color.parseColor(c2))
+        )
+        bg.cornerRadius = dp(22).toFloat()
+        bg.setStroke(dp(1), Color.parseColor(if (dark) "#55FFFFFF" else "#B3FFFFFF"))
+        card.background = bg
+        card.clipToOutline = true
+        card.elevation = dp(3).toFloat()
+        card.isClickable = true
+        card.setOnClickListener { onClick() }
+
+        val col = LinearLayout(this)
+        col.orientation = LinearLayout.VERTICAL
+        col.setPaddingRelative(dp(14), dp(16), dp(size + 14), dp(46))
+
+        val titleTv = TextView(this)
+        titleTv.text = title
+        titleTv.textSize = 14.5f
+        titleTv.setTypeface(null, Typeface.BOLD)
+        titleTv.setTextColor(Color.parseColor(if (dark) "#FFFFFF" else "#241B4E"))
+        titleTv.maxLines = 3
+        titleTv.gravity = Gravity.START
+        col.addView(titleTv, LinearLayout.LayoutParams(-1, -2))
+
+        val subTv = TextView(this)
+        subTv.text = sub
+        subTv.textSize = 10.5f
+        subTv.setTextColor(Color.parseColor(if (dark) "#D8CCFF" else "#5E5A7E"))
+        subTv.maxLines = 4
+        subTv.gravity = Gravity.START
+        subTv.setPadding(0, dp(4), 0, 0)
+        col.addView(subTv, LinearLayout.LayoutParams(-1, -2))
+        card.addView(col, FrameLayout.LayoutParams(-1, -2))
+
+        if (sticker != null) {
+            val iv = ImageView(this)
+            iv.setImageBitmap(sticker)
+            iv.scaleType = ImageView.ScaleType.FIT_CENTER
+            val ilp = FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END or Gravity.TOP)
+            ilp.marginEnd = dp(8)
+            ilp.topMargin = dp(12)
+            card.addView(iv, ilp)
+        } else if (emoji != null) {
+            val e = TextView(this)
+            e.text = emoji
+            e.textSize = 38f
+            e.gravity = Gravity.CENTER
+            val elp = FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END or Gravity.TOP)
+            elp.marginEnd = dp(8)
+            elp.topMargin = dp(12)
+            card.addView(e, elp)
         }
 
-        loadComprehensiveStats(teacherCode)
-                findViewById<TextView>(R.id.absentTodayList).text =
-            "الغياب بالحصة: من زرار مجموعاتي ← اختر المجموعة ← سجل الحضور والغياب"
+        val arrow = TextView(this)
+        arrow.text = "›"
+        arrow.textDirection = View.TEXT_DIRECTION_LTR
+        arrow.gravity = Gravity.CENTER
+        arrow.textSize = 20f
+        arrow.includeFontPadding = false
+        arrow.setTypeface(null, Typeface.BOLD)
+        arrow.setTextColor(Color.parseColor(accent))
+        val abg = GradientDrawable()
+        abg.shape = GradientDrawable.OVAL
+        abg.setColor(Color.WHITE)
+        arrow.background = abg
+        val alp = FrameLayout.LayoutParams(dp(28), dp(28), Gravity.END or Gravity.BOTTOM)
+        alp.marginEnd = dp(10)
+        alp.bottomMargin = dp(10)
+        card.addView(arrow, alp)
+
+        row.addView(card)
     }
 
     // تحديث خاص بالمدرسين فقط (ملف version_teacher.json)
@@ -185,81 +389,5 @@ class TeacherDashboardActivity : AppCompatActivity() {
             { error -> error.printStackTrace() }
         )
         queue.add(request)
-    }
-
-    private fun loadAbsentToday(teacherCode: String) {
-        val absentText = findViewById<TextView>(R.id.absentTodayList)
-        val db = FirebaseFirestore.getInstance()
-        val todayDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-
-        db.collection("users").whereEqualTo("joined_teacher_code", teacherCode).get()
-            .addOnSuccessListener { rosterSnap ->
-                val rosterNames = rosterSnap.documents.mapNotNull { it.getString("name") }.filter { it.isNotBlank() }
-                if (rosterNames.isEmpty()) {
-                    absentText.text = "لا يوجد طلاب مسجلين بعد"
-                    return@addOnSuccessListener
-                }
-                db.collection("attendance")
-                    .whereEqualTo("teacherCode", teacherCode)
-                    .whereEqualTo("date", todayDate)
-                    .get()
-                    .addOnSuccessListener { attSnap ->
-                        val attendedNames = attSnap.documents.mapNotNull { it.getString("studentName") }.toSet()
-                        val absentNames = rosterNames.filter { it !in attendedNames }
-                        absentText.text = if (absentNames.isEmpty())
-                            "كل الطلاب حضروا النهاردة ✅"
-                        else
-                            absentNames.joinToString("، ")
-                    }
-            }
-    }
-
-    private fun loadComprehensiveStats(teacherCode: String) {
-        val db = FirebaseFirestore.getInstance()
-        val statsAttendanceText = findViewById<TextView>(R.id.statsAttendanceText)
-        val statsRatingText = findViewById<TextView>(R.id.statsRatingText)
-
-        db.collection("attendance")
-            .whereEqualTo("teacherCode", teacherCode)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                statsAttendanceText.text = "إجمالي مرات الحضور المسجلة: ${snapshot.size()} 📈"
-            }
-            .addOnFailureListener {
-                statsAttendanceText.text = "إجمالي مرات الحضور المسجلة: 0 📈"
-            }
-
-        db.collection("teachers").document(teacherCode).get()
-            .addOnSuccessListener { doc ->
-                val rating = doc.getDouble("rating") ?: 0.0
-                val ratingCount = (doc.getLong("ratingCount") ?: 0L).toInt()
-                statsRatingText.text = if (ratingCount > 0)
-                    "متوسط تقييمك: ${String.format("%.1f", rating)} ⭐ (من $ratingCount تقييم)"
-                else
-                    "متوسط تقييمك: لسه مفيش تقييمات ⭐"
-            }
-    }
-
-    private fun getStudentCount(joinCode: String, onResult: (Int) -> Unit) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("users")
-            .whereEqualTo("joined_teacher_code", joinCode)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                onResult(snapshot.size())
-            }
-            .addOnFailureListener {
-                onResult(0)
-            }
-    }
-
-    private fun loadStudentQuestions(teacherCode: String) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("interactive_questions")
-            .whereEqualTo("teacherCode", teacherCode)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshots, e ->
-                if (e != null || snapshots == null) return@addSnapshotListener
-            }
     }
 }
