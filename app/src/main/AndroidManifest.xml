@@ -130,6 +130,8 @@
         <activity android:name=".SortBoardActivity" android:exported="false" />
         <activity android:name=".SortStudentActivity" android:exported="false" android:screenOrientation="portrait" />
                 <activity android:name=".AiTutorActivity" android:exported="false" />
+                <activity android:name=".TeacherPublishActivity" android:exported="false" />
+        <activity android:name=".ExamReviewActivity" android:exported="false" />
     </application>
 
 </manifest>
