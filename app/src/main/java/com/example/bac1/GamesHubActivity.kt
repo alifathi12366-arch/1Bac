@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -32,9 +31,6 @@ class GamesHubActivity : AppCompatActivity() {
         findViewById<View>(R.id.btnMarkAttendance).visibility = View.GONE
 
         val grid = findViewById<LinearLayout>(R.id.gridContainer)
-        val soon: () -> Unit = {
-            Toast.makeText(this, "قريبًا 🔜 جارٍ تجهيز اللعبة", Toast.LENGTH_SHORT).show()
-        }
 
         var row = CardKit.newRow(this, grid)
         CardKit.addCard(
@@ -91,7 +87,15 @@ class GamesHubActivity : AppCompatActivity() {
         row = CardKit.newRow(this, grid)
         CardKit.addCard(
             this, row, "صنّف المعلومات", "اسحب كل معلومة لتصنيفها", "🗂️",
-            "#E3D8FE", "#D0BCFC", "#6A3CD6", soon
-        )
+            "#E3D8FE", "#D0BCFC", "#6A3CD6"
+        ) {
+            if (isTeacher) {
+                startActivity(Intent(this, SortTeacherHomeActivity::class.java))
+            } else {
+                startActivity(
+                    Intent(this, SortStudentActivity::class.java).putExtra("teacherCode", teacherCode)
+                )
+            }
+        }
     }
 }
