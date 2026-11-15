@@ -23,6 +23,7 @@ object CardKit {
         return r
     }
 
+    // الكارت عمودي: السهم والإيموجي فوق، والنص تحتهم بعرض الكارت كله
     fun addCard(
         ctx: Context, row: LinearLayout, title: String, sub: String, emoji: String,
         c1: String, c2: String, accent: String, onClick: () -> Unit
@@ -31,7 +32,7 @@ object CardKit {
         val lp = LinearLayout.LayoutParams(0, -1, 1f)
         lp.setMargins(dp(ctx, 5), dp(ctx, 5), dp(ctx, 5), dp(ctx, 5))
         card.layoutParams = lp
-        card.minimumHeight = dp(ctx, 118)
+        card.minimumHeight = dp(ctx, 130)
 
         val bg = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
@@ -45,42 +46,14 @@ object CardKit {
         card.isClickable = true
         card.setOnClickListener { onClick() }
 
-        // النصوص (العنوان + الوصف) والكارت بيكبر على حسبهم
         val col = LinearLayout(ctx)
         col.orientation = LinearLayout.VERTICAL
-        col.setPaddingRelative(dp(ctx, 14), dp(ctx, 14), dp(ctx, 62), dp(ctx, 14))
+        col.setPadding(dp(ctx, 14), dp(ctx, 12), dp(ctx, 14), dp(ctx, 14))
 
-        val titleTv = TextView(ctx)
-        titleTv.text = title
-        titleTv.textSize = 14f
-        titleTv.setTypeface(null, Typeface.BOLD)
-        titleTv.setTextColor(Color.parseColor("#241B4E"))
-        titleTv.maxLines = 3
-        titleTv.gravity = Gravity.START
-        col.addView(titleTv, LinearLayout.LayoutParams(-1, -2))
+        // الصف العلوي: السهم + الإيموجي
+        val top = FrameLayout(ctx)
+        col.addView(top, LinearLayout.LayoutParams(-1, dp(ctx, 46)))
 
-        val subTv = TextView(ctx)
-        subTv.text = sub
-        subTv.textSize = 10.5f
-        subTv.setTextColor(Color.parseColor("#5E5A7E"))
-        subTv.maxLines = 3
-        subTv.gravity = Gravity.START
-        subTv.setPadding(0, dp(ctx, 4), 0, 0)
-        col.addView(subTv, LinearLayout.LayoutParams(-1, -2))
-
-        card.addView(col, FrameLayout.LayoutParams(-1, -2))
-
-        // الإيموجي
-        val e = TextView(ctx)
-        e.text = emoji
-        e.textSize = 32f
-        e.gravity = Gravity.CENTER
-        val elp = FrameLayout.LayoutParams(dp(ctx, 48), dp(ctx, 48), Gravity.END or Gravity.TOP)
-        elp.marginEnd = dp(ctx, 8)
-        elp.topMargin = dp(ctx, 10)
-        card.addView(e, elp)
-
-        // دايرة السهم
         val arrow = TextView(ctx)
         arrow.text = "›"
         arrow.textDirection = View.TEXT_DIRECTION_LTR
@@ -93,11 +66,35 @@ object CardKit {
         abg.shape = GradientDrawable.OVAL
         abg.setColor(Color.WHITE)
         arrow.background = abg
-        val alp = FrameLayout.LayoutParams(dp(ctx, 28), dp(ctx, 28), Gravity.END or Gravity.BOTTOM)
-        alp.marginEnd = dp(ctx, 10)
-        alp.bottomMargin = dp(ctx, 10)
-        card.addView(arrow, alp)
+        top.addView(arrow, FrameLayout.LayoutParams(dp(ctx, 28), dp(ctx, 28), Gravity.START or Gravity.CENTER_VERTICAL))
 
+        val e = TextView(ctx)
+        e.text = emoji
+        e.textSize = 34f
+        e.gravity = Gravity.CENTER
+        top.addView(e, FrameLayout.LayoutParams(dp(ctx, 46), dp(ctx, 46), Gravity.END))
+
+        // العنوان
+        val titleTv = TextView(ctx)
+        titleTv.text = title
+        titleTv.textSize = 14.5f
+        titleTv.setTypeface(null, Typeface.BOLD)
+        titleTv.setTextColor(Color.parseColor("#241B4E"))
+        titleTv.gravity = Gravity.START
+        val tlp = LinearLayout.LayoutParams(-1, -2)
+        tlp.topMargin = dp(ctx, 8)
+        col.addView(titleTv, tlp)
+
+        // الوصف
+        val subTv = TextView(ctx)
+        subTv.text = sub
+        subTv.textSize = 10.5f
+        subTv.setTextColor(Color.parseColor("#5E5A7E"))
+        subTv.gravity = Gravity.START
+        subTv.setPadding(0, dp(ctx, 3), 0, 0)
+        col.addView(subTv, LinearLayout.LayoutParams(-1, -2))
+
+        card.addView(col, FrameLayout.LayoutParams(-1, -2))
         row.addView(card)
         return subTv
     }
