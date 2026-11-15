@@ -129,6 +129,7 @@
         <activity android:name=".SortTeacherHomeActivity" android:exported="false" />
         <activity android:name=".SortBoardActivity" android:exported="false" />
         <activity android:name=".SortStudentActivity" android:exported="false" android:screenOrientation="portrait" />
+                <activity android:name=".AiTutorActivity" android:exported="false" />
     </application>
 
 </manifest>
