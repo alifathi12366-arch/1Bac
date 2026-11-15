@@ -18,6 +18,7 @@ object CardKit {
         val r = LinearLayout(ctx)
         r.orientation = LinearLayout.HORIZONTAL
         r.weightSum = 2f
+        r.isBaselineAligned = false
         parent.addView(r, LinearLayout.LayoutParams(-1, -2))
         return r
     }
@@ -27,9 +28,10 @@ object CardKit {
         c1: String, c2: String, accent: String, onClick: () -> Unit
     ): TextView {
         val card = FrameLayout(ctx)
-        val lp = LinearLayout.LayoutParams(0, dp(ctx, 112), 1f)
+        val lp = LinearLayout.LayoutParams(0, -1, 1f)
         lp.setMargins(dp(ctx, 5), dp(ctx, 5), dp(ctx, 5), dp(ctx, 5))
         card.layoutParams = lp
+        card.minimumHeight = dp(ctx, 118)
 
         val bg = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
@@ -43,42 +45,40 @@ object CardKit {
         card.isClickable = true
         card.setOnClickListener { onClick() }
 
-        // الإيموجي
-        val e = TextView(ctx)
-        e.text = emoji
-        e.textSize = 40f
-        e.gravity = Gravity.CENTER
-        val elp = FrameLayout.LayoutParams(dp(ctx, 64), dp(ctx, 64), Gravity.END or Gravity.TOP)
-        elp.marginEnd = dp(ctx, 8)
-        elp.topMargin = dp(ctx, 10)
-        card.addView(e, elp)
+        // النصوص (العنوان + الوصف) والكارت بيكبر على حسبهم
+        val col = LinearLayout(ctx)
+        col.orientation = LinearLayout.VERTICAL
+        col.setPaddingRelative(dp(ctx, 14), dp(ctx, 14), dp(ctx, 62), dp(ctx, 14))
 
-        // العنوان
         val titleTv = TextView(ctx)
         titleTv.text = title
-        titleTv.textSize = 15f
+        titleTv.textSize = 14f
         titleTv.setTypeface(null, Typeface.BOLD)
         titleTv.setTextColor(Color.parseColor("#241B4E"))
-        titleTv.maxLines = 2
+        titleTv.maxLines = 3
         titleTv.gravity = Gravity.START
-        val tlp = FrameLayout.LayoutParams(-1, -2, Gravity.START or Gravity.TOP)
-        tlp.marginStart = dp(ctx, 14)
-        tlp.marginEnd = dp(ctx, 76)
-        tlp.topMargin = dp(ctx, 16)
-        card.addView(titleTv, tlp)
+        col.addView(titleTv, LinearLayout.LayoutParams(-1, -2))
 
-        // الوصف
         val subTv = TextView(ctx)
         subTv.text = sub
         subTv.textSize = 10.5f
         subTv.setTextColor(Color.parseColor("#5E5A7E"))
-        subTv.maxLines = 2
+        subTv.maxLines = 3
         subTv.gravity = Gravity.START
-        val slp = FrameLayout.LayoutParams(-1, -2, Gravity.START or Gravity.BOTTOM)
-        slp.marginStart = dp(ctx, 14)
-        slp.marginEnd = dp(ctx, 48)
-        slp.bottomMargin = dp(ctx, 12)
-        card.addView(subTv, slp)
+        subTv.setPadding(0, dp(ctx, 4), 0, 0)
+        col.addView(subTv, LinearLayout.LayoutParams(-1, -2))
+
+        card.addView(col, FrameLayout.LayoutParams(-1, -2))
+
+        // الإيموجي
+        val e = TextView(ctx)
+        e.text = emoji
+        e.textSize = 32f
+        e.gravity = Gravity.CENTER
+        val elp = FrameLayout.LayoutParams(dp(ctx, 48), dp(ctx, 48), Gravity.END or Gravity.TOP)
+        elp.marginEnd = dp(ctx, 8)
+        elp.topMargin = dp(ctx, 10)
+        card.addView(e, elp)
 
         // دايرة السهم
         val arrow = TextView(ctx)
