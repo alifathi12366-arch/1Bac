@@ -50,14 +50,13 @@ class TakeExamActivity : AppCompatActivity() {
 
                 FirebaseFirestore.getInstance().collection("results").document(resultId).get()
                     .addOnSuccessListener { resultDoc ->
-                        if (resultDoc.exists()) {
-                            val autoScore = resultDoc.getLong("autoScore")?.toInt() ?: 0
-                            tvExamTitle.text = "${exam.title}\n✅ تم التقديم مسبقاً (الدرجة: $autoScore / ${exam.totalScore})"
-                            btnSubmit.isEnabled = false
-                            btnSubmit.text = "تم التقديم من قبل"
-                            
-                            // عرض الأسئلة في وضع القراءة المباشر بدون أخطاء
-                            renderQuestions(questionsContainer, true)
+                                                if (resultDoc.exists()) {
+                            // بعد التسليم الامتحان بيتعرض كصفحة ثابتة (عرض فقط)
+                            startActivity(
+                                android.content.Intent(this, ExamReviewActivity::class.java)
+                                    .putExtra("EXAM_ID", examId)
+                            )
+                            finish()
                         } else if (deadline > 0L && System.currentTimeMillis() > deadline) {
                             tvExamTitle.text = "${exam.title}\n(انتهى موعد هذا الامتحان)"
                             btnSubmit.isEnabled = false
