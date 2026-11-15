@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity() {
         addCard(
             row, "التقييمات الأسبوعية", "",
             spr(0, 325, 295, 222), null, "#7A33E0", "#4F1AA0", "#5A2BC8",
-            dark = true, size = 76
+            dark = true, size = 64
         ) { open(WeeklyUpdatesActivity::class.java) }
         addCard(
             row, "المدرس الذكي", "اسأل في أي مادة لأولى ثانوي",
@@ -173,19 +173,20 @@ class MainActivity : AppCompatActivity() {
         ) { open(AiTutorActivity::class.java) }
     }
 
-    // الكارت بيكبر على حسب النص، فمفيش حاجة بتتقطع
+    // الكارت عمودي: الاستيكر والسهم فوق، والعنوان والوصف تحتهم بعرض الكارت كله،
+    // والكارت بيكبر مع النص، فمفيش كلمة بتتقطع حتى لو حجم الخط في الموبايل كبير
     private fun addCard(
         row: LinearLayout, title: String, sub: String,
         sticker: Bitmap?, emoji: String?,
         c1: String, c2: String, accent: String,
-        dark: Boolean = false, badge: Boolean = false, size: Int = 70,
+        dark: Boolean = false, badge: Boolean = false, size: Int = 52,
         onClick: () -> Unit
     ): TextView {
         val card = FrameLayout(this)
         val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
         lp.setMargins(dp(6), dp(6), dp(6), dp(6))
         card.layoutParams = lp
-        card.minimumHeight = dp(124)
+        card.minimumHeight = dp(140)
 
         val bg = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
@@ -199,53 +200,14 @@ class MainActivity : AppCompatActivity() {
         card.isClickable = true
         card.setOnClickListener { onClick() }
 
-        // النصوص
         val col = LinearLayout(this)
         col.orientation = LinearLayout.VERTICAL
-        col.setPaddingRelative(dp(14), dp(if (badge) 30 else 16), dp(size + 14), dp(16))
+        col.setPadding(dp(14), dp(14), dp(14), dp(14))
 
-        val titleTv = TextView(this)
-        titleTv.text = title
-        titleTv.textSize = 14.5f
-        titleTv.setTypeface(null, Typeface.BOLD)
-        titleTv.setTextColor(Color.parseColor(if (dark) "#FFFFFF" else "#241B4E"))
-        titleTv.maxLines = 3
-        titleTv.gravity = Gravity.START
-        col.addView(titleTv, LinearLayout.LayoutParams(-1, -2))
+        // الصف العلوي: السهم + الاستيكر
+        val top = FrameLayout(this)
+        col.addView(top, LinearLayout.LayoutParams(-1, dp(size)))
 
-        val subTv = TextView(this)
-        subTv.text = sub
-        subTv.textSize = 10.5f
-        subTv.setTextColor(Color.parseColor(if (dark) "#D8CCFF" else "#5E5A7E"))
-        subTv.maxLines = 4
-        subTv.gravity = Gravity.START
-        subTv.setPadding(0, dp(4), 0, 0)
-        if (sub.isEmpty()) subTv.visibility = View.GONE
-        col.addView(subTv, LinearLayout.LayoutParams(-1, -2))
-
-        card.addView(col, FrameLayout.LayoutParams(-1, -2))
-
-        // الاستيكر (أو إيموجي)
-        if (sticker != null) {
-            val iv = ImageView(this)
-            iv.setImageBitmap(sticker)
-            iv.scaleType = ImageView.ScaleType.FIT_CENTER
-            val ilp = FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END or Gravity.TOP)
-            ilp.marginEnd = dp(8)
-            ilp.topMargin = dp(12)
-            card.addView(iv, ilp)
-        } else if (emoji != null) {
-            val e = TextView(this)
-            e.text = emoji
-            e.textSize = 40f
-            e.gravity = Gravity.CENTER
-            val elp = FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END or Gravity.TOP)
-            elp.marginEnd = dp(8)
-            elp.topMargin = dp(12)
-            card.addView(e, elp)
-        }
-
-        // دايرة السهم
         val arrow = TextView(this)
         arrow.text = "›"
         arrow.textDirection = View.TEXT_DIRECTION_LTR
@@ -258,10 +220,43 @@ class MainActivity : AppCompatActivity() {
         abg.shape = GradientDrawable.OVAL
         abg.setColor(Color.WHITE)
         arrow.background = abg
-        val alp = FrameLayout.LayoutParams(dp(28), dp(28), Gravity.END or Gravity.BOTTOM)
-        alp.marginEnd = dp(10)
-        alp.bottomMargin = dp(10)
-        card.addView(arrow, alp)
+        top.addView(arrow, FrameLayout.LayoutParams(dp(28), dp(28), Gravity.START or Gravity.CENTER_VERTICAL))
+
+        if (sticker != null) {
+            val iv = ImageView(this)
+            iv.setImageBitmap(sticker)
+            iv.scaleType = ImageView.ScaleType.FIT_CENTER
+            top.addView(iv, FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END))
+        } else if (emoji != null) {
+            val e = TextView(this)
+            e.text = emoji
+            e.textSize = 34f
+            e.gravity = Gravity.CENTER
+            top.addView(e, FrameLayout.LayoutParams(dp(size), dp(size), Gravity.END))
+        }
+
+        // العنوان
+        val titleTv = TextView(this)
+        titleTv.text = title
+        titleTv.textSize = 14.5f
+        titleTv.setTypeface(null, Typeface.BOLD)
+        titleTv.setTextColor(Color.parseColor(if (dark) "#FFFFFF" else "#241B4E"))
+        titleTv.gravity = Gravity.START
+        val tlp = LinearLayout.LayoutParams(-1, -2)
+        tlp.topMargin = dp(8)
+        col.addView(titleTv, tlp)
+
+        // الوصف
+        val subTv = TextView(this)
+        subTv.text = sub
+        subTv.textSize = 10.5f
+        subTv.setTextColor(Color.parseColor(if (dark) "#D8CCFF" else "#5E5A7E"))
+        subTv.gravity = Gravity.START
+        subTv.setPadding(0, dp(3), 0, 0)
+        if (sub.isEmpty()) subTv.visibility = View.GONE
+        col.addView(subTv, LinearLayout.LayoutParams(-1, -2))
+
+        card.addView(col, FrameLayout.LayoutParams(-1, -2))
 
         // شارة "جديد"
         if (badge) {
