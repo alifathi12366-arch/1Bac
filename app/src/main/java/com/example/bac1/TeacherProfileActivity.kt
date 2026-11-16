@@ -2,21 +2,18 @@ package com.example.bac1
 
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.InputFilter
 import android.text.InputType
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.bumptech.glide.Glide
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
 class TeacherProfileActivity : AppCompatActivity() {
-
-    private lateinit var container: LinearLayout
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -41,7 +38,7 @@ class TeacherProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_questions)
-        container = findViewById(R.id.adminContainer)
+        val container = findViewById<LinearLayout>(R.id.adminContainer)
 
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val code = prefs.getString("teacher_code", "") ?: ""
@@ -51,14 +48,7 @@ class TeacherProfileActivity : AppCompatActivity() {
 
         container.addView(tv("👤 ملفي الشخصي", 24f, true))
         container.addView(tv("الأستاذ $name", 18f, true))
-
-        val preview = ImageView(this)
-        preview.adjustViewBounds = true
-        container.addView(preview, LinearLayout.LayoutParams(dp(140), dp(140)))
-
-        container.addView(tv("رابط صورتك (Direct link من imgBB)"))
-        val etPhoto = edit("https://i.ibb.co/...", InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT)
-        container.addView(etPhoto)
+        container.addView(tv("المعلومات دي بتظهر لطلابك في صفحتك جوه التطبيق.", 13f))
 
         container.addView(tv("المادة"))
         val etSubject = edit("مثال: تاريخ")
@@ -70,9 +60,13 @@ class TeacherProfileActivity : AppCompatActivity() {
         container.addView(etPhone)
         container.addView(tv("⚠️ هذا الرقم سيظهر لكل طلابك ليتواصلوا معك.", 12f))
 
-        container.addView(tv("نبذة قصيرة (سطرين)"))
-        val etBio = edit("مثال: خبرة 10 سنوات في تدريس التاريخ",
-            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
+        container.addView(tv("نبذة قصيرة (سطرين، بتظهر للطلاب)"))
+        val etBio = edit(
+            "مثال: خبرة 10 سنوات في تدريس التاريخ",
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+        )
+        etBio.filters = arrayOf<InputFilter>(InputFilter.LengthFilter(200))
+        etBio.minLines = 2
         container.addView(etBio)
 
         val save = Button(this)
@@ -81,46 +75,31 @@ class TeacherProfileActivity : AppCompatActivity() {
         save.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF4CAF50.toInt())
         container.addView(save)
 
-        fun showPhoto(url: String) {
-            if (url.startsWith("http")) Glide.with(this).load(url).into(preview)
-        }
-
         if (code.isNotEmpty()) {
             db.collection("teachers").document(code).get().addOnSuccessListener { d ->
-                etPhoto.setText(d.getString("photoUrl") ?: "")
                 d.getString("profileSubject")?.let { if (it.isNotBlank()) etSubject.setText(it) }
                 etPhone.setText(d.getString("whatsapp") ?: "")
                 etBio.setText(d.getString("bio") ?: "")
-                showPhoto(etPhoto.text.toString())
             }
         }
 
         save.setOnClickListener {
-            val photo = etPhoto.text.toString().trim()
             if (code.isEmpty()) {
                 Toast.makeText(this, "لا يوجد كود مدرس", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            if (photo.isNotEmpty()) {
-                if (!photo.startsWith("http")) {
-                    Toast.makeText(this, "رابط الصورة غير صحيح", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                if (photo.contains("ibb.co/") && !photo.contains("i.ibb.co/")) {
-                    Toast.makeText(this, "هذا Viewer link. اختر Direct link (يبدأ بـ i.ibb.co)", Toast.LENGTH_LONG).show()
-                    return@setOnClickListener
-                }
-            }
             val phone = etPhone.text.toString().filter { it.isDigit() || it == '+' }
             save.isEnabled = false
-            db.collection("teachers").document(code).set(hashMapOf(
-                "photoUrl" to photo,
-                "profileSubject" to etSubject.text.toString().trim(),
-                "whatsapp" to phone,
-                "bio" to etBio.text.toString().trim()
-            ), SetOptions.merge()).addOnSuccessListener {
+            db.collection("teachers").document(code).set(
+                hashMapOf<String, Any>(
+                    "profileSubject" to etSubject.text.toString().trim(),
+                    "whatsapp" to phone,
+                    "bio" to etBio.text.toString().trim(),
+                    "photoUrl" to ""
+                ),
+                SetOptions.merge()
+            ).addOnSuccessListener {
                 save.isEnabled = true
-                showPhoto(photo)
                 Toast.makeText(this, "تم الحفظ ✅", Toast.LENGTH_SHORT).show()
             }.addOnFailureListener {
                 save.isEnabled = true
