@@ -240,40 +240,45 @@ class TeacherContentActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- كارت بيانات المدرس ----------
+    // ---------- كارت بيانات المدرس (من غير صورة) ----------
     private fun addTeacherCard(anchor: TextView, code: String) {
         FirebaseFirestore.getInstance().collection("teachers").document(code).get()
             .addOnSuccessListener { d ->
-                val photo = d.getString("photoUrl") ?: ""
                 val subject = d.getString("profileSubject") ?: ""
                 val bio = d.getString("bio") ?: ""
                 val phone = d.getString("whatsapp") ?: ""
-                if (photo.isEmpty() && subject.isEmpty() && bio.isEmpty() && phone.isEmpty()) return@addOnSuccessListener
+                if (subject.isEmpty() && bio.isEmpty() && phone.isEmpty()) return@addOnSuccessListener
 
                 val parent = anchor.parent as? ViewGroup ?: return@addOnSuccessListener
                 val box = LinearLayout(this)
                 box.orientation = LinearLayout.VERTICAL
                 box.gravity = Gravity.CENTER_HORIZONTAL
-                box.setPadding(dp(12), dp(4), dp(12), dp(12))
+                box.setPadding(dp(16), dp(14), dp(16), dp(14))
+                val bg = android.graphics.drawable.GradientDrawable()
+                bg.setColor(0xFFFFFFFF.toInt())
+                bg.cornerRadius = dp(20).toFloat()
+                bg.setStroke(dp(1), 0xFFDDD7FA.toInt())
+                box.background = bg
+                val lp = LinearLayout.LayoutParams(-1, -2)
+                lp.setMargins(dp(5), 0, dp(5), dp(6))
+                box.layoutParams = lp
 
-                if (photo.startsWith("http")) {
-                    val img = android.widget.ImageView(this)
-                    box.addView(img, LinearLayout.LayoutParams(dp(110), dp(110)))
-                    com.bumptech.glide.Glide.with(this).load(photo).circleCrop().into(img)
-                }
                 if (subject.isNotEmpty()) {
                     val t = TextView(this)
-                    t.text = "مادة: $subject"
-                    t.textSize = 15f
+                    t.text = "📚 مادة: $subject"
+                    t.textSize = 16f
+                    t.setTypeface(null, android.graphics.Typeface.BOLD)
                     t.setTextColor(0xFF241B4E.toInt())
+                    t.gravity = Gravity.CENTER
                     box.addView(t)
                 }
                 if (bio.isNotEmpty()) {
                     val t = TextView(this)
                     t.text = bio
-                    t.textSize = 13f
+                    t.textSize = 14f
                     t.setTextColor(0xFF5E5A7E.toInt())
                     t.gravity = Gravity.CENTER
+                    t.setPadding(0, dp(6), 0, 0)
                     box.addView(t)
                 }
                 if (phone.isNotEmpty()) {
