@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager // 1. استيراد مكتبة مدير النوافذ للأمان
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -62,6 +63,12 @@ class LessonPlayerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 2. تفعيل حماية منع السكرين شوت وتسجيل الشاشة بالكامل داخل شاشة عرض الشرح والامتحان
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
 
         val root = FrameLayout(this)
         val main = LinearLayout(this)
@@ -225,7 +232,8 @@ class LessonPlayerActivity : AppCompatActivity() {
         w.setBackgroundColor(Color.BLACK)
         w.webChromeClient = chrome
         w.webViewClient = WebViewClient()
-        // لازم نبعت Referer عشان يوتيوب يقبل التشغيل (غير كده بيطلع خطأ 153)
+        
+        // حقن أزرار التحكم في سرعة التشغيل (Playback Speed buttons inside HTML/JS injection if needed, or keeping clean iframe)
         val html = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
                 "<style>html,body{margin:0;height:100%;background:#000}iframe{border:0;width:100%;height:100%}</style></head>" +
                 "<body><iframe src=\"https://www.youtube.com/embed/${l.videoId}?rel=0&playsinline=1&modestbranding=1\" " +
@@ -406,7 +414,6 @@ class LessonPlayerActivity : AppCompatActivity() {
             return
         }
 
-        // نجح: نعرض الإجابات الصحيحة
         quiz.forEachIndexed { i, q ->
             body.addView(LeagueUi.questionBox(this, "${i + 1}. ${q.text}"))
             q.options.forEachIndexed { k, opt ->
@@ -457,7 +464,7 @@ class LessonPlayerActivity : AppCompatActivity() {
         video?.onResume()
     }
 
-    override fun onDestroy() {
+    override onDestroy() {
         releaseVideo()
         super.onDestroy()
     }
