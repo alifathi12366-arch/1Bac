@@ -132,6 +132,14 @@
                 <activity android:name=".AiTutorActivity" android:exported="false" />
                 <activity android:name=".TeacherPublishActivity" android:exported="false" />
         <activity android:name=".ExamReviewActivity" android:exported="false" />
+                <activity android:name=".CourseTeacherHomeActivity" android:exported="false" />
+        <activity android:name=".CourseManageActivity" android:exported="false" />
+        <activity android:name=".LessonEditActivity" android:exported="false" />
+        <activity android:name=".CourseProgressActivity" android:exported="false" />
+        <activity android:name=".CourseStudentHomeActivity" android:exported="false" />
+        <activity android:name=".CourseLessonsActivity" android:exported="false" />
+        <activity android:name=".LessonPlayerActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" />
     </application>
 
 </manifest>
