@@ -263,7 +263,12 @@ class TeacherDashboardActivity : AppCompatActivity() {
             row, "ملفي الشخصي", "صورتك ونبذتك وواتساب",
             null, "👤", "#E7E2FE", "#D6CEFB", "#4B3FD1"
         ) { open(TeacherProfileActivity::class.java) }
-
+        row = newRow()
+        addCard(
+            row, "الكورسات والفيديوهات", "فيديوهات يوتيوب وكل درس عليه امتحان",
+            null, "🎬", "#4F46E5", "#312E81", "#6366F1",
+            dark = true
+        ) { open(CourseTeacherHomeActivity::class.java) }
         row = newRow()
         addCard(
             row, "السبورة الذكية", "اكتب وشرح درسك بكل سهولة",
