@@ -110,13 +110,7 @@ class AccountActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        findViewById<TextView>(R.id.teacherRegisterButton).setOnClickListener {
-            startActivity(Intent(this, TeacherRegisterActivity::class.java))
-        }
-
-        findViewById<TextView>(R.id.teacherCodeButton).setOnClickListener {
-            startActivity(Intent(this, TeacherCodeActivity::class.java))
-        }
+        // تم حذف أزرار (هل أنت مدرس؟) و (كود التفعيل) من هنا تماماً بناءً على طلبك
 
         // 🎁 زرار دعوة الأصدقاء
         val inviteBtn = findViewById<Button>(R.id.leaderboardButton)
@@ -136,18 +130,12 @@ class AccountActivity : AppCompatActivity() {
                     val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
                     val clip = android.content.ClipData.newPlainText("Student Code", studentId)
                     clipboard.setPrimaryClip(clip)
-                    // تم تصحيح الخطأ هنا بنجاح
                     Toast.makeText(this, "تم نسخ الكود بنجاح! ابعته لأصحابك 🚀", Toast.LENGTH_SHORT).show()
                 }
                 .setNegativeButton("إغلاق", null)
                 .show()
         }
 
-        // زرار الاقتراحات (يُضاف برمجيًا تحت زرار دعوة الأصدقاء)
-        val sugBtn = Button(this)
-        sugBtn.text = "💡 اقتراح أو شكوى"
-        sugBtn.setOnClickListener { startActivity(Intent(this, SuggestionActivity::class.java)) }
-        val p = inviteBtn.parent as ViewGroup
-        p.addView(sugBtn, p.indexOfChild(inviteBtn) + 1)
+        // تم حذف زر الاقتراحات أو الشكوى البرمجي من هنا أيضاً
     }
 }
