@@ -138,6 +138,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
 
         if (code.isNotEmpty()) loadStats(code)
+        if (code.isNotEmpty()) JoinUtil.showPending(this, grid, code)
     }
 
     private fun fmt(n: Long): String = when {
@@ -260,10 +261,15 @@ class TeacherDashboardActivity : AppCompatActivity() {
             spr(140, 715, 164, 128), null, "#FFD9EE", "#FDC4E6", "#E5365A"
         ) { open(TeacherQuestionsActivity::class.java) }
         addCard(
-            row, "ملفي الشخصي", "صورتك ونبذتك وواتساب",
+            row, "ملفي الشخصي", "نبذتك وواتساب",
             null, "👤", "#E7E2FE", "#D6CEFB", "#4B3FD1"
         ) { open(TeacherProfileActivity::class.java) }
         row = newRow()
+                row = newRow()
+        addCard(
+            row, "طلابي وطلبات الانضمام", "اقبل أو ارفض الطلبات، وشوف بيانات كل طالب وولي أمره",
+            null, "🧑‍🎓", "#E3D8FE", "#D0BCFC", "#6A3CD6"
+        ) { open(StudentsManageActivity::class.java) }
         addCard(
             row, "الكورسات والفيديوهات", "فيديوهات يوتيوب وكل درس عليه امتحان",
             null, "🎬", "#4F46E5", "#312E81", "#6366F1",
