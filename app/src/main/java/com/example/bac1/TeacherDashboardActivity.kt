@@ -206,11 +206,11 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         row = newRow()
         addCard(
-            row, "نشر المحتوى لطلابي", "شارك الدروس والملخصات",
+            row, "رسائل لطلابي", "اكتب رسالة تظهر لطلابك ",
             null, "📢", "#CDF2E5", "#BDEBE3", "#1FAE7C"
         ) { open(TeacherPublishActivity::class.java) }
         addCard(
-            row, "محتواي", "اللي نشرته لطلابك",
+            row, "رسائلي", "المرسلة لطلابي ",
             spr(276, 551, 147, 145), null, "#E7E2FE", "#D6CEFB", "#4B3FD1"
         ) { open(TeacherMyContentActivity::class.java) }
 
