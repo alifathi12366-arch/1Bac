@@ -15,13 +15,16 @@ class CourseStudentHomeActivity : AppCompatActivity() {
     private lateinit var body: LinearLayout
     private var teacherCode = ""
     private var playerKey = ""
+    private var studentName = ""
 
     private fun dp(v: Int) = LeagueUi.dp(this, v)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         body = CourseUtil.page(this)
-        playerKey = CourseUtil.student(this).first
+        val st = CourseUtil.student(this)
+        playerKey = st.first
+        studentName = st.second
         teacherCode = intent.getStringExtra("teacherCode") ?: ""
     }
 
@@ -42,38 +45,40 @@ class CourseStudentHomeActivity : AppCompatActivity() {
             return
         }
         body.addView(LeagueUi.note(this, "جارٍ التحميل..."))
-        db.collection("courses").whereEqualTo("teacherCode", teacherCode).get()
-            .addOnSuccessListener { snap ->
-                val courses = snap.documents.sortedBy { it.getLong("createdAt") ?: 0L }
-                db.collection("courseProgress").whereEqualTo("studentId", playerKey).get()
-                    .addOnSuccessListener { pr ->
-                        val passedBy = HashMap<String, Set<String>>()
-                        for (p in pr.documents) {
-                            val cid = p.getString("courseId") ?: continue
-                            passedBy[cid] = (p.get("passed") as? List<*>)
-                                ?.mapNotNull { it as? String }?.toSet() ?: emptySet()
+        CourseUtil.myGroups(db, teacherCode, studentName) { mine ->
+            db.collection("courses").whereEqualTo("teacherCode", teacherCode).get()
+                .addOnSuccessListener { snap ->
+                    val courses = snap.documents.sortedBy { it.getLong("createdAt") ?: 0L }
+                    db.collection("courseProgress").whereEqualTo("studentId", playerKey).get()
+                        .addOnSuccessListener { pr ->
+                            val passedBy = HashMap<String, Set<String>>()
+                            for (p in pr.documents) {
+                                val cid = p.getString("courseId") ?: continue
+                                passedBy[cid] = (p.get("passed") as? List<*>)
+                                    ?.mapNotNull { it as? String }?.toSet() ?: emptySet()
+                            }
+                            show(courses, passedBy, mine)
                         }
-                        show(courses, passedBy)
-                    }
-                    .addOnFailureListener { show(courses, HashMap()) }
-            }
-            .addOnFailureListener {
-                header()
-                body.addView(LeagueUi.note(this, "تعذّر الاتصال، تحقق من الإنترنت وحاول تاني."))
-            }
+                        .addOnFailureListener { show(courses, HashMap(), mine) }
+                }
+                .addOnFailureListener {
+                    header()
+                    body.addView(LeagueUi.note(this, "تعذّر الاتصال، تحقق من الإنترنت وحاول تاني."))
+                }
+        }
     }
 
-    private fun show(courses: List<DocumentSnapshot>, passedBy: Map<String, Set<String>>) {
+    private fun show(courses: List<DocumentSnapshot>, passedBy: Map<String, Set<String>>, mine: Set<String>) {
         header()
-        if (courses.isEmpty()) {
-            body.addView(LeagueUi.note(this, "لا توجد كورسات دلوقتي 🙂\nأول ما المدرس ينشر كورس هتلاقيه هنا."))
-            return
-        }
+        var shown = 0
         for (c in courses) {
-            val lessons = CourseUtil.parseLessons(c.get("lessons"))
-            val mine = passedBy[c.id] ?: emptySet()
-            val done = lessons.count { it.id in mine }
-            val finished = lessons.isNotEmpty() && done == lessons.size
+            val lessons = CourseUtil.visible(CourseUtil.parseLessons(c.get("lessons")), mine)
+            if (lessons.isEmpty()) continue
+            shown++
+            val passed = passedBy[c.id] ?: emptySet()
+            val flags = CourseUtil.unlocked(lessons, passed)
+            val done = lessons.indices.count { flags[it] && CourseUtil.isDone(lessons[it], passed) }
+            val finished = done == lessons.size
 
             val card = LinearLayout(this)
             card.orientation = LinearLayout.VERTICAL
@@ -83,35 +88,28 @@ class CourseStudentHomeActivity : AppCompatActivity() {
             lp.topMargin = dp(10)
             card.layoutParams = lp
 
-            card.addView(LeagueUi.tv(this, (c.getString("title") ?: "") + if (finished) "  🎓" else "", 19f, LeagueUi.TEXT, true))
             card.addView(
-                LeagueUi.tv(
-                    this,
-                    if (lessons.isEmpty()) "لسه ما فيهاش دروس" else "📊 $done من ${lessons.size} دروس",
-                    13f, LeagueUi.MUTED
-                )
+                LeagueUi.tv(this, (c.getString("title") ?: "") + if (finished) "  🎓" else "", 19f, LeagueUi.TEXT, true)
             )
-            if (lessons.isNotEmpty()) {
-                val bar = LinearLayout(this)
-                bar.orientation = LinearLayout.HORIZONTAL
-                bar.background = LeagueUi.bg(this, "#34428F", 4)
-                val fill = View(this)
-                fill.background = LeagueUi.bg(this, LeagueUi.GOLD, 4)
-                bar.addView(fill, LinearLayout.LayoutParams(0, -1, done.toFloat()))
-                bar.addView(View(this), LinearLayout.LayoutParams(0, -1, (lessons.size - done).toFloat()))
-                val blp = LinearLayout.LayoutParams(-1, dp(8))
-                blp.topMargin = dp(8)
-                card.addView(bar, blp)
-            }
+            card.addView(LeagueUi.tv(this, "📊 $done من ${lessons.size} دروس", 13f, LeagueUi.MUTED))
+            val bar = LinearLayout(this)
+            bar.orientation = LinearLayout.HORIZONTAL
+            bar.background = LeagueUi.bg(this, "#34428F", 4)
+            val fill = View(this)
+            fill.background = LeagueUi.bg(this, LeagueUi.GOLD, 4)
+            bar.addView(fill, LinearLayout.LayoutParams(0, -1, done.toFloat()))
+            bar.addView(View(this), LinearLayout.LayoutParams(0, -1, (lessons.size - done).toFloat()))
+            val blp = LinearLayout.LayoutParams(-1, dp(8))
+            blp.topMargin = dp(8)
+            card.addView(bar, blp)
 
             card.setOnClickListener {
-                if (lessons.isEmpty()) {
-                    Toast.makeText(this, "لسه المدرس ما ضافش دروس", Toast.LENGTH_SHORT).show()
-                } else {
-                    startActivity(Intent(this, CourseLessonsActivity::class.java).putExtra("courseId", c.id))
-                }
+                startActivity(Intent(this, CourseLessonsActivity::class.java).putExtra("courseId", c.id))
             }
             body.addView(card)
+        }
+        if (shown == 0) {
+            body.addView(LeagueUi.note(this, "لا توجد كورسات متاحة ليك دلوقتي 🙂\nأول ما المدرس ينشر درس لمجموعتك هتلاقيه هنا."))
         }
     }
 }
