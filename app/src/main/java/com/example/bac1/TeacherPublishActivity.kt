@@ -30,7 +30,7 @@ class TeacherPublishActivity : AppCompatActivity() {
         e.setTextColor(0xFF000000.toInt())
         if (multiline) {
             e.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            e.minLines = 3
+            e.minLines = 4
         }
         return e
     }
@@ -41,23 +41,19 @@ class TeacherPublishActivity : AppCompatActivity() {
         val container = findViewById<LinearLayout>(R.id.adminContainer)
         val teacherCode = getSharedPreferences("bac1_prefs", MODE_PRIVATE).getString("teacher_code", "") ?: ""
 
-        container.addView(label("📢 نشر المحتوى لطلابي", 22f))
+        container.addView(label("📢 رسالة لطلابي", 22f))
+        container.addView(label("بتظهر لكل طلابك في صفحتك (إعلان، تنبيه، سؤال رأي...). للفيديوهات استخدم الكورسات.", 13f))
 
-        container.addView(label("عنوان الدرس"))
-        val etTitle = edit("مثال: شرح الوحدة الأولى")
+        container.addView(label("عنوان الرسالة"))
+        val etTitle = edit("مثال: محتاج رأيكم")
         container.addView(etTitle)
 
-        container.addView(label("الوصف أو الملخص"))
-        val etDescription = edit("اكتب شرح قصير أو ملخص الدرس", true)
-        container.addView(etDescription)
-
-        container.addView(label("رابط يوتيوب (اختياري)"))
-        val etYoutube = edit("https://youtube.com/...")
-        etYoutube.inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
-        container.addView(etYoutube)
+        container.addView(label("نص الرسالة"))
+        val etMsg = edit("اكتب رسالتك هنا", true)
+        container.addView(etMsg)
 
         val btn = Button(this)
-        btn.text = "🚀 نشر المحتوى"
+        btn.text = "🚀 إرسال الرسالة"
         btn.setTextColor(0xFFFFFFFF.toInt())
         btn.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF4CAF50.toInt())
         val lp = LinearLayout.LayoutParams(-1, -2)
@@ -68,40 +64,37 @@ class TeacherPublishActivity : AppCompatActivity() {
 
         btn.setOnClickListener {
             val title = etTitle.text.toString().trim()
-            val description = etDescription.text.toString().trim()
-            val youtubeUrl = etYoutube.text.toString().trim()
-
-            if (title.isEmpty()) {
-                Toast.makeText(this, "يرجى كتابة عنوان الدرس", Toast.LENGTH_SHORT).show()
+            val msg = etMsg.text.toString().trim()
+            if (title.isEmpty() || msg.isEmpty()) {
+                Toast.makeText(this, "اكتب العنوان ونص الرسالة", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (teacherCode.isEmpty()) {
                 Toast.makeText(this, "لا يوجد كود مدرس", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
             btn.isEnabled = false
-            val data = hashMapOf<String, Any>(
-                "teacherCode" to teacherCode,
-                "type" to "message",
-                "text" to "$title\n\n$description",
-                "youtubeUrl" to youtubeUrl,
-                "pdfUrl" to "",
-                "directVideoUrl" to "",
-                "createdAt" to System.currentTimeMillis()
-            )
-
             FirebaseFirestore.getInstance().collection("teacherContent")
                 .document(UUID.randomUUID().toString())
-                .set(data)
+                .set(
+                    hashMapOf<String, Any>(
+                        "teacherCode" to teacherCode,
+                        "type" to "message",
+                        "text" to "$title\n\n$msg",
+                        "youtubeUrl" to "",
+                        "pdfUrl" to "",
+                        "directVideoUrl" to "",
+                        "createdAt" to System.currentTimeMillis()
+                    )
+                )
                 .addOnSuccessListener {
-                    TeacherActivityLog.post(this, "نزّل محتوى جديد 📚")
-                    Toast.makeText(this, "تم نشر المحتوى بنجاح! 🚀", Toast.LENGTH_LONG).show()
+                    TeacherActivityLog.post(this, "بعت رسالة جديدة 📢")
+                    Toast.makeText(this, "تم إرسال الرسالة 🚀", Toast.LENGTH_LONG).show()
                     finish()
                 }
                 .addOnFailureListener { e ->
                     btn.isEnabled = true
-                    Toast.makeText(this, "فشل النشر: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "فشل الإرسال: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
         }
     }
