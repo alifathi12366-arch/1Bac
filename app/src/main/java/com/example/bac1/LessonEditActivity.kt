@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.RadioButton
@@ -20,17 +21,22 @@ class LessonEditActivity : AppCompatActivity() {
     private var lessonId: String? = null
     private var lessons: List<CourseUtil.Lesson> = emptyList()
     private var loaded = false
+    private var groupDocs: List<Pair<String, String>> = emptyList()
 
     private val qText = mutableListOf<EditText>()
     private val qOpts = mutableListOf<List<EditText>>()
     private val qRg = mutableListOf<RadioGroup>()
     private val qNote = mutableListOf<EditText>()
+    private val groupChecks = mutableListOf<CheckBox>()
 
     private lateinit var questionsBox: LinearLayout
+    private lateinit var groupsBox: LinearLayout
+    private lateinit var allCb: CheckBox
     private lateinit var etTitle: EditText
     private lateinit var etLink: EditText
     private lateinit var etDesc: EditText
     private lateinit var etCount: EditText
+    private lateinit var etMinutes: EditText
     private lateinit var saveBtn: Button
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
@@ -52,7 +58,6 @@ class LessonEditActivity : AppCompatActivity() {
         return e
     }
 
-    // بيحفظ اللي اتكتب عشان لما تغيّر عدد الأسئلة ما يضيعش
     private fun currentSeed(): List<CourseUtil.Q> = qText.indices.map { i ->
         val rg = qRg[i]
         val c = if (rg.checkedRadioButtonId == -1) -1
@@ -128,8 +133,24 @@ class LessonEditActivity : AppCompatActivity() {
         etDesc = edit("ملخص أو ملاحظات للطالب", true)
         container.addView(etDesc)
 
+        container.addView(label("👥 مين يشوف الدرس ده؟"))
+        allCb = CheckBox(this)
+        allCb.text = "كل المجموعات"
+        allCb.setTextColor(0xFF000000.toInt())
+        allCb.isChecked = true
+        allCb.setOnCheckedChangeListener { _, on ->
+            groupChecks.forEach {
+                it.isEnabled = !on
+                if (on) it.isChecked = false
+            }
+        }
+        container.addView(allCb)
+        groupsBox = LinearLayout(this)
+        groupsBox.orientation = LinearLayout.VERTICAL
+        container.addView(groupsBox)
+
         container.addView(label("🧪 امتحان الدرس", 20f))
-        container.addView(label("عدد الأسئلة (من 1 إلى 10)"))
+        container.addView(label("عدد الأسئلة (من 0 إلى 50، صفر = من غير امتحان وكل الطلاب يعدّوا)"))
         val countRow = LinearLayout(this)
         countRow.orientation = LinearLayout.HORIZONTAL
         etCount = edit("3")
@@ -141,11 +162,17 @@ class LessonEditActivity : AppCompatActivity() {
         apply.text = "تطبيق"
         apply.setOnClickListener {
             val c = etCount.text.toString().trim().toIntOrNull() ?: 3
-            if (c !in 1..10) Toast.makeText(this, "العدد من 1 إلى 10", Toast.LENGTH_SHORT).show()
+            if (c !in 0..50) Toast.makeText(this, "العدد من 0 إلى 50", Toast.LENGTH_SHORT).show()
             else buildQuestions(c, currentSeed())
         }
         countRow.addView(apply)
         container.addView(countRow)
+
+        container.addView(label("⏱ وقت الامتحان بالدقائق (صفر = من غير وقت)"))
+        etMinutes = edit("0")
+        etMinutes.inputType = InputType.TYPE_CLASS_NUMBER
+        etMinutes.setText("0")
+        container.addView(etMinutes)
 
         questionsBox = LinearLayout(this)
         questionsBox.orientation = LinearLayout.VERTICAL
@@ -163,19 +190,53 @@ class LessonEditActivity : AppCompatActivity() {
         saveBtn.setOnClickListener { save() }
         container.addView(saveBtn)
 
-        load()
+        loadGroups()
     }
 
-    private fun load() {
+    private fun loadGroups() {
+        val code = getSharedPreferences("bac1_prefs", MODE_PRIVATE).getString("teacher_code", "") ?: ""
+        db.collection("teacherGroups").whereEqualTo("teacherCode", code).get()
+            .addOnSuccessListener { gs ->
+                groupDocs = gs.documents.map { Pair(it.id, it.getString("name") ?: "مجموعة") }
+                    .sortedBy { it.second }
+                loadCourse()
+            }
+            .addOnFailureListener {
+                groupDocs = emptyList()
+                loadCourse()
+            }
+    }
+
+    private fun loadCourse() {
         db.collection("courses").document(courseId).get()
             .addOnSuccessListener { d ->
                 lessons = CourseUtil.parseLessons(d.get("lessons"))
                 val existing = lessons.firstOrNull { it.id == lessonId }
+                val sel = existing?.groups ?: emptyList()
+
+                groupsBox.removeAllViews()
+                groupChecks.clear()
+                groupDocs.forEach { (gid, gname) ->
+                    val cb = CheckBox(this)
+                    cb.text = gname
+                    cb.tag = gid
+                    cb.setTextColor(0xFF000000.toInt())
+                    cb.isChecked = gid in sel
+                    groupsBox.addView(cb)
+                    groupChecks.add(cb)
+                }
+                if (groupDocs.isEmpty()) {
+                    groupsBox.addView(label("لسه ما عملتش مجموعات، الدرس هيظهر للكل.", 12f))
+                }
+                allCb.isChecked = sel.isEmpty()
+                groupChecks.forEach { it.isEnabled = !allCb.isChecked }
+
                 if (existing != null) {
                     etTitle.setText(existing.title)
                     etLink.setText("https://youtu.be/${existing.videoId}")
                     etDesc.setText(existing.desc)
-                    val n = existing.qs.size.coerceIn(1, 10)
+                    etMinutes.setText(existing.quizMinutes.toString())
+                    val n = existing.qs.size.coerceIn(0, 50)
                     etCount.setText(n.toString())
                     buildQuestions(n, existing.qs)
                 } else {
@@ -201,6 +262,18 @@ class LessonEditActivity : AppCompatActivity() {
             Toast.makeText(this, "رابط اليوتيوب غير صحيح", Toast.LENGTH_SHORT).show()
             return
         }
+        val minutes = etMinutes.text.toString().trim().toIntOrNull() ?: 0
+        if (minutes !in 0..180) {
+            Toast.makeText(this, "وقت الامتحان من 0 إلى 180 دقيقة", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val groups = if (allCb.isChecked) emptyList()
+        else groupChecks.filter { it.isChecked }.map { it.tag as String }
+        if (!allCb.isChecked && groups.isEmpty()) {
+            Toast.makeText(this, "اختر مجموعة على الأقل أو كل المجموعات", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val qs = mutableListOf<CourseUtil.Q>()
         for (i in qText.indices) {
             val t = qText[i].text.toString().trim()
@@ -216,10 +289,21 @@ class LessonEditActivity : AppCompatActivity() {
 
         val isNew = lessonId == null
         val lesson = CourseUtil.Lesson(
-            lessonId ?: CourseUtil.newId(), title, vid, etDesc.text.toString().trim(), qs
+            lessonId ?: CourseUtil.newId(), title, vid, etDesc.text.toString().trim(), qs, minutes, groups
         )
         val newList = if (isNew) lessons + lesson
         else lessons.map { if (it.id == lesson.id) lesson else it }
+
+        // مستند Firestore حده حوالي 1 ميجا، فنتأكد إن الكورس مش كبير أوي
+        val approx = newList.sumOf { l ->
+            (l.title.length + l.desc.length + l.qs.sumOf { q ->
+                q.text.length + q.note.length + q.options.sumOf { it.length } + 40
+            }) * 2 + 300
+        }
+        if (approx > 900_000) {
+            Toast.makeText(this, "الكورس كبر أوي، اعمل كورس تاني للدروس الجاية", Toast.LENGTH_LONG).show()
+            return
+        }
 
         saveBtn.isEnabled = false
         db.collection("courses").document(courseId)
