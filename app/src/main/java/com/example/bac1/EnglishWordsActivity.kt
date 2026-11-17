@@ -101,10 +101,6 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             Toast.makeText(this, "اكتب كلمة أو جملة قصيرة (لحد 40 حرف)", Toast.LENGTH_SHORT).show()
             return
         }
-        if (BuildConfig.GEMINI_API_KEY.isEmpty()) {
-            showError("المفتاح مش متضبط في البناء")
-            return
-        }
 
         tvError.visibility = View.GONE
         cardResult.visibility = View.GONE
@@ -114,8 +110,7 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         Thread {
             var word: Word? = null
             var error: String? = null
-            try {
-                val prompt = "You are a friendly English tutor for Egyptian high-school students. " +
+            val prompt = "You are a friendly English tutor for Egyptian high-school students. " +
                     "The student typed: \"$text\". " +
                     "If it is Arabic, translate it to the most natural English word or phrase. " +
                     "If it is English, translate it to Arabic. " +
@@ -126,43 +121,13 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     "Reply ONLY with JSON in this exact shape: " +
                     "{\"english\":\"\",\"arabic\":\"\",\"sentence_en\":\"\",\"sentence_ar\":\"\"}"
 
-                val body = JSONObject()
-                    .put("contents", JSONArray().put(
-                        JSONObject().put("parts", JSONArray().put(JSONObject().put("text", prompt)))
-                    ))
-                    .put("generationConfig", JSONObject().put("responseMimeType", "application/json"))
-
-                val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.connectTimeout = 15000
-                conn.readTimeout = 30000
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.setRequestProperty("x-goog-api-key", BuildConfig.GEMINI_API_KEY)
-                conn.doOutput = true
-                conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
-
-                val code = conn.responseCode
-                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-                val resp = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
-                conn.disconnect()
-
-                if (code !in 200..299) {
-                    error = when (code) {
-                        429 -> "الحد المجاني خلص دلوقتي، جرب بعد شوية"
-                        400, 401, 403 -> "فيه مشكلة في المفتاح أو الطلب ($code)"
-                        else -> "حصل خطأ ($code)"
-                    }
-                } else {
-                    val parts = JSONObject(resp).getJSONArray("candidates").getJSONObject(0)
-                        .getJSONObject("content").getJSONArray("parts")
-                    val sb = StringBuilder()
-                    for (i in 0 until parts.length()) {
-                        val p = parts.getJSONObject(i)
-                        if (p.optBoolean("thought", false)) continue
-                        sb.append(p.optString("text", ""))
-                    }
-                    val clean = sb.toString().replace("```json", "").replace("```", "").trim()
+            val r = GeminiClient.ask(null, prompt, true)
+            val raw = r.text
+            if (raw == null) {
+                error = r.error ?: "حصل خطأ"
+            } else {
+                try {
+                    val clean = raw.replace("```json", "").replace("```", "").trim()
                     val o = JSONObject(clean)
                     val en = o.optString("english").trim()
                     if (en.isEmpty()) {
@@ -173,10 +138,9 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                             o.optString("sentence_en").trim(), o.optString("sentence_ar").trim()
                         )
                     }
+                } catch (e: Exception) {
+                    error = "رد غير مفهوم من الخدمة، جرب تاني"
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                error = "تعذّر الاتصال، تحقق من الإنترنت وحاول تاني"
             }
 
             runOnUiThread {
