@@ -68,7 +68,7 @@ class TeacherContentActivity : AppCompatActivity() {
             )
         }
         CardKit.addCard(
-            this, row, "المحتوى", "دروس ومنشورات المدرس", "📚",
+            this, row, "رسائل المدرس", "اعلانات و تنبيهات المدرس", "📚",
             "#E7E2FE", "#D6CEFB", "#4B3FD1"
         ) {
             startActivity(
