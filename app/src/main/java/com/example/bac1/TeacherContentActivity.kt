@@ -40,6 +40,7 @@ class TeacherContentActivity : AppCompatActivity() {
 
         teacherCode = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_CODE) ?: ""
         teacherName = intent.getStringExtra(MyTeachersActivity.EXTRA_TEACHER_NAME) ?: ""
+                JoinUtil.requireMember(this, teacherCode)
 
         val nameView = findViewById<TextView>(R.id.contentTeacherName)
         gridContainer = findViewById(R.id.gridContainer)
