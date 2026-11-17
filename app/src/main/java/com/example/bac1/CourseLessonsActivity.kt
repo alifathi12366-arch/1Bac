@@ -13,13 +13,16 @@ class CourseLessonsActivity : AppCompatActivity() {
     private lateinit var body: LinearLayout
     private var courseId = ""
     private var playerKey = ""
+    private var studentName = ""
 
     private fun dp(v: Int) = LeagueUi.dp(this, v)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         body = CourseUtil.page(this)
-        playerKey = CourseUtil.student(this).first
+        val st = CourseUtil.student(this)
+        playerKey = st.first
+        studentName = st.second
         courseId = intent.getStringExtra("courseId") ?: ""
     }
 
@@ -44,14 +47,18 @@ class CourseLessonsActivity : AppCompatActivity() {
                 }
                 val title = c.getString("title") ?: ""
                 val pass = (c.getLong("passPercent") ?: 60L).toInt()
-                val lessons = CourseUtil.parseLessons(c.get("lessons"))
-                db.collection("courseProgress").document("${courseId}_$playerKey").get()
-                    .addOnSuccessListener { p ->
-                        val passed = (p.get("passed") as? List<*>)
-                            ?.mapNotNull { it as? String }?.toSet() ?: emptySet()
-                        show(title, pass, lessons, passed, p.get("scores") as? Map<*, *>)
-                    }
-                    .addOnFailureListener { show(title, pass, lessons, emptySet(), null) }
+                val code = c.getString("teacherCode") ?: ""
+                val all = CourseUtil.parseLessons(c.get("lessons"))
+                CourseUtil.myGroups(db, code, studentName) { mine ->
+                    val lessons = CourseUtil.visible(all, mine)
+                    db.collection("courseProgress").document("${courseId}_$playerKey").get()
+                        .addOnSuccessListener { p ->
+                            val passed = (p.get("passed") as? List<*>)
+                                ?.mapNotNull { it as? String }?.toSet() ?: emptySet()
+                            show(title, pass, lessons, passed, p.get("scores") as? Map<*, *>)
+                        }
+                        .addOnFailureListener { show(title, pass, lessons, emptySet(), null) }
+                }
             }
             .addOnFailureListener { message("تعذّر الاتصال، تحقق من الإنترنت وحاول تاني.") }
     }
@@ -62,19 +69,24 @@ class CourseLessonsActivity : AppCompatActivity() {
     ) {
         body.removeAllViews()
         body.addView(LeagueUi.tv(this, "🎬 $title", 24f, LeagueUi.GOLD, true))
-        val done = lessons.count { it.id in passed }
+        val flags = CourseUtil.unlocked(lessons, passed)
+        val done = lessons.indices.count { flags[it] && CourseUtil.isDone(lessons[it], passed) }
         body.addView(
             LeagueUi.note(this, "📊 تقدمك: $done من ${lessons.size} · النجاح في كل امتحان من $pass%", LeagueUi.CYAN)
         )
+        if (lessons.isEmpty()) body.addView(LeagueUi.note(this, "مفيش دروس متاحة ليك لسه."))
 
         lessons.forEachIndexed { i, l ->
-            val isPassed = l.id in passed
-            val unlocked = isPassed || i == 0 || lessons[i - 1].id in passed
+            val unlocked = flags[i]
+            val hasQuiz = l.qs.isNotEmpty()
+            val isPassed = hasQuiz && l.id in passed
             val icon = if (isPassed) "✅" else if (unlocked) "▶️" else "🔒"
             val sc = (scores?.get(l.id) as? Number)?.toInt()
             val sub = when {
                 isPassed -> "نجحت" + (if (sc != null) " ($sc%)" else "") + " · اضغط لمراجعة الدرس"
-                unlocked -> "${l.qs.size} سؤال في الامتحان · ابدأ الدرس"
+                unlocked && hasQuiz -> "${l.qs.size} سؤال في الامتحان" +
+                        (if (l.quizMinutes > 0) " · ⏱ ${l.quizMinutes} د" else "") + " · ابدأ الدرس"
+                unlocked -> "من غير امتحان · ابدأ الدرس"
                 else -> "خلّص امتحان الدرس السابق عشان يفتح"
             }
             val border = if (isPassed) LeagueUi.GREEN else if (unlocked) LeagueUi.GOLD else "#34428F"
@@ -89,7 +101,6 @@ class CourseLessonsActivity : AppCompatActivity() {
             card.layoutParams = lp
             card.addView(LeagueUi.tv(this, "$icon  ${i + 1}. ${l.title}", 18f, LeagueUi.TEXT, true))
             card.addView(LeagueUi.tv(this, sub, 13f, LeagueUi.MUTED))
-
             card.setOnClickListener {
                 if (!unlocked) {
                     Toast.makeText(this, "🔒 خلّص امتحان الدرس السابق الأول", Toast.LENGTH_SHORT).show()
