@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gridContainer: LinearLayout
     private lateinit var tvDailySub: TextView
     private lateinit var tvMyRank: TextView
+        private lateinit var tvJourneySub: TextView
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -126,8 +127,7 @@ class MainActivity : AppCompatActivity() {
         row = newRow()
         tvDailySub = addCard(
             row, "تحدي اليوم", "اختبر نفسك الآن",
-            spr(124, 551, 148, 157), null, "#FFD9EE", "#FDC4E6", "#E5365A",
-            badge = true
+             spr(124, 551, 148, 157), null, "#FFD9EE", "#FDC4E6", "#E5365A"
         ) {
             if (challengeDoneToday) open(DailyChallengeActivity::class.java)
             else openWithAd(DailyChallengeActivity::class.java)
@@ -168,9 +168,16 @@ class MainActivity : AppCompatActivity() {
         ) { open(WeeklyUpdatesActivity::class.java) }
         addCard(
             row, "المدرس الذكي", "اسأل في أي مادة لأولى ثانوي",
-            null, "🤖", "#FFF3E0", "#FFE0B2", "#F57C00",
-            badge = true
+          null, "🤖", "#FFF3E0", "#FFE0B2", "#F57C00"
         ) { open(AiTutorActivity::class.java) }
+
+        // الصف 6: رحلة التفوق
+        row = newRow()
+        tvJourneySub = addCard(
+            row, "رحلة التفوق 🚀", "جاري تحميل لقبك...",
+            null, "🏔️", "#7A33E0", "#4F1AA0", "#5A2BC8",
+            dark = true
+        ) { open(JourneyActivity::class.java) } 
     }
 
     // الكارت عمودي: الاستيكر والسهم فوق، والعنوان والوصف تحتهم بعرض الكارت كله،
@@ -489,6 +496,14 @@ class MainActivity : AppCompatActivity() {
                             else "لا يوجد تحدٍّ لليوم بعد"
                         }
                 }
+            }
+                    db.collection("dailyAttempts").whereEqualTo("studentKey", key)
+            .aggregate(com.google.firebase.firestore.AggregateField.sum("score"))
+            .get(com.google.firebase.firestore.AggregateSource.SERVER)
+            .addOnSuccessListener { snap ->
+                val total = (snap.get(com.google.firebase.firestore.AggregateField.sum("score")) as? Number)
+                    ?.toLong() ?: 0L
+                tvJourneySub.text = Journey.summary(total)
             }
 
         // النقاط والمركز تحت بعض
