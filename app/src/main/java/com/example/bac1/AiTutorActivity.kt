@@ -8,10 +8,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import org.json.JSONArray
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 class AiTutorActivity : AppCompatActivity() {
 
@@ -50,74 +46,18 @@ class AiTutorActivity : AppCompatActivity() {
             Toast.makeText(this, "اكتب سؤالك الأول يا فنان", Toast.LENGTH_SHORT).show()
             return
         }
-        if (BuildConfig.GEMINI_API_KEY.isEmpty()) {
-            tvAnswer.text = "المدرس الذكي مش متفعّل في النسخة دي."
-            return
-        }
-
         progressAi.visibility = View.VISIBLE
         btnAsk.isEnabled = false
         tvAnswer.text = "جاري التفكير وتحضير الشرح..."
 
         Thread {
-            var answerStr: String
-            try {
-                val body = JSONObject()
-                    .put(
-                        "systemInstruction",
-                        JSONObject().put("parts", JSONArray().put(JSONObject().put("text", systemPrompt)))
-                    )
-                    .put(
-                        "contents",
-                        JSONArray().put(
-                            JSONObject().put("role", "user")
-                                .put("parts", JSONArray().put(JSONObject().put("text", question)))
-                        )
-                    )
-
-                val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.connectTimeout = 15000
-                conn.readTimeout = 40000
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.setRequestProperty("x-goog-api-key", BuildConfig.GEMINI_API_KEY)
-                conn.doOutput = true
-                conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
-
-                val code = conn.responseCode
-                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-                val resp = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
-                conn.disconnect()
-
-                answerStr = if (code in 200..299) {
-                    val parts = JSONObject(resp).getJSONArray("candidates").getJSONObject(0)
-                        .getJSONObject("content").getJSONArray("parts")
-                    val sb = StringBuilder()
-                    for (i in 0 until parts.length()) {
-                        val p = parts.getJSONObject(i)
-                        if (p.optBoolean("thought", false)) continue
-                        sb.append(p.optString("text", ""))
-                    }
-                    sb.toString().trim().ifEmpty { "ما قدرتش أطلع إجابة للسؤال ده، جرّب تصيغه بشكل تاني." }
-                } else {
-                    when (code) {
-                        429 -> "الحد المجاني خلص دلوقتي، جرّب بعد شوية."
-                        400, 401, 403 -> "فيه مشكلة في مفتاح المدرس الذكي ($code)."
-                        404 -> "اسم الموديل مش متاح ($code)، قولّي الخطأ ده."
-                        else -> "حصلت مشكلة في الاتصال بالمدرس الذكي ($code)، حاول تاني."
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                answerStr = "تعذّر الاتصال، تأكد من الإنترنت وحاول تاني."
-            }
-
+            val r = GeminiClient.ask(systemPrompt, question)
+            val answer = r.text ?: ("⚠️ " + (r.error ?: "حصل خطأ، حاول تاني"))
             runOnUiThread {
                 if (isFinishing) return@runOnUiThread
                 progressAi.visibility = View.GONE
                 btnAsk.isEnabled = true
-                tvAnswer.text = answerStr
+                tvAnswer.text = answer
             }
         }.start()
     }
