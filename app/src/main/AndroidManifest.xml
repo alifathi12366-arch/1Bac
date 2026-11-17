@@ -140,6 +140,7 @@
         <activity android:name=".CourseLessonsActivity" android:exported="false" />
         <activity android:name=".LessonPlayerActivity" android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" />
+                <activity android:name=".JourneyActivity" android:exported="false" />
     </application>
 
 </manifest>
