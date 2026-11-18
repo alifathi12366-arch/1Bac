@@ -13,6 +13,18 @@ object GeminiClient {
 
     // لازم تتندهي من Thread (مش من الـ UI)
     fun ask(system: String?, user: String, json: Boolean = false): Result {
+        val parts = JSONArray().put(JSONObject().put("text", user))
+        return send(system, parts, json)
+    }
+
+    fun askImage(prompt: String, base64: String, mime: String, json: Boolean = true): Result {
+        val parts = JSONArray()
+            .put(JSONObject().put("inline_data", JSONObject().put("mime_type", mime).put("data", base64)))
+            .put(JSONObject().put("text", prompt))
+        return send(null, parts, json)
+    }
+
+    private fun send(system: String?, parts: JSONArray, json: Boolean): Result {
         val key = BuildConfig.GEMINI_API_KEY
         if (key.isEmpty()) return Result(null, "المفتاح مش متضبط في النسخة دي")
 
@@ -25,13 +37,7 @@ object GeminiClient {
                     JSONObject().put("parts", JSONArray().put(JSONObject().put("text", system)))
                 )
             }
-            body.put(
-                "contents",
-                JSONArray().put(
-                    JSONObject().put("role", "user")
-                        .put("parts", JSONArray().put(JSONObject().put("text", user)))
-                )
-            )
+            body.put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", parts)))
             if (json) body.put("generationConfig", JSONObject().put("responseMimeType", "application/json"))
 
             var code = 0
@@ -41,7 +47,7 @@ object GeminiClient {
                     .openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.connectTimeout = 15000
-                conn.readTimeout = 40000
+                conn.readTimeout = 60000
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.setRequestProperty("x-goog-api-key", key)
                 conn.doOutput = true
@@ -57,7 +63,7 @@ object GeminiClient {
             if (code in 200..299) {
                 val text = extract(resp)
                 if (text.isNotEmpty()) return Result(text, null)
-                lastError = "الرد فاضي، جرّب تصيغ السؤال بشكل تاني"
+                lastError = "الرد فاضي، جرّب تاني"
                 continue
             }
             val msg = try {
