@@ -142,6 +142,7 @@
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" />
                 <activity android:name=".JourneyActivity" android:exported="false" />
                 <activity android:name=".StudentsManageActivity" android:exported="false" />
+                <activity android:name=".ParentReportActivity" android:exported="false" />
     </application>
 
 </manifest>
