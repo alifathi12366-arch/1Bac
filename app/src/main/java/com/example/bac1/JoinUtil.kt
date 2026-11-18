@@ -45,9 +45,9 @@ object JoinUtil {
     fun localPhone(p: String): String = if (p.startsWith("+20")) "0" + p.substring(3) else p
 
     // قبول طالب: بيدخل في users (القايمة اللي كل الشاشات بتقرأ منها)
-    fun approve(
+        fun approve(
         db: FirebaseFirestore, code: String, identifier: String, studentName: String,
-        fullName: String, phone: String, parentPhone: String, done: (Boolean) -> Unit
+        fullName: String, phone: String, parentPhone: String, uid: String, done: (Boolean) -> Unit
     ) {
         if (identifier.isEmpty()) {
             done(false)
@@ -59,17 +59,15 @@ object JoinUtil {
         userRef.get()
             .addOnSuccessListener { ex ->
                 val already = ex.exists()
-                val batch = db.batch()
-                batch.set(
-                    userRef,
-                    hashMapOf<String, Any>(
-                        "joined_teacher_code" to code, "identifier" to identifier,
-                        "name" to studentName, "fullName" to fullName,
-                        "phone" to phone, "parentPhone" to parentPhone,
-                        "joinedAt" to System.currentTimeMillis()
-                    ),
-                    SetOptions.merge()
+                val data = hashMapOf<String, Any>(
+                    "joined_teacher_code" to code, "identifier" to identifier,
+                    "name" to studentName, "fullName" to fullName,
+                    "phone" to phone, "parentPhone" to parentPhone,
+                    "joinedAt" to System.currentTimeMillis()
                 )
+                if (uid.isNotEmpty()) data["uid"] = uid
+                val batch = db.batch()
+                batch.set(userRef, data, SetOptions.merge())
                 batch.set(
                     reqRef,
                     hashMapOf<String, Any>("status" to "approved", "decidedAt" to System.currentTimeMillis()),
@@ -87,7 +85,7 @@ object JoinUtil {
             }
             .addOnFailureListener { done(false) }
     }
-
+        
     fun reject(ref: DocumentReference, done: (Boolean) -> Unit) = mark(ref, "rejected", done)
 
     fun block(ref: DocumentReference, done: (Boolean) -> Unit) = mark(ref, "blocked", done)
