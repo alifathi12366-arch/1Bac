@@ -59,16 +59,27 @@ class StudentRegisterActivity : AppCompatActivity() {
             val db = FirebaseFirestore.getInstance()
 
             // حفظ بيانات الطالب الجديد في فايرستور مع كوده الخاص
-            db.collection("students").add(
+                        db.collection("students").add(
                 hashMapOf(
                     "studentId" to studentId,
                     "name" to name,
-                    "phone" to phone,
                     "invited_count" to 0L,
                     "monthly_points" to 0L,
                     "timestamp" to System.currentTimeMillis()
                 )
             )
+
+            // رقم الموبايل في مكان خاص (مش قدام أي حد)
+            AuthGate.ensure { ok ->
+                if (ok) {
+                    db.collection("studentPrivate").document(studentId).set(
+                        hashMapOf<String, Any>(
+                            "studentId" to studentId, "name" to name,
+                            "phone" to phone, "uid" to AuthGate.uid()
+                        )
+                    )
+                }
+            }
 
             // منطق التحقق من كود الداعي ومكافأته
             if (referralCode.isNotEmpty() && referralCode != studentId) {
