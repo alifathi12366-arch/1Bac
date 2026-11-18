@@ -48,7 +48,7 @@ class MyTeachersActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val codes = HashSet(prefs.getStringSet("joined_teacher_codes", emptySet()) ?: emptySet())
 
-        db.collection("joinRequests").whereEqualTo("identifier", id).get()
+                db.collection("joinRequests").whereEqualTo("uid", AuthGate.uid()).get()
             .addOnSuccessListener { rs ->
                 val status = HashMap<String, String>()
                 val names = HashMap<String, String>()
