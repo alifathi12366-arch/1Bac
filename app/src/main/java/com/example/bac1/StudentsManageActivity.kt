@@ -333,19 +333,25 @@ class StudentsManageActivity : AppCompatActivity() {
         }
     }
 
-    private fun studentMenu(d: DocumentSnapshot) {
+        private fun studentMenu(d: DocumentSnapshot) {
         val phone = d.getString("phone") ?: ""
         val parent = d.getString("parentPhone") ?: ""
         AlertDialog.Builder(this)
             .setTitle(nameOf(d))
             .setItems(
-                arrayOf("📞 اتصل بالطالب", "📞 اتصل بولي الأمر", "💬 واتساب لولي الأمر", "🚫 إخراج الطالب")
+                arrayOf(
+                    "📊 تقرير ولي الأمر", "📞 اتصل بالطالب", "📞 اتصل بولي الأمر",
+                    "💬 واتساب لولي الأمر", "🚫 إخراج الطالب"
+                )
             ) { _, which ->
                 when (which) {
-                    0 -> dial(phone)
-                    1 -> dial(parent)
-                    2 -> whatsapp(parent)
-                    3 -> confirm("تخرّج ${nameOf(d)}؟ هيتشال من قايمتك ومجموعاتك ومش هيقدر يدخل بالكود تاني.") {
+                    0 -> startActivity(
+                        Intent(this, ParentReportActivity::class.java).putExtra("userId", d.id)
+                    )
+                    1 -> dial(phone)
+                    2 -> dial(parent)
+                    3 -> whatsapp(parent)
+                    4 -> confirm("تخرّج ${nameOf(d)}؟ هيتشال من قايمتك ومجموعاتك ومش هيقدر يدخل بالكود تاني.") {
                         JoinUtil.removeStudent(db, code, teacherName, d) { ok ->
                             Toast.makeText(this, if (ok) "تم إخراج الطالب" else "فشل الإخراج", Toast.LENGTH_SHORT).show()
                             if (ok) load()
