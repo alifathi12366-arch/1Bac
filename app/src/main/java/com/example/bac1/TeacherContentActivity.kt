@@ -69,7 +69,18 @@ class TeacherContentActivity : AppCompatActivity() {
             )
         }
         CardKit.addCard(
-            this, row, "رسائل المدرس", "اعلانات و تنبيهات المدرس", "📚",
+            this, row, "الواجبات", "حل واجباتك قبل الموعد", "📚",
+            "#CFF0FF", "#A5DDF7", "#0284C7"
+        ) {
+            startActivity(
+                Intent(this, HomeworkStudentActivity::class.java)
+                    .putExtra("teacherCode", teacherCode)
+            )
+        }
+
+        row = CardKit.newRow(this, gridContainer)
+        CardKit.addCard(
+            this, row, "رسائل المدرس", "إعلانات وتنبيهات", "📢",
             "#E7E2FE", "#D6CEFB", "#4B3FD1"
         ) {
             startActivity(
@@ -78,8 +89,6 @@ class TeacherContentActivity : AppCompatActivity() {
                     .putExtra(MyTeachersActivity.EXTRA_TEACHER_NAME, teacherName)
             )
         }
-
-        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "الألعاب", "العب وتنافس مع زمايلك", "🎮",
             "#D2F6DE", "#B9EFCD", "#2F7BD8"
@@ -90,6 +99,8 @@ class TeacherContentActivity : AppCompatActivity() {
                     .putExtra("teacherName", teacherName)
             )
         }
+
+        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "امتحانات أستاذي", "امتحانات بمدة وموعد", "📝",
             "#E3D8FE", "#D0BCFC", "#6A3CD6"
@@ -99,8 +110,6 @@ class TeacherContentActivity : AppCompatActivity() {
                     .putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
             )
         }
-
-        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "تحديات المدرس", "تحدى وكسب جوائز", "🎯",
             "#FFE6CC", "#FFD2A8", "#E65100"
@@ -110,6 +119,8 @@ class TeacherContentActivity : AppCompatActivity() {
                     .putExtra("teacherCode", teacherCode)
             )
         }
+
+        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "المراجعات", "مراجعات قبل الامتحان", "📘",
             "#D3E8FF", "#BEDDFD", "#2F6BEA"
@@ -119,8 +130,6 @@ class TeacherContentActivity : AppCompatActivity() {
                     .putExtra("teacherCode", teacherCode)
             )
         }
-
-        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "أخطائي", "راجع أسئلتك الغلط", "❌",
             "#FFD9EE", "#FDC4E6", "#E5365A"
@@ -130,12 +139,12 @@ class TeacherContentActivity : AppCompatActivity() {
                     .putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
             )
         }
+
+        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "اسأل المستر", "اكتب سؤالك عن الدرس", "💬",
             "#CDF2E5", "#BDEBE3", "#1FAE7C"
         ) { showAskDialog() }
-
-        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "ردود المدرس", "أسئلتك وإجاباتها", "📨",
             "#FDE8DC", "#FDD5BD", "#E5413A"
@@ -145,11 +154,14 @@ class TeacherContentActivity : AppCompatActivity() {
                     .putExtra(MyTeachersActivity.EXTRA_TEACHER_CODE, teacherCode)
             )
         }
+
+        row = CardKit.newRow(this, gridContainer)
         CardKit.addCard(
             this, row, "قيّم أستاذك", "رأيك يفرق", "⭐",
             "#FCE9C8", "#FDDA96", "#F08A24"
         ) { showRatingDialog() }
     }
+        
 
     // ---------- اسأل المستر ----------
     private fun showAskDialog() {
