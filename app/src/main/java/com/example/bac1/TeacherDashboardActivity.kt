@@ -381,6 +381,28 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         row.addView(card)
     }
+        // ربط حساب المدرس بالجهاز (للأمان)
+    private fun secureTeacher() {
+        val code = getSharedPreferences("bac1_prefs", MODE_PRIVATE).getString("teacher_code", "") ?: ""
+        if (code.isEmpty()) return
+        AuthGate.ensure { ok ->
+            if (!ok) {
+                android.widget.Toast.makeText(
+                    this, "تعذّر تسجيل الدخول الآمن، تحقق من الإنترنت", android.widget.Toast.LENGTH_LONG
+                ).show()
+                return@ensure
+            }
+            TeacherAuth.claim(FirebaseFirestore.getInstance(), code) { r ->
+                if (r == "other") {
+                    androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("⚠️ حسابك مربوط بجهاز تاني")
+                        .setMessage("الحساب ده اتربط بجهاز تاني، فمش هتقدر تشوف بيانات طلابك من هنا. كلّم الإدارة عشان تفك الربط.")
+                        .setPositiveButton("حسنًا", null)
+                        .show()
+                }
+            }
+        }
+    }
 
     // تحديث خاص بالمدرسين فقط (ملف version_teacher.json)
     private fun checkTeacherUpdate() {
