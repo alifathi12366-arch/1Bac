@@ -93,9 +93,12 @@ class JoinTeacherActivity : AppCompatActivity() {
                 !JoinUtil.validPhone(phone) -> toast("رقمك غير صحيح")
                 !JoinUtil.validPhone(parent) -> toast("رقم ولي الأمر غير صحيح")
                 phone == parent -> toast("رقم ولي الأمر لازم يكون غير رقمك")
-                else -> {
+                                else -> {
                     btn.isEnabled = false
-                    lookup(code, full, phone, parent)
+                    AuthGate.ensure { ok ->
+                        if (ok) lookup(code, full, phone, parent)
+                        else fail("تعذّر تسجيل الدخول الآمن، تحقق من الإنترنت وحاول تاني")
+                    }
                 }
             }
         }
@@ -187,13 +190,13 @@ class JoinTeacherActivity : AppCompatActivity() {
                 "teacherCode" to info.teacherCode, "teacherName" to info.teacherName,
                 "identifier" to info.id, "studentName" to info.studentName,
                 "fullName" to info.full, "phone" to info.phone, "parentPhone" to info.parent,
-                "status" to "pending", "createdAt" to System.currentTimeMillis()
+                "uid" to AuthGate.uid(), "status" to "pending", "createdAt" to System.currentTimeMillis()
             )
         )
             .addOnSuccessListener {
                 if (info.auto) {
                     JoinUtil.approve(
-                        db, info.teacherCode, info.id, info.studentName, info.full, info.phone, info.parent
+                    db, info.teacherCode, info.id, info.studentName, info.full, info.phone, info.parent, AuthGate.uid()
                     ) { ok ->
                         if (ok) {
                             rememberTeacher(info.teacherCode)
