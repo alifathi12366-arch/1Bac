@@ -325,7 +325,7 @@ class StudentsManageActivity : AppCompatActivity() {
                 "accept" -> JoinUtil.approve(
                     db, code, d.getString("identifier") ?: "", d.getString("studentName") ?: "",
                     d.getString("fullName") ?: "", d.getString("phone") ?: "",
-                    d.getString("parentPhone") ?: "", after
+                    d.getString("parentPhone") ?: "", d.getString("uid") ?: "", after
                 )
                 "reject" -> JoinUtil.reject(d.reference, after)
                 else -> JoinUtil.block(d.reference, after)
