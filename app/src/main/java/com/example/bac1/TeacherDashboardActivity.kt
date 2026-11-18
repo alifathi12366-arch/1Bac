@@ -58,6 +58,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
 
         checkTeacherUpdate()
+        secureTeacher()
 
         val opts = BitmapFactory.Options()
         opts.inScaled = false
