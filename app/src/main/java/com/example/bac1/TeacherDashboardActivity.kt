@@ -279,6 +279,12 @@ class TeacherDashboardActivity : AppCompatActivity() {
             null, "🎬", "#4F46E5", "#312E81", "#6366F1",
             dark = true
         ) { open(CourseTeacherHomeActivity::class.java) }
+                row = newRow()
+        addCard(
+            row, "الواجبات", "اكتب واجب بالصق أو بالتصوير، وتابع مين سلّم ومين لأ",
+            null, "📚", "#0EA5E9", "#0369A1", "#0284C7",
+            dark = true
+        ) { open(HomeworkTeacherHomeActivity::class.java) }
         row = newRow()
         addCard(
             row, "السبورة الذكية", "اكتب وشرح درسك بكل سهولة",
