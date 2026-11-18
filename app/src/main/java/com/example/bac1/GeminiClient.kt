@@ -9,7 +9,8 @@ object GeminiClient {
 
     class Result(val text: String?, val error: String?)
 
-    private val models = listOf("gemini-flash-latest", "gemini-3.8-flash", "gemini-2.5-flash")
+    // تم تحديث الموديلات لأسماء الموديلات القياسية المدعومة لمنع خطأ 404
+    private val models = listOf("gemini-1.5-flash", "gemini-1.5-pro", "gemini-flash-latest")
 
     // لازم تتندهي من Thread (مش من الـ UI)
     fun ask(system: String?, user: String, json: Boolean = false): Result {
