@@ -143,6 +143,10 @@
                 <activity android:name=".JourneyActivity" android:exported="false" />
                 <activity android:name=".StudentsManageActivity" android:exported="false" />
                 <activity android:name=".ParentReportActivity" android:exported="false" />
+                <activity android:name=".HomeworkCreateActivity" android:exported="false" />
+        <activity android:name=".HomeworkTeacherHomeActivity" android:exported="false" />
+        <activity android:name=".HomeworkManageActivity" android:exported="false" />
+        <activity android:name=".HomeworkStudentActivity" android:exported="false" />
     </application>
 
 </manifest>
