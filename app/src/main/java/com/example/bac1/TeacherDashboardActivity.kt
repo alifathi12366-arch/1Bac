@@ -270,6 +270,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
             row, "طلابي وطلبات الانضمام", "اقبل أو ارفض الطلبات، وشوف بيانات كل طالب وولي أمره",
             null, "🧑‍🎓", "#E3D8FE", "#D0BCFC", "#6A3CD6"
         ) { open(StudentsManageActivity::class.java) }
+                addCard(
+            row, "تقرير ولي الأمر", "صورة بدرجات الطالب وحضوره تبعتها لولي أمره",
+            null, "📊", "#FCE9C8", "#FDDA96", "#F08A24"
+        ) { open(ParentReportActivity::class.java) }
         addCard(
             row, "الكورسات والفيديوهات", "فيديوهات يوتيوب وكل درس عليه امتحان",
             null, "🎬", "#4F46E5", "#312E81", "#6366F1",
