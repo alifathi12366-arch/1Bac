@@ -431,6 +431,7 @@ class MainActivity : AppCompatActivity() {
         if (uiReady) {
             refreshHomeCards()
             showTeacherBanners()
+            showNotices()
         }
     }
 
@@ -467,6 +468,46 @@ class MainActivity : AppCompatActivity() {
                     parent.addView(t, 0, lp)
                 }
         }
+    }
+        // تذكيرات المدرس الشخصية (زي واجب لسه ما اتسلّمش)
+    private fun showNotices() {
+        val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
+        val name = prefs.getString("student_name", "") ?: ""
+        if (name.isEmpty()) return
+        val parent = findViewById<ViewGroup>(R.id.bannerContainer)
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("notices").whereEqualTo("studentName", name).get()
+            .addOnSuccessListener { res ->
+                val seen = HashSet(prefs.getStringSet("seen_notices", emptySet()) ?: emptySet())
+                for (d in res.documents) {
+                    val key = d.id + "_" + (d.getLong("createdAt") ?: 0L)
+                    val tag = "notice_$key"
+                    if (key in seen || parent.findViewWithTag<View>(tag) != null) continue
+                    val tc = d.getString("teacherCode") ?: ""
+
+                    val t = TextView(this)
+                    t.tag = tag
+                    t.text = (d.getString("text") ?: "") + "\n(اضغط لفتح الواجبات)"
+                    t.textSize = 15f
+                    t.setTextColor(0xFF7A1F00.toInt())
+                    val bg = GradientDrawable()
+                    bg.setColor(0xFFFFCCBC.toInt())
+                    bg.cornerRadius = dp(14).toFloat()
+                    t.background = bg
+                    t.setPadding(dp(14), dp(12), dp(14), dp(12))
+                    val lp = ViewGroup.MarginLayoutParams(-1, -2)
+                    lp.topMargin = dp(8)
+                    t.setOnClickListener {
+                        seen.add(key)
+                        prefs.edit().putStringSet("seen_notices", seen).apply()
+                        parent.removeView(t)
+                        if (tc.isNotEmpty()) {
+                            startActivity(Intent(this, HomeworkStudentActivity::class.java).putExtra("teacherCode", tc))
+                        }
+                    }
+                    parent.addView(t, 0, lp)
+                }
+            }
     }
 
     private fun refreshHomeCards() {
