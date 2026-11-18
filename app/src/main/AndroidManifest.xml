@@ -10,6 +10,7 @@
     
 
     <application
+        android:name=".BacApp"
         android:allowBackup="true"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
