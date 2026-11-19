@@ -75,25 +75,26 @@ class AccountActivity : AppCompatActivity() {
                     .setView(pinInput)
                     .setPositiveButton("دخول") { _, _ ->
                         if (pinInput.text.toString() == "7391") {
-                            val items = arrayOf(
+                          val items = arrayOf(
                                 "➕ أسئلة اليوم",
                                 "⚔️ أسئلة تحدي الأصحاب",
                                 "📢 التقييمات الأسبوعية",
-                                "💡 الاقتراحات"
+                                "💡 الاقتراحات",
+                                "🆔 معرّف حسابي (للقواعد)",
+                                "🧹 تنضيف أرقام الطلاب القديمة"
                             )
                             android.app.AlertDialog.Builder(this)
                                 .setTitle("لوحة الأدمن")
                                 .setItems(items) { _, which ->
                                     when (which) {
-                                        0 -> startActivity(
-                                            Intent(this, AdminQuestionsActivity::class.java))
+                                        0 -> startActivity(Intent(this, AdminQuestionsActivity::class.java))
                                         1 -> startActivity(
                                             Intent(this, AdminQuestionsActivity::class.java)
                                                 .putExtra("collection", "friendChallenges"))
-                                        2 -> startActivity(
-                                            Intent(this, AdminWeeklyActivity::class.java))
-                                        else -> startActivity(
-                                            Intent(this, AdminSuggestionsActivity::class.java))
+                                        2 -> startActivity(Intent(this, AdminWeeklyActivity::class.java))
+                                        3 -> startActivity(Intent(this, AdminSuggestionsActivity::class.java))
+                                        4 -> showMyUid()
+                                        else -> cleanOldPhones()
                                     }
                                 }
                                 .show()
@@ -137,5 +138,56 @@ class AccountActivity : AppCompatActivity() {
         }
 
         // تم حذف زر الاقتراحات أو الشكوى البرمجي من هنا أيضاً
+    }
+        private fun showMyUid() {
+        AuthGate.ensure { ok ->
+            val uid = AuthGate.uid()
+            if (!ok || uid.isEmpty()) {
+                Toast.makeText(this, "تعذّر تسجيل الدخول: " + AuthGate.lastError, Toast.LENGTH_LONG).show()
+                return@ensure
+            }
+            android.app.AlertDialog.Builder(this)
+                .setTitle("معرّف حسابك")
+                .setMessage(uid + "\n\nانسخه وحطه في Firestore: config ← admins ← uids")
+                .setPositiveButton("نسخ") { _, _ ->
+                    val cm = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    cm.setPrimaryClip(android.content.ClipData.newPlainText("uid", uid))
+                    Toast.makeText(this, "تم النسخ", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("إغلاق", null)
+                .show()
+        }
+    }
+
+    // يمسح أرقام الموبايل القديمة من students (الأرقام الجديدة بتتحفظ في مكان خاص)
+    private fun cleanOldPhones() {
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        Toast.makeText(this, "جارٍ التنضيف...", Toast.LENGTH_SHORT).show()
+        var total = 0
+        fun step() {
+            db.collection("students").whereGreaterThan("phone", "").limit(400).get()
+                .addOnSuccessListener { snap ->
+                    if (snap.isEmpty) {
+                        Toast.makeText(this, "تم تنضيف $total طالب ✅", Toast.LENGTH_LONG).show()
+                        return@addOnSuccessListener
+                    }
+                    val batch = db.batch()
+                    snap.documents.forEach {
+                        batch.update(it.reference, "phone", com.google.firebase.firestore.FieldValue.delete())
+                    }
+                    batch.commit()
+                        .addOnSuccessListener {
+                            total += snap.size()
+                            step()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "فشل: " + it.message, Toast.LENGTH_LONG).show()
+                        }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "فشل: " + it.message, Toast.LENGTH_LONG).show()
+                }
+        }
+        step()
     }
 }
