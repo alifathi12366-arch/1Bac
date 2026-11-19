@@ -387,9 +387,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
         if (code.isEmpty()) return
         AuthGate.ensure { ok ->
             if (!ok) {
-                android.widget.Toast.makeText(
-                    this, "تعذّر تسجيل الدخول الآمن، تحقق من الإنترنت", android.widget.Toast.LENGTH_LONG
-                ).show()
+                               android.widget.Toast.makeText(
+                    this, "تعذّر تسجيل الدخول الآمن:\n" + AuthGate.lastError, android.widget.Toast.LENGTH_LONG
+                ).show() 
                 return@ensure
             }
             TeacherAuth.claim(FirebaseFirestore.getInstance(), code) { r ->
