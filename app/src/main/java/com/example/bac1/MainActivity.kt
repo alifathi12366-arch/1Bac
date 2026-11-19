@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity() {
             else openWithAd(DailyChallengeActivity::class.java)
         }
         addCard(
-            row, "أدوات المذاكرة", "ذاكر بذكاء وتنظم وقتك",
+            row, "أدوات المذاكرة", "ذاكر بذكاء وتنظيم وقتك",
             spr(427, 551, 152, 144), null, "#D2F6DE", "#B9EFCD", "#2F7BD8"
         ) { openWithAd(StudyToolsActivity::class.java) }
 
@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity() {
             spr(308, 715, 151, 125), null, "#E3D8FE", "#D0BCFC", "#6A3CD6"
         ) { open(ChallengeHomeActivity::class.java) }
         addCard(
-            row, "مستواي الدراسي", "تابع تقدمك في كل مادة",
+            row, "مستوايا الدراسي", "تابع تقدمك في كل مادة",
             spr(0, 715, 136, 131), null, "#D3E8FF", "#BEDDFD", "#2F6BEA"
         ) { open(ReportActivity::class.java) }
 
