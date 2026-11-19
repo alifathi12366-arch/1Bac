@@ -13,6 +13,9 @@ class BacApp : Application() {
 
 object AuthGate {
 
+    @Volatile
+    var lastError: String = ""
+
     fun uid(): String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     // يسجّل دخول مجهول لو لسه مفيش حساب (المستخدم مش بيحس بيه)
@@ -23,8 +26,14 @@ object AuthGate {
             return
         }
         auth.signInAnonymously()
-            .addOnSuccessListener { onReady(true) }
-            .addOnFailureListener { onReady(false) }
+            .addOnSuccessListener {
+                lastError = ""
+                onReady(true)
+            }
+            .addOnFailureListener { e ->
+                lastError = (e.message ?: e.javaClass.simpleName).take(220)
+                onReady(false)
+            }
     }
 }
 
