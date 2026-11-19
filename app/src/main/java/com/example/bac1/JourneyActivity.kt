@@ -197,7 +197,7 @@ class JourneyActivity : AppCompatActivity() {
                 db.collection("journeyClaims").document(key).set(
                     hashMapOf<String, Any>(
                         "studentKey" to key, "studentName" to name,
-                        "phone" to (prefs.getString("student_phone", "") ?: ""),
+                        "uid" to AuthGate.uid(),
                         "total" to total, "createdAt" to System.currentTimeMillis()
                     )
                 ).addOnSuccessListener {
