@@ -15,11 +15,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.example.bac1.BuildConfig
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.Locale
 
 class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -29,6 +26,7 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var tts: TextToSpeech? = null
     private var ttsReady = false
     private var current: Word? = null
+    private val dictionary = mutableListOf<Word>()
     private val saved = mutableListOf<Word>()
 
     private lateinit var etWord: EditText
@@ -70,6 +68,7 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         findViewById<Button>(R.id.btnSpeakSentence).setOnClickListener { current?.let { speak(it.sEn) } }
         findViewById<Button>(R.id.btnSaveWord).setOnClickListener { saveCurrent() }
 
+        loadDictionary()
         loadSaved()
         renderSaved()
     }
@@ -83,6 +82,7 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun speak(text: String) {
+        if (text.isBlank()) return
         if (!ttsReady) {
             Toast.makeText(this, "النطق مش متاح على موبايلك", Toast.LENGTH_SHORT).show()
             return
@@ -90,7 +90,43 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "w")
     }
 
-    // ---------- الترجمة ----------
+    // ---------- تحميل القاموس المحلي ----------
+    private fun loadDictionary() {
+        dictionary.clear()
+        try {
+            val jsonStr = assets.open("dictionary_en_ar.json").bufferedReader().use { it.readText() }
+            val arr = JSONArray(jsonStr)
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                val en = o.optString("en").trim()
+                val ar = o.optString("ar").trim()
+                val sEn = o.optString("sEn").trim()
+                val sAr = o.optString("sAr").trim()
+                if (en.isNotEmpty() && ar.isNotEmpty()) {
+                    dictionary.add(Word(en, ar, sEn, sAr))
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // ---------- البحث في القاموس المحلي ----------
+    private fun findWord(query: String): Word? {
+        val q = query.trim().lowercase(Locale.ROOT)
+        if (q.isEmpty()) return null
+
+        // 1) تطابق كامل أولاً
+        dictionary.firstOrNull {
+            it.en.lowercase(Locale.ROOT) == q || it.ar.lowercase(Locale.ROOT) == q
+        }?.let { return it }
+
+        // 2) تطابق جزئي في الإنجليزي أو العربي
+        return dictionary.firstOrNull {
+            it.en.lowercase(Locale.ROOT).contains(q) || it.ar.lowercase(Locale.ROOT).contains(q)
+        }
+    }
+
     private fun translate() {
         val text = etWord.text.toString().trim()
         if (text.isEmpty()) {
@@ -107,49 +143,16 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         progress.visibility = View.VISIBLE
         btnTranslate.isEnabled = false
 
-        Thread {
-            var word: Word? = null
-            var error: String? = null
-            val prompt = "You are a friendly English tutor for Egyptian high-school students. " +
-                    "The student typed: \"$text\". " +
-                    "If it is Arabic, translate it to the most natural English word or phrase. " +
-                    "If it is English, translate it to Arabic. " +
-                    "Then write ONE short, casual English sentence using the English word, " +
-                    "in the style of a guy chatting with his guy friend (relaxed and friendly, " +
-                    "clean and appropriate for students). " +
-                    "Also give the Arabic translation of that sentence in Egyptian colloquial Arabic. " +
-                    "Reply ONLY with JSON in this exact shape: " +
-                    "{\"english\":\"\",\"arabic\":\"\",\"sentence_en\":\"\",\"sentence_ar\":\"\"}"
+        val found = findWord(text)
 
-            val r = GeminiClient.ask(null, prompt, true)
-            val raw = r.text
-            if (raw == null) {
-                error = r.error ?: "حصل خطأ"
-            } else {
-                try {
-                    val clean = raw.replace("```json", "").replace("```", "").trim()
-                    val o = JSONObject(clean)
-                    val en = o.optString("english").trim()
-                    if (en.isEmpty()) {
-                        error = "ما قدرتش أترجم الكلمة دي، جرب كلمة تانية"
-                    } else {
-                        word = Word(
-                            en, o.optString("arabic").trim(),
-                            o.optString("sentence_en").trim(), o.optString("sentence_ar").trim()
-                        )
-                    }
-                } catch (e: Exception) {
-                    error = "رد غير مفهوم من الخدمة، جرب تاني"
-                }
-            }
+        progress.visibility = View.GONE
+        btnTranslate.isEnabled = true
 
-            runOnUiThread {
-                if (isFinishing) return@runOnUiThread
-                progress.visibility = View.GONE
-                btnTranslate.isEnabled = true
-                if (word != null) showWord(word) else showError(error ?: "حصل خطأ")
-            }
-        }.start()
+        if (found != null) {
+            showWord(found)
+        } else {
+            showError("الكلمة دي مش موجودة في القاموس المحلي لسه، جرب كلمة تانية")
+        }
     }
 
     private fun showError(msg: String) {
