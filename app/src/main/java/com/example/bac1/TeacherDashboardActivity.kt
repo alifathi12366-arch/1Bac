@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.TextViewCompat
 import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Locale
@@ -265,27 +267,31 @@ class TeacherDashboardActivity : AppCompatActivity() {
             row, "ملفي الشخصي", "نبذتك وواتساب",
             null, "👤", "#E7E2FE", "#D6CEFB", "#4B3FD1"
         ) { open(TeacherProfileActivity::class.java) }
+
         row = newRow()
-                row = newRow()
         addCard(
             row, "طلابي وطلبات الانضمام", "اقبل أو ارفض الطلبات، وشوف بيانات كل طالب وولي أمره",
             null, "🧑‍🎓", "#E3D8FE", "#D0BCFC", "#6A3CD6"
         ) { open(StudentsManageActivity::class.java) }
-                addCard(
+        addCard(
             row, "تقرير ولي الأمر", "صورة بدرجات الطالب وحضوره تبعتها لولي أمره",
             null, "📊", "#FCE9C8", "#FDDA96", "#F08A24"
         ) { open(ParentReportActivity::class.java) }
+
+        row = newRow()
         addCard(
             row, "الكورسات والفيديوهات", "فيديوهات يوتيوب وكل درس عليه امتحان",
             null, "🎬", "#4F46E5", "#312E81", "#6366F1",
             dark = true
         ) { open(CourseTeacherHomeActivity::class.java) }
-                row = newRow()
+
+        row = newRow()
         addCard(
             row, "الواجبات", "اكتب واجب بالصق أو بالتصوير، وتابع مين سلّم ومين لأ",
             null, "📚", "#0EA5E9", "#0369A1", "#0284C7",
             dark = true
         ) { open(HomeworkTeacherHomeActivity::class.java) }
+
         row = newRow()
         addCard(
             row, "السبورة الذكية", "اكتب وشرح درسك بكل سهولة",
@@ -294,7 +300,6 @@ class TeacherDashboardActivity : AppCompatActivity() {
         ) { open(WhiteboardActivity::class.java) }
     }
 
-    // الكارت بيكبر على حسب النص، فمفيش حاجة بتتقطع
     private fun addCard(
         row: LinearLayout, title: String, sub: String,
         sticker: Bitmap?, emoji: String?,
@@ -326,20 +331,24 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         val titleTv = TextView(this)
         titleTv.text = title
-        titleTv.textSize = 14.5f
         titleTv.setTypeface(null, Typeface.BOLD)
         titleTv.setTextColor(Color.parseColor(if (dark) "#FFFFFF" else "#241B4E"))
-        titleTv.maxLines = 3
+        titleTv.maxLines = 2
         titleTv.gravity = Gravity.START
+        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+            titleTv, 11, 15, 1, TypedValue.COMPLEX_UNIT_SP
+        )
         col.addView(titleTv, LinearLayout.LayoutParams(-1, -2))
 
         val subTv = TextView(this)
         subTv.text = sub
-        subTv.textSize = 10.5f
         subTv.setTextColor(Color.parseColor(if (dark) "#D8CCFF" else "#5E5A7E"))
         subTv.maxLines = 4
         subTv.gravity = Gravity.START
         subTv.setPadding(0, dp(4), 0, 0)
+        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+            subTv, 9, 11, 1, TypedValue.COMPLEX_UNIT_SP
+        )
         col.addView(subTv, LinearLayout.LayoutParams(-1, -2))
         card.addView(col, FrameLayout.LayoutParams(-1, -2))
 
@@ -381,15 +390,16 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         row.addView(card)
     }
-        // ربط حساب المدرس بالجهاز (للأمان)
+
+    // ربط حساب المدرس بالجهاز (للأمان)
     private fun secureTeacher() {
         val code = getSharedPreferences("bac1_prefs", MODE_PRIVATE).getString("teacher_code", "") ?: ""
         if (code.isEmpty()) return
         AuthGate.ensure { ok ->
             if (!ok) {
-                               android.widget.Toast.makeText(
+                android.widget.Toast.makeText(
                     this, "تعذّر تسجيل الدخول الآمن:\n" + AuthGate.lastError, android.widget.Toast.LENGTH_LONG
-                ).show() 
+                ).show()
                 return@ensure
             }
             TeacherAuth.claim(FirebaseFirestore.getInstance(), code) { r ->
