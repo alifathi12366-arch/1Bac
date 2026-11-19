@@ -426,12 +426,16 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    override fun onResume() {
+        override fun onResume() {
         super.onResume()
         if (uiReady) {
-            refreshHomeCards()
-            showTeacherBanners()
-            showNotices()
+            AuthGate.ensure { ok ->
+                if (ok) {
+                    refreshHomeCards()
+                    showTeacherBanners()
+                    showNotices()
+                }
+            }
         }
     }
 
