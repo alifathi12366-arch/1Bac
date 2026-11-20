@@ -4,7 +4,6 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -149,7 +148,7 @@ class StudentQuestionBankActivity : AppCompatActivity() {
         t.text = msg
         t.gravity = Gravity.CENTER
         t.textSize = 15f
-        t.setTextColor(ContextCompat.getColor(this, R.color.text_gray))
+        t.setTextColor(Color.parseColor("#B0BEC5"))
         t.setPadding(dp(16), dp(40), dp(16), 0)
         container.addView(t)
     }
@@ -177,19 +176,21 @@ class StudentQuestionBankActivity : AppCompatActivity() {
             val card = MaterialCardView(this)
             card.radius = dp(16).toFloat()
             card.cardElevation = dp(3).toFloat()
+            card.setCardBackgroundColor(Color.WHITE)
             val lp = LinearLayout.LayoutParams(-1, -2)
             lp.topMargin = dp(10)
             card.layoutParams = lp
 
             val box = LinearLayout(this)
             box.orientation = LinearLayout.VERTICAL
+            box.setBackgroundColor(Color.WHITE)
             box.setPadding(dp(16), dp(16), dp(16), dp(16))
 
             val title = TextView(this)
             title.text = "📘 $subject"
             title.textSize = 19f
             title.setTypeface(null, Typeface.BOLD)
-            title.setTextColor(ContextCompat.getColor(this, R.color.text_dark))
+            title.setTextColor(Color.parseColor("#111827"))
             box.addView(title)
 
             val sub = TextView(this)
@@ -197,7 +198,7 @@ class StudentQuestionBankActivity : AppCompatActivity() {
             sub.textSize = 14f
             sub.setTextColor(
                 if (wrong > 0) Color.parseColor("#C62828")
-                else ContextCompat.getColor(this, R.color.text_gray)
+                else Color.parseColor("#4B5563")
             )
             sub.setPadding(0, dp(4), 0, 0)
             box.addView(sub)
@@ -225,18 +226,20 @@ class StudentQuestionBankActivity : AppCompatActivity() {
             val card = MaterialCardView(this)
             card.radius = dp(16).toFloat()
             card.cardElevation = dp(3).toFloat()
+            card.setCardBackgroundColor(Color.WHITE)
             val lp = LinearLayout.LayoutParams(-1, -2)
             lp.topMargin = dp(10)
             card.layoutParams = lp
 
             val box = LinearLayout(this)
             box.orientation = LinearLayout.VERTICAL
+            box.setBackgroundColor(Color.WHITE)
             box.setPadding(dp(14), dp(14), dp(14), dp(14))
 
             val head = TextView(this)
             head.text = "${n + 1}  ·  📅 ${q.date}"
             head.textSize = 12f
-            head.setTextColor(ContextCompat.getColor(this, R.color.text_gray))
+            head.setTextColor(Color.parseColor("#6B7280"))
             box.addView(head)
 
             if (r != null) {
@@ -258,7 +261,7 @@ class StudentQuestionBankActivity : AppCompatActivity() {
             qt.text = q.text
             qt.textSize = 18f
             qt.setTypeface(null, Typeface.BOLD)
-            qt.setTextColor(ContextCompat.getColor(this, R.color.text_dark))
+            qt.setTextColor(Color.parseColor("#111827"))
             qt.setPadding(0, dp(8), 0, dp(4))
             box.addView(qt)
 
@@ -282,7 +285,7 @@ class StudentQuestionBankActivity : AppCompatActivity() {
                     }
                     else -> {
                         tv.text = "•  $opt"
-                        tv.setTextColor(ContextCompat.getColor(this, R.color.text_dark))
+                        tv.setTextColor(Color.parseColor("#1F2937"))
                     }
                 }
                 val olp = LinearLayout.LayoutParams(-1, -2)
