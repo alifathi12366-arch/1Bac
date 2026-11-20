@@ -26,8 +26,6 @@ import java.util.Locale
 
 class TeacherDashboardActivity : AppCompatActivity() {
 
-    // زوّد الرقم ده مع كل نسخة جديدة للمدرسين
-    private val currentTeacherVersion = 3
 
     private lateinit var sheet: Bitmap
     private lateinit var grid: LinearLayout
@@ -414,10 +412,10 @@ class TeacherDashboardActivity : AppCompatActivity() {
         }
     }
 
-    // تحديث خاص بالمدرسين فقط (ملف version_teacher.json)
+        // تحديث التطبيق (نفس ملف version.json بتاع الطلاب)
     private fun checkTeacherUpdate() {
         val queue = com.android.volley.toolbox.Volley.newRequestQueue(this)
-        val url = "https://raw.githubusercontent.com/alifathi12366-arch/1Bac/main/version_teacher.json"
+        val url = "https://raw.githubusercontent.com/alifathi12366-arch/1Bac/main/version.json"
 
         val request = com.android.volley.toolbox.StringRequest(
             com.android.volley.Request.Method.GET, url,
@@ -426,9 +424,17 @@ class TeacherDashboardActivity : AppCompatActivity() {
                     val json = org.json.JSONObject(response)
                     val latest = json.getInt("latestVersion")
                     val downloadUrl = json.getString("downloadUrl")
-                    if (latest > currentTeacherVersion && downloadUrl.startsWith("http")) {
+                    val current = packageManager.getPackageInfo(packageName, 0).let {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            it.longVersionCode.toInt()
+                        } else {
+                            @Suppress("DEPRECATION")
+                            it.versionCode
+                        }
+                    }
+                    if (latest > current && downloadUrl.startsWith("http")) {
                         android.app.AlertDialog.Builder(this)
-                            .setTitle("تحديث جديد للمدرسين")
+                            .setTitle("تحديث جديد")
                             .setMessage("فيه نسخة جديدة فيها مميزات جديدة، حمّلها دلوقتي")
                             .setPositiveButton("تحميل") { _, _ ->
                                 startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(downloadUrl)))
@@ -444,4 +450,5 @@ class TeacherDashboardActivity : AppCompatActivity() {
         )
         queue.add(request)
     }
+            
 }
