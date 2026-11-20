@@ -166,10 +166,7 @@ class MainActivity : AppCompatActivity() {
             spr(0, 325, 295, 222), null, "#7A33E0", "#4F1AA0", "#5A2BC8",
             dark = true, size = 64
         ) { open(WeeklyUpdatesActivity::class.java) }
-        addCard(
-            row, "المدرس الذكي", "اسأل في أي مادة لأولى ثانوي",
-          null, "🤖", "#FFF3E0", "#FFE0B2", "#F57C00"
-        ) { open(AiTutorActivity::class.java) }
+    
 
         // الصف 6: رحلة التفوق
         row = newRow()
