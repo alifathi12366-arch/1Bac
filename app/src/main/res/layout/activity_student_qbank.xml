@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:layoutDirection="rtl"
     android:padding="14dp"
-    android:background="@color/bg_gray">
+    android:background="#F4F6F9">
 
     <TextView
         android:id="@+id/tvBankTitle"
@@ -16,7 +16,7 @@
         android:text="🏦 بنك الأسئلة"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/text_dark" />
+        android:textColor="#111827" />
 
     <TextView
         android:id="@+id/tvBankSub"
@@ -25,7 +25,7 @@
         android:layout_marginStart="6dp"
         android:layout_marginTop="4dp"
         android:textSize="14sp"
-        android:textColor="@color/text_gray" />
+        android:textColor="#4B5563" />
 
     <Button
         android:id="@+id/btnBackSubjects"
