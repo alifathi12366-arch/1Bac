@@ -145,71 +145,76 @@ class EnglishWordsActivity : AppCompatActivity(),
 
     // ---------------- تحميل قاعدة البيانات ----------------
 
-    private fun loadDictionary() {
-        progress.visibility = View.VISIBLE
-        btnTranslate.isEnabled = false
-        tvError.visibility = View.GONE
+    
+private fun loadDictionary() {
+    progress.visibility = View.VISIBLE
+    btnTranslate.isEnabled = false
+    tvError.visibility = View.GONE
 
-        Thread {
-            try {
-                val dbFile = File(
-                    filesDir,
-                    "1bac_dictionary.db"
-                )
+    Thread {
+        var db: SQLiteDatabase? = null
 
-                // نسخ قاعدة البيانات من assets لأول مرة
-                if (!dbFile.exists()) {
-                    assets.open("1bac_dictionary.db").use { input ->
-                        FileOutputStream(dbFile).use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                }
+        try {
+            val dbFile = File(filesDir, "1bac_dictionary.db")
 
-                val db = SQLiteDatabase.openDatabase(
-                    dbFile.absolutePath,
-                    null,
-                    SQLiteDatabase.OPEN_READONLY
-                )
+            // حذف النسخة القديمة وإعادة نسخ الملف من assets
+            if (dbFile.exists()) {
+                dbFile.delete()
+            }
 
-                // التأكد من وجود جدول الكلمات
-                db.rawQuery(
-                    "SELECT COUNT(*) FROM words",
-                    null
-                ).use { cursor ->
-                    if (!cursor.moveToFirst()) {
-                        throw Exception("جدول الكلمات غير موجود")
-                    }
-                }
-
-                runOnUiThread {
-                    database = db
-                    dictionaryReady = true
-
-                    progress.visibility = View.GONE
-                    btnTranslate.isEnabled = true
-
-                    Toast.makeText(
-                        this,
-                        "تم تشغيل قاموس 1Bac بنجاح",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-
-                runOnUiThread {
-                    progress.visibility = View.GONE
-                    btnTranslate.isEnabled = true
-
-                    showError(
-                        "تعذر فتح القاموس. تأكد من وجود ملف قاعدة البيانات داخل assets"
-                    )
+            assets.open("1bac_dictionary.db").use { input ->
+                FileOutputStream(dbFile).use { output ->
+                    input.copyTo(output)
                 }
             }
-        }.start()
-    }
+
+            // فتح قاعدة البيانات
+            db = SQLiteDatabase.openDatabase(
+                dbFile.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY
+            )
+
+            // التأكد من وجود الجدول والأعمدة
+            db.rawQuery(
+                "SELECT english, arabic FROM words LIMIT 1",
+                null
+            ).use { cursor ->
+                // فحص بنية الجدول
+            }
+
+            val finalDb = db
+
+            runOnUiThread {
+                database = finalDb
+                dictionaryReady = true
+
+                progress.visibility = View.GONE
+                btnTranslate.isEnabled = true
+
+                Toast.makeText(
+                    this,
+                    "تم تحميل قاموس 1Bac بنجاح",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            db?.close()
+
+            runOnUiThread {
+                progress.visibility = View.GONE
+                btnTranslate.isEnabled = true
+
+                showError(
+                    "خطأ القاموس: ${e.javaClass.simpleName}\n${e.message ?: "سبب غير معروف"}"
+                )
+            }
+        }
+    }.start()
+}
+
 
     // ---------------- البحث في SQLite ----------------
 
