@@ -2,15 +2,13 @@ package com.example.bac1
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
-import android.util.Base64
 import android.view.Gravity
 import android.widget.Button
 import android.widget.CheckBox
@@ -23,7 +21,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
-import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import java.util.UUID
 
@@ -38,16 +35,40 @@ class HomeworkCreateActivity : AppCompatActivity() {
 
     private lateinit var etTitle: EditText
     private lateinit var tvDeadline: TextView
-    private lateinit var allCb: CheckBox
     private lateinit var groupsBox: LinearLayout
     private lateinit var tvStatus: TextView
     private lateinit var tvCount: TextView
     private lateinit var previewBox: LinearLayout
     private lateinit var btnPublish: Button
 
-    private val picker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) fromImage(uri)
-    }
+    private val pickFromBankLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+            if (res.resultCode != RESULT_OK) return@registerForActivityResult
+            val rawList = res.data?.getStringArrayListExtra("picked") ?: return@registerForActivityResult
+            val imported = mutableListOf<HomeworkUtil.Draft>()
+            var skipped = 0
+            rawList.forEach { item ->
+                val parts = item.split("\u0001")
+                if (parts.size < 6) {
+                    skipped++
+                    return@forEach
+                }
+                val qText = parts[0].trim()
+                val opts = parts.subList(1, 5).map { it.trim() }
+                val corr1Based = parts[5].trim().toIntOrNull() ?: 1
+                val corr0Based = (corr1Based - 1).coerceIn(-1, 3)
+                if (qText.isEmpty() || opts.any { it.isEmpty() }) {
+                    skipped++
+                } else {
+                    imported.add(HomeworkUtil.Draft(qText, opts.toMutableList(), corr0Based))
+                }
+            }
+            if (imported.isNotEmpty()) {
+                addDrafts(imported, skipped)
+            } else if (skipped > 0) {
+                toast("تعذّر قراءة الأسئلة المختارة")
+            }
+        }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -94,27 +115,15 @@ class HomeworkCreateActivity : AppCompatActivity() {
         tvDeadline.setOnClickListener { pickDeadline() }
         container.addView(tvDeadline)
 
-        container.addView(label("👥 مين يشوف الواجب؟"))
-        allCb = CheckBox(this)
-        allCb.text = "كل المجموعات"
-        allCb.setTextColor(0xFF000000.toInt())
-        allCb.isChecked = true
-        allCb.setOnCheckedChangeListener { _, on ->
-            groupChecks.forEach {
-                it.isEnabled = !on
-                if (on) it.isChecked = false
-            }
-        }
-        container.addView(allCb)
+        container.addView(label("👥 حدد مجموعة أو أكثر للواجب:"))
         groupsBox = LinearLayout(this)
         groupsBox.orientation = LinearLayout.VERTICAL
         container.addView(groupsBox)
 
         container.addView(label("📝 الأسئلة", 20f))
-        container.addView(label("اختار طريقة (تقدر تستخدم أكتر من طريقة، والأسئلة بتتجمّع):", 13f))
+        container.addView(label("اختار طريقة أو أكتر لإضافة الأسئلة:", 13f))
+        container.addView(actionBtn("🏦 اختر من بنك الأسئلة") { openQuestionBankPicker() })
         container.addView(actionBtn("📋 ألصق أسئلتك") { pasteDialog() })
-        container.addView(actionBtn("🧠 اطلع أسئلة من نص الدرس (ذكاء اصطناعي)") { aiTextDialog() })
-        container.addView(actionBtn("📸 صوّر ورقة الأسئلة (ذكاء اصطناعي)") { picker.launch("image/*") })
 
         tvStatus = label("", 14f)
         container.addView(tvStatus)
@@ -129,7 +138,7 @@ class HomeworkCreateActivity : AppCompatActivity() {
         btnPublish = Button(this)
         btnPublish.text = "🚀 نشر الواجب"
         btnPublish.setTextColor(0xFFFFFFFF.toInt())
-        btnPublish.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF4CAF50.toInt())
+        btnPublish.backgroundTintList = ColorStateList.valueOf(0xFF4CAF50.toInt())
         val lp = LinearLayout.LayoutParams(-1, -2)
         lp.topMargin = dp(24)
         lp.bottomMargin = dp(40)
@@ -140,23 +149,36 @@ class HomeworkCreateActivity : AppCompatActivity() {
         loadGroups()
     }
 
+    private fun openQuestionBankPicker() {
+        val intent = Intent(this, QuestionBankActivity::class.java)
+        intent.putExtra("pick", true)
+        pickFromBankLauncher.launch(intent)
+    }
+
     private fun loadGroups() {
         val code = getSharedPreferences("bac1_prefs", MODE_PRIVATE).getString("teacher_code", "") ?: ""
         db.collection("teacherGroups").whereEqualTo("teacherCode", code).get()
             .addOnSuccessListener { gs ->
                 groupsBox.removeAllViews()
                 groupChecks.clear()
-                gs.documents.map { Pair(it.id, it.getString("name") ?: "مجموعة") }
+                val list = gs.documents.map { Pair(it.id, it.getString("name") ?: "مجموعة") }
                     .sortedBy { it.second }
-                    .forEach { (gid, name) ->
-                        val cb = CheckBox(this)
-                        cb.text = name
-                        cb.tag = gid
-                        cb.isEnabled = false
-                        cb.setTextColor(0xFF000000.toInt())
-                        groupsBox.addView(cb)
-                        groupChecks.add(cb)
-                    }
+                if (list.isEmpty()) {
+                    groupsBox.addView(label("لا توجد مجموعات مسجلة حالياً.", 14f))
+                    return@addOnSuccessListener
+                }
+                list.forEach { (gid, name) ->
+                    val cb = CheckBox(this)
+                    cb.text = name
+                    cb.tag = gid
+                    cb.isEnabled = true
+                    cb.setTextColor(0xFF000000.toInt())
+                    groupsBox.addView(cb)
+                    groupChecks.add(cb)
+                }
+            }
+            .addOnFailureListener {
+                groupsBox.addView(label("تعذّر تحميل المجموعات", 14f))
             }
     }
 
@@ -174,13 +196,6 @@ class HomeworkCreateActivity : AppCompatActivity() {
     }
 
     // ---------- إضافة الأسئلة ----------
-    private fun setBusy(on: Boolean, msg: String) {
-        busy = on
-        tvStatus.text = msg
-        actionBtns.forEach { it.isEnabled = !on }
-        btnPublish.isEnabled = !on
-    }
-
     private fun addDrafts(list: List<HomeworkUtil.Draft>, skipped: Int) {
         if (drafts.size + list.size > 200) {
             toast("الحد الأقصى 200 سؤال في الواجب")
@@ -205,7 +220,10 @@ class HomeworkCreateActivity : AppCompatActivity() {
             val bg = GradientDrawable()
             bg.setColor(Color.WHITE)
             bg.cornerRadius = dp(12).toFloat()
-            bg.setStroke(dp(if (q.correct < 0) 2 else 1), if (q.correct < 0) 0xFFE53935.toInt() else 0xFFDDDDDD.toInt())
+            bg.setStroke(
+                dp(if (q.correct < 0) 2 else 1),
+                if (q.correct < 0) 0xFFE53935.toInt() else 0xFFDDDDDD.toInt()
+            )
             card.background = bg
             val clp = LinearLayout.LayoutParams(-1, -2)
             clp.topMargin = dp(8)
@@ -304,104 +322,6 @@ class HomeworkCreateActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun aiTextDialog() {
-        val box = LinearLayout(this)
-        box.orientation = LinearLayout.VERTICAL
-        box.setPadding(dp(18), dp(8), dp(18), 0)
-        val cnt = EditText(this)
-        cnt.hint = "عدد الأسئلة (من 1 إلى 30)"
-        cnt.inputType = InputType.TYPE_CLASS_NUMBER
-        cnt.setText("10")
-        cnt.setTextColor(0xFF000000.toInt())
-        box.addView(cnt)
-        val et = bigEdit("ألصق نص الدرس أو الملخص هنا", 8)
-        box.addView(et)
-        val sv = ScrollView(this)
-        sv.addView(box)
-
-        AlertDialog.Builder(this)
-            .setTitle("🧠 أسئلة من نص الدرس")
-            .setView(sv)
-            .setPositiveButton("اطلع الأسئلة") { _, _ ->
-                val n = cnt.text.toString().trim().toIntOrNull() ?: 10
-                val text = et.text.toString().trim()
-                if (n !in 1..30) toast("العدد من 1 إلى 30")
-                else if (text.length < 40) toast("النص قصير، الصق ملخص أطول")
-                else fromText(text.take(12000), n)
-            }
-            .setNegativeButton("إلغاء", null)
-            .show()
-    }
-
-    private val jsonShape = "[{\"text\":\"\",\"options\":[\"\",\"\",\"\",\"\"],\"correct_index\":0}]"
-
-    private fun fromText(text: String, n: Int) {
-        setBusy(true, "⏳ الذكاء الاصطناعي بيكتب الأسئلة...")
-        val prompt = "You are an expert teacher. From the lesson text below, write exactly $n multiple-choice " +
-                "questions for Egyptian secondary-school students. Write in the same language as the text. " +
-                "Each question has exactly 4 options and exactly one correct option (correct_index is zero-based). " +
-                "Vary the difficulty and do not repeat questions. Reply ONLY with a JSON array shaped like: " +
-                "$jsonShape\n\nLesson text:\n$text"
-        Thread {
-            val r = GeminiClient.ask(null, prompt, true)
-            runOnUiThread { aiDone(r) }
-        }.start()
-    }
-
-    private fun fromImage(uri: Uri) {
-        setBusy(true, "⏳ بقرأ الصورة...")
-        Thread {
-            val b64 = imageToBase64(uri)
-            if (b64 == null) {
-                runOnUiThread {
-                    setBusy(false, "تعذّر قراءة الصورة")
-                }
-            } else {
-                val prompt = "This image is a paper of multiple-choice questions. Extract every question exactly as " +
-                        "written (keep the original language) with its options in order. If the paper shows the " +
-                        "correct answers use them, otherwise choose the most likely correct option. " +
-                        "correct_index is zero-based. Reply ONLY with a JSON array shaped like: $jsonShape"
-                val r = GeminiClient.askImage(prompt, b64, "image/jpeg", true)
-                runOnUiThread { aiDone(r) }
-            }
-        }.start()
-    }
-
-    private fun aiDone(r: GeminiClient.Result) {
-        if (isFinishing) return
-        setBusy(false, "")
-        val raw = r.text
-        if (raw == null) {
-            tvStatus.text = "⚠️ " + (r.error ?: "حصل خطأ")
-            return
-        }
-        val list = HomeworkUtil.parseAi(raw)
-        if (list.isEmpty()) tvStatus.text = "⚠️ ما قدرتش أطلع أسئلة، جرّب تاني أو الصق الأسئلة بإيدك"
-        else {
-            addDrafts(list, 0)
-            toast("راجع الأسئلة والإجابات قبل النشر 👀")
-        }
-    }
-
-    private fun imageToBase64(uri: Uri): String? {
-        return try {
-            val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
-            val o1 = BitmapFactory.Options()
-            o1.inJustDecodeBounds = true
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o1)
-            var sample = 1
-            while (maxOf(o1.outWidth, o1.outHeight) / sample > 1800) sample *= 2
-            val o2 = BitmapFactory.Options()
-            o2.inSampleSize = sample
-            val bmp: Bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o2) ?: return null
-            val bos = ByteArrayOutputStream()
-            bmp.compress(Bitmap.CompressFormat.JPEG, 85, bos)
-            Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP)
-        } catch (e: Throwable) {
-            null
-        }
-    }
-
     // ---------- النشر ----------
     private fun publish() {
         if (busy) return
@@ -414,6 +334,11 @@ class HomeworkCreateActivity : AppCompatActivity() {
             toast("حدد آخر موعد في المستقبل")
             return
         }
+        val groups = groupChecks.filter { it.isChecked }.map { it.tag as String }
+        if (groups.isEmpty()) {
+            toast("اختر مجموعة واحدة على الأقل")
+            return
+        }
         if (drafts.isEmpty()) {
             toast("ضيف أسئلة الأول")
             return
@@ -423,15 +348,13 @@ class HomeworkCreateActivity : AppCompatActivity() {
             toast("السؤال ${bad + 1} من غير إجابة صحيحة")
             return
         }
-        val groups = if (allCb.isChecked) emptyList() else groupChecks.filter { it.isChecked }.map { it.tag as String }
-        if (!allCb.isChecked && groups.isEmpty()) {
-            toast("اختر مجموعة على الأقل أو كل المجموعات")
-            return
-        }
 
         val prefs = getSharedPreferences("bac1_prefs", MODE_PRIVATE)
         val id = UUID.randomUUID().toString()
+        busy = true
+        actionBtns.forEach { it.isEnabled = false }
         btnPublish.isEnabled = false
+
         db.collection("homeworks").document(id).set(
             hashMapOf<String, Any>(
                 "homeworkId" to id,
@@ -440,7 +363,9 @@ class HomeworkCreateActivity : AppCompatActivity() {
                 "title" to title,
                 "deadline" to deadlineMs,
                 "groups" to groups,
-                "questions" to drafts.map { CourseUtil.questionToMap(CourseUtil.Q(it.text, it.options.toList(), it.correct, "")) },
+                "questions" to drafts.map {
+                    CourseUtil.questionToMap(CourseUtil.Q(it.text, it.options.toList(), it.correct, ""))
+                },
                 "createdAt" to System.currentTimeMillis()
             )
         ).addOnSuccessListener {
@@ -448,6 +373,8 @@ class HomeworkCreateActivity : AppCompatActivity() {
             toast("تم نشر الواجب ✅")
             finish()
         }.addOnFailureListener {
+            busy = false
+            actionBtns.forEach { it.isEnabled = true }
             btnPublish.isEnabled = true
             Toast.makeText(this, "فشل النشر: ${it.message}", Toast.LENGTH_LONG).show()
         }
