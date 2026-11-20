@@ -18,11 +18,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
+import android.database.sqlite.SQLiteDatabase
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 
-class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
+class EnglishWordsActivity : AppCompatActivity(),
+    TextToSpeech.OnInitListener {
 
-    private class Word(
+    private data class Word(
         val en: String,
         val ar: String,
         val sEn: String = "",
@@ -39,8 +43,8 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var current: Word? = null
 
     private val saved = mutableListOf<Word>()
-    private val dictionary = mutableListOf<DictionaryEntry>()
 
+    private var database: SQLiteDatabase? = null
     private var dictionaryReady = false
 
     private lateinit var etWord: EditText
@@ -85,28 +89,29 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tvSentEn.visibility = View.GONE
         tvSentAr.visibility = View.GONE
 
-        // إخفاء عنوان الأمثلة وزر نطق الجملة
-        val speakSentence = findViewById<Button>(R.id.btnSpeakSentence)
-        speakSentence.visibility = View.GONE
+        findViewById<Button>(R.id.btnSpeakSentence)
+            .visibility = View.GONE
 
         btnTranslate.setOnClickListener {
             translate()
         }
 
-        findViewById<Button>(R.id.btnSpeakWord).setOnClickListener {
-            current?.let { speak(it.en) }
-        }
+        findViewById<Button>(R.id.btnSpeakWord)
+            .setOnClickListener {
+                current?.let { speak(it.en) }
+            }
 
-        findViewById<Button>(R.id.btnSaveWord).setOnClickListener {
-            saveCurrent()
-        }
+        findViewById<Button>(R.id.btnSaveWord)
+            .setOnClickListener {
+                saveCurrent()
+            }
 
         loadSaved()
         renderSaved()
         loadDictionary()
     }
 
-    // ---------------- TTS ----------------
+    // ---------------- النطق الصوتي ----------------
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
@@ -138,7 +143,7 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         )
     }
 
-    // ---------------- تحميل القاموس ----------------
+    // ---------------- تحميل قاعدة البيانات ----------------
 
     private fun loadDictionary() {
         progress.visibility = View.VISIBLE
@@ -147,28 +152,38 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         Thread {
             try {
-                val jsonText = assets.open("dictionary.json")
-                    .bufferedReader(Charsets.UTF_8)
-                    .use { it.readText() }
+                val dbFile = File(
+                    filesDir,
+                    "1bac_dictionary.db"
+                )
 
-                val root = JSONArray(jsonText)
+                // نسخ قاعدة البيانات من assets لأول مرة
+                if (!dbFile.exists()) {
+                    assets.open("1bac_dictionary.db").use { input ->
+                        FileOutputStream(dbFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                }
 
-                val loaded = mutableListOf<DictionaryEntry>()
+                val db = SQLiteDatabase.openDatabase(
+                    dbFile.absolutePath,
+                    null,
+                    SQLiteDatabase.OPEN_READONLY
+                )
 
-                for (i in 0 until root.length()) {
-                    val item = root.optJSONObject(i) ?: continue
-
-                    val en = item.optString("en").trim()
-                    val ar = item.optString("ar").trim()
-
-                    if (en.isNotEmpty() && ar.isNotEmpty()) {
-                        loaded.add(DictionaryEntry(en, ar))
+                // التأكد من وجود جدول الكلمات
+                db.rawQuery(
+                    "SELECT COUNT(*) FROM words",
+                    null
+                ).use { cursor ->
+                    if (!cursor.moveToFirst()) {
+                        throw Exception("جدول الكلمات غير موجود")
                     }
                 }
 
                 runOnUiThread {
-                    dictionary.clear()
-                    dictionary.addAll(loaded)
+                    database = db
                     dictionaryReady = true
 
                     progress.visibility = View.GONE
@@ -176,7 +191,7 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                     Toast.makeText(
                         this,
-                        "تم تحميل ${dictionary.size} كلمة من القاموس",
+                        "تم تشغيل قاموس 1Bac بنجاح",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -187,15 +202,106 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 runOnUiThread {
                     progress.visibility = View.GONE
                     btnTranslate.isEnabled = true
+
                     showError(
-                        "ملف القاموس غير موجود أو به مشكلة"
+                        "تعذر فتح القاموس. تأكد من وجود ملف قاعدة البيانات داخل assets"
                     )
                 }
             }
         }.start()
     }
 
-    // ---------------- البحث ----------------
+    // ---------------- البحث في SQLite ----------------
+
+    private fun searchEnglish(
+        query: String
+    ): List<DictionaryEntry> {
+
+        val db = database ?: return emptyList()
+
+        val results = mutableListOf<DictionaryEntry>()
+
+        // البحث عن الكلمة المطابقة أولاً
+        db.rawQuery(
+            """
+            SELECT english, arabic
+            FROM words
+            WHERE english = ? COLLATE NOCASE
+            LIMIT 50
+            """.trimIndent(),
+            arrayOf(query)
+        ).use { cursor ->
+
+            while (cursor.moveToNext()) {
+                results.add(
+                    DictionaryEntry(
+                        cursor.getString(0),
+                        cursor.getString(1)
+                    )
+                )
+            }
+        }
+
+        // لو مفيش تطابق، نبحث ببداية الكلمة
+        if (results.isEmpty()) {
+            db.rawQuery(
+                """
+                SELECT english, arabic
+                FROM words
+                WHERE english LIKE ? COLLATE NOCASE
+                ORDER BY english
+                LIMIT 30
+                """.trimIndent(),
+                arrayOf("$query%")
+            ).use { cursor ->
+
+                while (cursor.moveToNext()) {
+                    results.add(
+                        DictionaryEntry(
+                            cursor.getString(0),
+                            cursor.getString(1)
+                        )
+                    )
+                }
+            }
+        }
+
+        return results
+    }
+
+    private fun searchArabic(
+        query: String
+    ): List<DictionaryEntry> {
+
+        val db = database ?: return emptyList()
+
+        val results = mutableListOf<DictionaryEntry>()
+
+        db.rawQuery(
+            """
+            SELECT english, arabic
+            FROM words
+            WHERE arabic LIKE ?
+            ORDER BY english
+            LIMIT 50
+            """.trimIndent(),
+            arrayOf("%$query%")
+        ).use { cursor ->
+
+            while (cursor.moveToNext()) {
+                results.add(
+                    DictionaryEntry(
+                        cursor.getString(0),
+                        cursor.getString(1)
+                    )
+                )
+            }
+        }
+
+        return results
+    }
+
+    // ---------------- تنفيذ البحث ----------------
 
     private fun translate() {
         val query = etWord.text.toString().trim()
@@ -221,43 +327,60 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tvError.visibility = View.GONE
         cardResult.visibility = View.GONE
 
-        val isArabic = query.any {
-            it in '\u0600'..'\u06FF'
-        }
+        btnTranslate.isEnabled = false
+        progress.visibility = View.VISIBLE
 
-        val results = if (isArabic) {
-            dictionary.filter {
-                it.ar.contains(query, ignoreCase = true)
-            }
-        } else {
-            dictionary.filter {
-                it.en.equals(query, ignoreCase = true)
-            }.ifEmpty {
-                dictionary.filter {
-                    it.en.startsWith(query, ignoreCase = true)
+        Thread {
+            try {
+                val isArabic = query.any {
+                    it in '\u0600'..'\u06FF'
+                }
+
+                val results = if (isArabic) {
+                    searchArabic(query)
+                } else {
+                    searchEnglish(query)
+                }
+
+                runOnUiThread {
+                    progress.visibility = View.GONE
+                    btnTranslate.isEnabled = true
+
+                    if (results.isEmpty()) {
+                        showError(
+                            "مش لاقي الكلمة دي في القاموس"
+                        )
+                        return@runOnUiThread
+                    }
+
+                    val englishMeanings = results
+                        .map { it.en }
+                        .distinctBy {
+                            it.lowercase(Locale.ROOT)
+                        }
+
+                    val arabicMeanings = results
+                        .map { it.ar }
+                        .distinct()
+
+                    val word = Word(
+                        en = englishMeanings.joinToString("، "),
+                        ar = arabicMeanings.joinToString("، ")
+                    )
+
+                    showWord(word)
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+
+                runOnUiThread {
+                    progress.visibility = View.GONE
+                    btnTranslate.isEnabled = true
+                    showError("حصل خطأ أثناء البحث")
                 }
             }
-        }
-
-        if (results.isEmpty()) {
-            showError("مش لاقي الكلمة دي في القاموس")
-            return
-        }
-
-        val englishMeanings = results
-            .map { it.en }
-            .distinctBy { it.lowercase(Locale.ROOT) }
-
-        val arabicMeanings = results
-            .map { it.ar }
-            .distinct()
-
-        val result = Word(
-            en = englishMeanings.joinToString("، "),
-            ar = arabicMeanings.joinToString("، ")
-        )
-
-        showWord(result)
+        }.start()
     }
 
     private fun showError(message: String) {
@@ -501,6 +624,10 @@ class EnglishWordsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     override fun onDestroy() {
         tts?.stop()
         tts?.shutdown()
+
+        database?.close()
+        database = null
+
         super.onDestroy()
     }
 }
