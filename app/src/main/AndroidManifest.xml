@@ -148,6 +148,9 @@
         <activity android:name=".HomeworkTeacherHomeActivity" android:exported="false" />
         <activity android:name=".HomeworkManageActivity" android:exported="false" />
         <activity android:name=".HomeworkStudentActivity" android:exported="false" />
+        <activity
+    android:name=".DictionaryAdminActivity"
+    android:exported="false" />
     </application>
 
 </manifest>
