@@ -3,6 +3,7 @@ package com.example.bac1
 
 import android.os.Bundle
 import android.content.ContentValues
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.view.Gravity
 import android.widget.*
@@ -21,10 +22,12 @@ class DictionaryAdminActivity : AppCompatActivity() {
     private lateinit var resultsContainer: LinearLayout
     private lateinit var addButton: Button
     private lateinit var exportButton: Button
-private val EXPORT_REQUEST = 2001
 
-    private fun dp(value: Int) =
-        (value * resources.displayMetrics.density).toInt()
+    private val EXPORT_REQUEST = 2001
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +63,11 @@ private val EXPORT_REQUEST = 2001
             isEnabled = false
         }
 
+        exportButton = Button(this).apply {
+            text = "📦 تصدير قاعدة البيانات"
+            isEnabled = false
+        }
+
         searchInput = EditText(this).apply {
             hint = "ابحث عن كلمة أو معنى"
             setSingleLine(true)
@@ -78,6 +86,7 @@ private val EXPORT_REQUEST = 2001
         root.addView(englishInput)
         root.addView(arabicInput)
         root.addView(addButton)
+        root.addView(exportButton)
         root.addView(searchInput)
         root.addView(searchButton)
         root.addView(resultsContainer)
@@ -92,6 +101,7 @@ private val EXPORT_REQUEST = 2001
             openDictionary()
             updateWordCount()
             addButton.isEnabled = true
+            exportButton.isEnabled = true
         } catch (e: Exception) {
             Toast.makeText(
                 this,
@@ -100,10 +110,20 @@ private val EXPORT_REQUEST = 2001
             ).show()
         }
 
-        addButton.setOnClickListener { addWord() }
-        searchButton.setOnClickListener { searchWords() }
+        addButton.setOnClickListener {
+            addWord()
+        }
+
+        searchButton.setOnClickListener {
+            searchWords()
+        }
+
+        exportButton.setOnClickListener {
+            exportDictionary()
+        }
     }
 
+    // فتح قاعدة البيانات المحلية
     private fun openDictionary() {
         val dbFile = File(filesDir, "1bac_dictionary.db")
 
@@ -124,9 +144,12 @@ private val EXPORT_REQUEST = 2001
         database?.rawQuery(
             "SELECT english, arabic FROM words LIMIT 1",
             null
-        )?.use { }
+        )?.use {
+            // التأكد من وجود الجدول والأعمدة
+        }
     }
 
+    // تحديث عدد الكلمات
     private fun updateWordCount() {
         database?.rawQuery(
             "SELECT COUNT(*) FROM words",
@@ -138,6 +161,7 @@ private val EXPORT_REQUEST = 2001
         }
     }
 
+    // إضافة كلمة جديدة
     private fun addWord() {
         val english = englishInput.text.toString().trim()
         val arabic = arabicInput.text.toString().trim()
@@ -148,31 +172,46 @@ private val EXPORT_REQUEST = 2001
             return
         }
 
-        val duplicate = db.rawQuery(
-            "SELECT 1 FROM words WHERE english = ? COLLATE NOCASE AND arabic = ? LIMIT 1",
-            arrayOf(english, arabic)
-        ).use { it.moveToFirst() }
+        try {
+            val duplicate = db.rawQuery(
+                """
+                SELECT 1 FROM words
+                WHERE english = ? COLLATE NOCASE
+                AND arabic = ?
+                LIMIT 1
+                """.trimIndent(),
+                arrayOf(english, arabic)
+            ).use {
+                it.moveToFirst()
+            }
 
-        if (duplicate) {
-            toast("الكلمة بنفس المعنى موجودة بالفعل")
-            return
-        }
+            if (duplicate) {
+                toast("الكلمة بنفس المعنى موجودة بالفعل")
+                return
+            }
 
-        val values = ContentValues().apply {
-            put("english", english)
-            put("arabic", arabic)
-        }
+            val values = ContentValues().apply {
+                put("english", english)
+                put("arabic", arabic)
+            }
 
-        if (db.insert("words", null, values) != -1L) {
-            englishInput.text.clear()
-            arabicInput.text.clear()
-            updateWordCount()
-            toast("تمت إضافة الكلمة بنجاح")
-        } else {
-            toast("لم تتم الإضافة")
+            val result = db.insert("words", null, values)
+
+            if (result != -1L) {
+                englishInput.text.clear()
+                arabicInput.text.clear()
+                updateWordCount()
+                toast("تمت إضافة الكلمة بنجاح")
+            } else {
+                toast("لم تتم الإضافة")
+            }
+
+        } catch (e: Exception) {
+            toast("خطأ أثناء الإضافة: ${e.message}")
         }
     }
 
+    // البحث عن الكلمات والمعاني
     private fun searchWords() {
         val query = searchInput.text.toString().trim()
         val db = database ?: return
@@ -184,35 +223,41 @@ private val EXPORT_REQUEST = 2001
             return
         }
 
-        val cursor = db.rawQuery(
-            """
-            SELECT rowid, english, arabic
-            FROM words
-            WHERE english LIKE ? COLLATE NOCASE
-            OR arabic LIKE ?
-            ORDER BY english
-            LIMIT 50
-            """.trimIndent(),
-            arrayOf("%$query%", "%$query%")
-        )
+        try {
+            val cursor = db.rawQuery(
+                """
+                SELECT rowid, english, arabic
+                FROM words
+                WHERE english LIKE ? COLLATE NOCASE
+                OR arabic LIKE ?
+                ORDER BY english
+                LIMIT 50
+                """.trimIndent(),
+                arrayOf("%$query%", "%$query%")
+            )
 
-        cursor.use {
-            if (!it.moveToFirst()) {
-                showResultMessage("لا توجد نتائج")
-                return
+            cursor.use {
+                if (!it.moveToFirst()) {
+                    showResultMessage("لا توجد نتائج")
+                    return
+                }
+
+                do {
+                    val id = it.getLong(0)
+                    val english = it.getString(1) ?: ""
+                    val arabic = it.getString(2) ?: ""
+
+                    addResultRow(id, english, arabic)
+
+                } while (it.moveToNext())
             }
 
-            do {
-                val id = it.getLong(0)
-                val english = it.getString(1) ?: ""
-                val arabic = it.getString(2) ?: ""
-
-                addResultRow(id, english, arabic)
-
-            } while (it.moveToNext())
+        } catch (e: Exception) {
+            toast("خطأ في البحث: ${e.message}")
         }
     }
 
+    // عرض نتيجة البحث
     private fun addResultRow(
         id: Long,
         english: String,
@@ -249,14 +294,21 @@ private val EXPORT_REQUEST = 2001
                 .setTitle("حذف الكلمة")
                 .setMessage("هل تريد حذف $english؟")
                 .setPositiveButton("حذف") { _, _ ->
-                    database?.delete(
-                        "words",
-                        "rowid = ?",
-                        arrayOf(id.toString())
-                    )
-                    searchWords()
-                    updateWordCount()
-                    toast("تم الحذف")
+
+                    try {
+                        database?.delete(
+                            "words",
+                            "rowid = ?",
+                            arrayOf(id.toString())
+                        )
+
+                        searchWords()
+                        updateWordCount()
+                        toast("تم الحذف")
+
+                    } catch (e: Exception) {
+                        toast("تعذر الحذف: ${e.message}")
+                    }
                 }
                 .setNegativeButton("إلغاء", null)
                 .show()
@@ -283,6 +335,7 @@ private val EXPORT_REQUEST = 2001
         )
     }
 
+    // تعديل كلمة موجودة
     private fun showEditDialog(
         id: Long,
         oldEnglish: String,
@@ -311,6 +364,7 @@ private val EXPORT_REQUEST = 2001
             .setTitle("تعديل الكلمة")
             .setView(layout)
             .setPositiveButton("حفظ") { _, _ ->
+
                 val english = englishEdit.text.toString().trim()
                 val arabic = arabicEdit.text.toString().trim()
 
@@ -319,40 +373,150 @@ private val EXPORT_REQUEST = 2001
                     return@setPositiveButton
                 }
 
-                val duplicate = database?.rawQuery(
-                    """
-                    SELECT 1 FROM words
-                    WHERE english = ? COLLATE NOCASE
-                    AND arabic = ?
-                    AND rowid != ?
-                    LIMIT 1
-                    """.trimIndent(),
-                    arrayOf(english, arabic, id.toString())
-                )?.use { it.moveToFirst() } ?: false
+                try {
+                    val duplicate = database?.rawQuery(
+                        """
+                        SELECT 1 FROM words
+                        WHERE english = ? COLLATE NOCASE
+                        AND arabic = ?
+                        AND rowid != ?
+                        LIMIT 1
+                        """.trimIndent(),
+                        arrayOf(
+                            english,
+                            arabic,
+                            id.toString()
+                        )
+                    )?.use {
+                        it.moveToFirst()
+                    } ?: false
 
-                if (duplicate) {
-                    toast("هذه الكلمة بنفس المعنى موجودة بالفعل")
-                    return@setPositiveButton
+                    if (duplicate) {
+                        toast("هذه الكلمة بنفس المعنى موجودة بالفعل")
+                        return@setPositiveButton
+                    }
+
+                    val values = ContentValues().apply {
+                        put("english", english)
+                        put("arabic", arabic)
+                    }
+
+                    database?.update(
+                        "words",
+                        values,
+                        "rowid = ?",
+                        arrayOf(id.toString())
+                    )
+
+                    searchWords()
+                    updateWordCount()
+                    toast("تم تعديل الكلمة")
+
+                } catch (e: Exception) {
+                    toast("تعذر التعديل: ${e.message}")
                 }
-
-                val values = ContentValues().apply {
-                    put("english", english)
-                    put("arabic", arabic)
-                }
-
-                database?.update(
-                    "words",
-                    values,
-                    "rowid = ?",
-                    arrayOf(id.toString())
-                )
-
-                searchWords()
-                updateWordCount()
-                toast("تم تعديل الكلمة")
             }
             .setNegativeButton("إلغاء", null)
             .show()
+    }
+
+    // تصدير قاعدة البيانات
+    private fun exportDictionary() {
+        try {
+            database?.close()
+            database = null
+
+            val dbFile = File(
+                filesDir,
+                "1bac_dictionary.db"
+            )
+
+            if (!dbFile.exists() || dbFile.length() == 0L) {
+                openDictionary()
+                updateWordCount()
+                toast("ملف القاموس غير موجود")
+                return
+            }
+
+            val intent = Intent(
+                Intent.ACTION_CREATE_DOCUMENT
+            ).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/octet-stream"
+
+                putExtra(
+                    Intent.EXTRA_TITLE,
+                    "1bac_dictionary.db"
+                )
+            }
+
+            startActivityForResult(
+                intent,
+                EXPORT_REQUEST
+            )
+
+        } catch (e: Exception) {
+            try {
+                openDictionary()
+                updateWordCount()
+            } catch (_: Exception) {
+            }
+
+            toast("خطأ في التصدير: ${e.message}")
+        }
+    }
+
+    // استلام مكان حفظ الملف ونسخ قاعدة البيانات إليه
+    @Deprecated("Using legacy activity result API")
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(
+            requestCode,
+            resultCode,
+            data
+        )
+
+        if (requestCode != EXPORT_REQUEST) return
+
+        try {
+            if (resultCode == RESULT_OK && data?.data != null) {
+
+                val dbFile = File(
+                    filesDir,
+                    "1bac_dictionary.db"
+                )
+
+                contentResolver.openOutputStream(
+                    data.data!!
+                )?.use { output ->
+
+                    dbFile.inputStream().use { input ->
+                        input.copyTo(output)
+                    }
+
+                } ?: throw Exception("تعذر إنشاء الملف")
+
+                toast("تم تصدير القاموس بنجاح")
+
+            } else {
+                toast("تم إلغاء التصدير")
+            }
+
+        } catch (e: Exception) {
+            toast("فشل التصدير: ${e.message}")
+
+        } finally {
+            try {
+                openDictionary()
+                updateWordCount()
+
+            } catch (e: Exception) {
+                toast("تعذر إعادة فتح القاموس: ${e.message}")
+            }
+        }
     }
 
     private fun showResultMessage(message: String) {
@@ -362,11 +526,16 @@ private val EXPORT_REQUEST = 2001
             gravity = Gravity.CENTER
             setPadding(0, dp(20), 0, dp(20))
         }
+
         resultsContainer.addView(text)
     }
 
     private fun toast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            this,
+            message,
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     override fun onDestroy() {
