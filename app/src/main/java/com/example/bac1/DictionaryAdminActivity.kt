@@ -37,10 +37,10 @@ class DictionaryAdminActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
         }
 
-        val englishInput = EditText(this).apply {
-            hint = "الكلمة الإنجليزية"
-            singleLine = true
-        }
+    val englishInput = EditText(this).apply {
+    hint = "الكلمة الإنجليزية"
+    setSingleLine(true)
+}
 
         val arabicInput = EditText(this).apply {
             hint = "المعنى بالعربي"
