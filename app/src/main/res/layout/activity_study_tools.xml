@@ -73,7 +73,7 @@
                         android:minLines="2"
                         android:maxLines="2"
                         android:gravity="center"
-                        android:text="ترجمة ونطق وجملة تحفظها"
+                        android:text="ترجمة ونطق الكلمات "
                         android:textSize="12sp"
                         android:textColor="#BBDEFB" />
                 </LinearLayout>
