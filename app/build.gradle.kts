@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -14,8 +15,15 @@ android {
         targetSdk = 35
         versionCode = 3
         versionName = "3.0"
-buildConfigField("String", "GEMINI_API_KEY", "\"${System.getenv("GEMINI_API_KEY") ?: ""}\"")
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${System.getenv("GEMINI_API_KEY") ?: ""}\""
+        )
+
+        testInstrumentationRunner =
+            "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
@@ -23,18 +31,37 @@ buildConfigField("String", "GEMINI_API_KEY", "\"${System.getenv("GEMINI_API_KEY"
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "boolean",
+                "IS_DICTIONARY_ADMIN",
+                "true"
+            )
+        }
+
         release {
             isMinifyEnabled = false
+
+            buildConfigField(
+                "boolean",
+                "IS_DICTIONARY_ADMIN",
+                "false"
+            )
+
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+                getDefaultProguardFile(
+                    "proguard-android-optimize.txt"
+                ),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
@@ -46,17 +73,24 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("com.android.volley:volley:1.2.1")
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+
+    implementation(
+        platform("com.google.firebase:firebase-bom:33.7.0")
+    )
+
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-storage-ktx")
+
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
 }
