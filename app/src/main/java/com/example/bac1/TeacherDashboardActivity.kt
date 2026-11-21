@@ -285,7 +285,7 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         row = newRow()
         addCard(
-            row, "الواجبات", "اكتب واجب بالصق أو بالتصوير، وتابع مين سلّم ومين لأ",
+            row, "الواجبات", "اكتب واجب و ارفعه لطلابك ، وتابع مين سلّم ومين لأ",
             null, "📚", "#0EA5E9", "#0369A1", "#0284C7",
             dark = true
         ) { open(HomeworkTeacherHomeActivity::class.java) }
