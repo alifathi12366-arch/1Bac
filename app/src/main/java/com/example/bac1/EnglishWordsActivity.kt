@@ -17,10 +17,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.FirebaseFirestore
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.Normalizer
 import java.util.Locale
 
@@ -42,6 +46,7 @@ class EnglishWordsActivity : AppCompatActivity(),
     companion object {
         private const val MAX_RESULTS = 12
         private const val DB_NAME = "1bac_dictionary.db"
+        private const val INITIAL_VERSION = 1L
     }
 
     private var tts: TextToSpeech? = null
@@ -67,6 +72,10 @@ class EnglishWordsActivity : AppCompatActivity(),
 
     private val prefs by lazy {
         getSharedPreferences("bac1_words", MODE_PRIVATE)
+    }
+
+    private val updatePrefs by lazy {
+        getSharedPreferences("dictionary_update", MODE_PRIVATE)
     }
 
     private fun dp(v: Int): Int {
@@ -160,8 +169,14 @@ class EnglishWordsActivity : AppCompatActivity(),
 
             try {
                 val dbFile = File(filesDir, DB_NAME)
+                val backupFile = File(filesDir, "$DB_NAME.backup")
 
-                // نسخ قاعدة البيانات لأول مرة فقط
+                // استرجاع النسخة الاحتياطية عند الحاجة
+                if (!dbFile.exists() && backupFile.exists()) {
+                    backupFile.renameTo(dbFile)
+                }
+
+                // إنشاء النسخة الأساسية أول مرة فقط
                 if (!dbFile.exists() || dbFile.length() == 0L) {
                     assets.open(DB_NAME).use { input ->
                         FileOutputStream(dbFile).use { output ->
@@ -170,13 +185,33 @@ class EnglishWordsActivity : AppCompatActivity(),
                     }
                 }
 
+                // فحص النسخة المحلية
+                if (!isValidDictionary(dbFile)) {
+                    if (backupFile.exists() &&
+                        isValidDictionary(backupFile)
+                    ) {
+                        dbFile.delete()
+                        backupFile.renameTo(dbFile)
+                    } else {
+                        throw Exception("قاعدة البيانات المحلية غير صالحة")
+                    }
+                }
+
+                // محاولة تحديث القاموس من GitHub
+                try {
+                    checkDictionaryUpdate(dbFile)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    // الاحتفاظ بالنسخة القديمة عند فشل التحديث
+                }
+
+                // فتح قاعدة البيانات بعد محاولة التحديث
                 db = SQLiteDatabase.openDatabase(
                     dbFile.absolutePath,
                     null,
                     SQLiteDatabase.OPEN_READONLY
                 )
 
-                // التأكد من أسماء الجدول والأعمدة
                 db.rawQuery(
                     "SELECT english, arabic FROM words LIMIT 1",
                     null
@@ -213,6 +248,145 @@ class EnglishWordsActivity : AppCompatActivity(),
         }.start()
     }
 
+    // ---------------- تحديث القاموس ----------------
+
+    private fun checkDictionaryUpdate(dbFile: File) {
+
+        val document = Tasks.await(
+            FirebaseFirestore.getInstance()
+                .collection("app_config")
+                .document("dictionary")
+                .get()
+        )
+
+        if (!document.exists()) return
+
+        val remoteVersion =
+            document.getLong("version") ?: return
+
+        val downloadUrl =
+            document.getString("downloadUrl") ?: return
+
+        // النسخة الموجودة داخل التطبيق هي الإصدار الأول
+        val currentVersion = updatePrefs.getLong(
+            "version",
+            INITIAL_VERSION
+        )
+
+        if (remoteVersion <= currentVersion) return
+
+        val tempFile = File(filesDir, "$DB_NAME.tmp")
+        val backupFile = File(filesDir, "$DB_NAME.backup")
+
+        try {
+            tempFile.delete()
+
+            val connection =
+                URL(downloadUrl).openConnection() as HttpURLConnection
+
+            connection.connectTimeout = 15000
+            connection.readTimeout = 30000
+            connection.requestMethod = "GET"
+            connection.instanceFollowRedirects = true
+
+            try {
+                connection.connect()
+
+                if (connection.responseCode !=
+                    HttpURLConnection.HTTP_OK
+                ) {
+                    throw Exception("فشل تحميل القاموس")
+                }
+
+                connection.inputStream.use { input ->
+                    FileOutputStream(tempFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+            } finally {
+                connection.disconnect()
+            }
+
+            // فحص الملف الجديد قبل اعتماده
+            if (!isValidDictionary(tempFile)) {
+                throw Exception("ملف القاموس الجديد غير صالح")
+            }
+
+            // حفظ النسخة القديمة
+            if (backupFile.exists()) {
+                backupFile.delete()
+            }
+
+            if (!dbFile.renameTo(backupFile)) {
+                throw Exception("تعذر حفظ النسخة القديمة")
+            }
+
+            // استبدال النسخة القديمة بالجديدة
+            if (!tempFile.renameTo(dbFile)) {
+                backupFile.renameTo(dbFile)
+                throw Exception("تعذر اعتماد القاموس الجديد")
+            }
+
+            // حفظ الإصدار بعد نجاح الاستبدال
+            val savedVersion = updatePrefs.edit()
+                .putLong("version", remoteVersion)
+                .commit()
+
+            if (!savedVersion) {
+                dbFile.delete()
+                backupFile.renameTo(dbFile)
+                throw Exception("تعذر حفظ رقم الإصدار")
+            }
+
+            // حذف النسخة الاحتياطية بعد نجاح كل شيء
+            backupFile.delete()
+
+        } finally {
+            tempFile.delete()
+        }
+    }
+
+    // ---------------- فحص سلامة قاعدة البيانات ----------------
+
+    private fun isValidDictionary(file: File): Boolean {
+
+        if (!file.exists() || file.length() == 0L) {
+            return false
+        }
+
+        return try {
+            SQLiteDatabase.openDatabase(
+                file.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY
+            ).use { db ->
+
+                db.rawQuery(
+                    "PRAGMA quick_check",
+                    null
+                ).use { cursor ->
+
+                    if (!cursor.moveToFirst() ||
+                        cursor.getString(0) != "ok"
+                    ) {
+                        return false
+                    }
+                }
+
+                db.rawQuery(
+                    "SELECT english, arabic FROM words LIMIT 1",
+                    null
+                ).use { }
+            }
+
+            true
+
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     // ---------------- تنظيف النص العربي ----------------
 
     private fun normalizeArabic(text: String): String {
@@ -231,7 +405,6 @@ class EnglishWordsActivity : AppCompatActivity(),
             .trim()
     }
 
-    // التأكد أن العبارة موجودة ككلمة أو عبارة كاملة
     private fun containsArabicPhrase(
         text: String,
         query: String
@@ -259,7 +432,6 @@ class EnglishWordsActivity : AppCompatActivity(),
         val db = database ?: return emptyList()
         val results = mutableListOf<DictionaryEntry>()
 
-        // التطابق الكامل أولاً
         db.rawQuery(
             """
             SELECT english, arabic
@@ -286,7 +458,6 @@ class EnglishWordsActivity : AppCompatActivity(),
             }.take(MAX_RESULTS)
         }
 
-        // البحث ببداية الكلمة
         db.rawQuery(
             """
             SELECT english, arabic
@@ -322,7 +493,6 @@ class EnglishWordsActivity : AppCompatActivity(),
         val db = database ?: return emptyList()
         val candidates = mutableListOf<DictionaryEntry>()
 
-        // جلب الكلمات المحتمل ارتباطها بالبحث
         db.rawQuery(
             """
             SELECT english, arabic
@@ -343,7 +513,6 @@ class EnglishWordsActivity : AppCompatActivity(),
             }
         }
 
-        // الاحتفاظ بالنتائج التي تحتوي على العبارة كاملة
         return candidates
             .filter {
                 containsArabicPhrase(it.ar, query)
@@ -363,6 +532,7 @@ class EnglishWordsActivity : AppCompatActivity(),
     // ---------------- تنفيذ الترجمة ----------------
 
     private fun translate() {
+
         val query = etWord.text.toString().trim()
 
         if (query.isEmpty()) {
