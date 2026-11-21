@@ -76,26 +76,43 @@ class AccountActivity : AppCompatActivity() {
                     .setPositiveButton("دخول") { _, _ ->
                         if (pinInput.text.toString() == "7391") {
                           val items = arrayOf(
-                                "➕ أسئلة اليوم",
-                                "⚔️ أسئلة تحدي الأصحاب",
-                                "📢 التقييمات الأسبوعية",
-                                "💡 الاقتراحات",
-                                "🆔 معرّف حسابي (للقواعد)",
-                                "🧹 تنضيف أرقام الطلاب القديمة"
-                            )
+    "➕ أسئلة اليوم",
+    "⚔️ أسئلة تحدي الأصحاب",
+    "📢 التقييمات الأسبوعية",
+    "💡 الاقتراحات",
+    "🆔 معرّف حسابي (للقواعد)",
+    "🧹 تنضيف أرقام الطلاب القديمة",
+    "📚 إدارة قاموس 1Bac"
+)
                             android.app.AlertDialog.Builder(this)
                                 .setTitle("لوحة الأدمن")
                                 .setItems(items) { _, which ->
                                     when (which) {
-                                        0 -> startActivity(Intent(this, AdminQuestionsActivity::class.java))
-                                        1 -> startActivity(
-                                            Intent(this, AdminQuestionsActivity::class.java)
-                                                .putExtra("collection", "friendChallenges"))
-                                        2 -> startActivity(Intent(this, AdminWeeklyActivity::class.java))
-                                        3 -> startActivity(Intent(this, AdminSuggestionsActivity::class.java))
-                                        4 -> showMyUid()
-                                        else -> cleanOldPhones()
-                                    }
+    0 -> startActivity(
+        Intent(this, AdminQuestionsActivity::class.java)
+    )
+
+    1 -> startActivity(
+        Intent(this, AdminQuestionsActivity::class.java)
+            .putExtra("collection", "friendChallenges")
+    )
+
+    2 -> startActivity(
+        Intent(this, AdminWeeklyActivity::class.java)
+    )
+
+    3 -> startActivity(
+        Intent(this, AdminSuggestionsActivity::class.java)
+    )
+
+    4 -> showMyUid()
+
+    5 -> cleanOldPhones()
+
+    6 -> startActivity(
+        Intent(this, DictionaryAdminActivity::class.java)
+    )
+}
                                 }
                                 .show()
                         }
