@@ -13,7 +13,7 @@ android {
         applicationId = "com.example.bac1"
         minSdk = 24
         targetSdk = 35
-        versionCode = 4
+        versionCode = 10
         versionName = "4.0"
 
         buildConfigField(
