@@ -20,6 +20,8 @@ class DictionaryAdminActivity : AppCompatActivity() {
     private lateinit var countText: TextView
     private lateinit var resultsContainer: LinearLayout
     private lateinit var addButton: Button
+    private lateinit var exportButton: Button
+private val EXPORT_REQUEST = 2001
 
     private fun dp(value: Int) =
         (value * resources.displayMetrics.density).toInt()
