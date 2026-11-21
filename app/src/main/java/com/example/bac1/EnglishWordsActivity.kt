@@ -1,6 +1,7 @@
 
 package com.example.bac1
 
+import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -18,9 +19,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
-import android.database.sqlite.SQLiteDatabase
 import java.io.File
 import java.io.FileOutputStream
+import java.text.Normalizer
 import java.util.Locale
 
 class EnglishWordsActivity : AppCompatActivity(),
@@ -37,6 +38,11 @@ class EnglishWordsActivity : AppCompatActivity(),
         val en: String,
         val ar: String
     )
+
+    companion object {
+        private const val MAX_RESULTS = 12
+        private const val DB_NAME = "1bac_dictionary.db"
+    }
 
     private var tts: TextToSpeech? = null
     private var ttsReady = false
@@ -85,7 +91,6 @@ class EnglishWordsActivity : AppCompatActivity(),
         savedBox = findViewById(R.id.savedContainer)
         tvSavedTitle = findViewById(R.id.tvSavedTitle)
 
-        // الأمثلة مؤجلة للإصدار القادم
         tvSentEn.visibility = View.GONE
         tvSentAr.visibility = View.GONE
 
@@ -111,7 +116,7 @@ class EnglishWordsActivity : AppCompatActivity(),
         loadDictionary()
     }
 
-    // ---------------- النطق الصوتي ----------------
+    // ---------------- النطق ----------------
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
@@ -145,94 +150,122 @@ class EnglishWordsActivity : AppCompatActivity(),
 
     // ---------------- تحميل قاعدة البيانات ----------------
 
-    
-private fun loadDictionary() {
-    progress.visibility = View.VISIBLE
-    btnTranslate.isEnabled = false
-    tvError.visibility = View.GONE
+    private fun loadDictionary() {
+        progress.visibility = View.VISIBLE
+        btnTranslate.isEnabled = false
+        tvError.visibility = View.GONE
 
-    Thread {
-        var db: SQLiteDatabase? = null
+        Thread {
+            var db: SQLiteDatabase? = null
 
-        try {
-            val dbFile = File(filesDir, "1bac_dictionary.db")
+            try {
+                val dbFile = File(filesDir, DB_NAME)
 
-            // حذف النسخة القديمة وإعادة نسخ الملف من assets
-            if (dbFile.exists()) {
-                dbFile.delete()
-            }
+                // نسخ قاعدة البيانات لأول مرة فقط
+                if (!dbFile.exists() || dbFile.length() == 0L) {
+                    assets.open(DB_NAME).use { input ->
+                        FileOutputStream(dbFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                }
 
-            assets.open("1bac_dictionary.db").use { input ->
-                FileOutputStream(dbFile).use { output ->
-                    input.copyTo(output)
+                db = SQLiteDatabase.openDatabase(
+                    dbFile.absolutePath,
+                    null,
+                    SQLiteDatabase.OPEN_READONLY
+                )
+
+                // التأكد من أسماء الجدول والأعمدة
+                db.rawQuery(
+                    "SELECT english, arabic FROM words LIMIT 1",
+                    null
+                ).use { }
+
+                runOnUiThread {
+                    database?.close()
+                    database = db
+                    dictionaryReady = true
+
+                    progress.visibility = View.GONE
+                    btnTranslate.isEnabled = true
+
+                    Toast.makeText(
+                        this,
+                        "قاموس 1Bac جاهز للاستخدام",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                db?.close()
+
+                runOnUiThread {
+                    progress.visibility = View.GONE
+                    btnTranslate.isEnabled = true
+
+                    showError(
+                        "مشكلة في القاموس: ${e.message}"
+                    )
                 }
             }
+        }.start()
+    }
 
-            // فتح قاعدة البيانات
-            db = SQLiteDatabase.openDatabase(
-                dbFile.absolutePath,
-                null,
-                SQLiteDatabase.OPEN_READONLY
-            )
+    // ---------------- تنظيف النص العربي ----------------
 
-            // التأكد من وجود الجدول والأعمدة
-            db.rawQuery(
-                "SELECT english, arabic FROM words LIMIT 1",
-                null
-            ).use { cursor ->
-                // فحص بنية الجدول
-            }
+    private fun normalizeArabic(text: String): String {
+        return Normalizer.normalize(
+            text,
+            Normalizer.Form.NFKC
+        )
+            .replace(Regex("[\\u064B-\\u065F\\u0670]"), "")
+            .replace("ـ", "")
+            .replace("أ", "ا")
+            .replace("إ", "ا")
+            .replace("آ", "ا")
+            .replace("ى", "ي")
+            .replace(Regex("[،؛,:.!؟()\\[\\]{}]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
 
-            val finalDb = db
+    // التأكد أن العبارة موجودة ككلمة أو عبارة كاملة
+    private fun containsArabicPhrase(
+        text: String,
+        query: String
+    ): Boolean {
 
-            runOnUiThread {
-                database = finalDb
-                dictionaryReady = true
+        val cleanText = normalizeArabic(text)
+        val cleanQuery = normalizeArabic(query)
 
-                progress.visibility = View.GONE
-                btnTranslate.isEnabled = true
-
-                Toast.makeText(
-                    this,
-                    "تم تحميل قاموس 1Bac بنجاح",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            db?.close()
-
-            runOnUiThread {
-                progress.visibility = View.GONE
-                btnTranslate.isEnabled = true
-
-                showError(
-                    "خطأ القاموس: ${e.javaClass.simpleName}\n${e.message ?: "سبب غير معروف"}"
-                )
-            }
+        if (cleanText.isEmpty() || cleanQuery.isEmpty()) {
+            return false
         }
-    }.start()
-}
 
+        val paddedText = " $cleanText "
+        val paddedQuery = " $cleanQuery "
 
-    // ---------------- البحث في SQLite ----------------
+        return paddedText.contains(paddedQuery)
+    }
+
+    // ---------------- البحث الإنجليزي ----------------
 
     private fun searchEnglish(
         query: String
     ): List<DictionaryEntry> {
 
         val db = database ?: return emptyList()
-
         val results = mutableListOf<DictionaryEntry>()
 
-        // البحث عن الكلمة المطابقة أولاً
+        // التطابق الكامل أولاً
         db.rawQuery(
             """
             SELECT english, arabic
             FROM words
-            WHERE english = ? COLLATE NOCASE
-            LIMIT 50
+            WHERE TRIM(english) = ? COLLATE NOCASE
+            LIMIT 100
             """.trimIndent(),
             arrayOf(query)
         ).use { cursor ->
@@ -247,50 +280,22 @@ private fun loadDictionary() {
             }
         }
 
-        // لو مفيش تطابق، نبحث ببداية الكلمة
-        if (results.isEmpty()) {
-            db.rawQuery(
-                """
-                SELECT english, arabic
-                FROM words
-                WHERE english LIKE ? COLLATE NOCASE
-                ORDER BY english
-                LIMIT 30
-                """.trimIndent(),
-                arrayOf("$query%")
-            ).use { cursor ->
-
-                while (cursor.moveToNext()) {
-                    results.add(
-                        DictionaryEntry(
-                            cursor.getString(0),
-                            cursor.getString(1)
-                        )
-                    )
-                }
-            }
+        if (results.isNotEmpty()) {
+            return results.distinctBy {
+                it.en.lowercase(Locale.ROOT) + "|" + it.ar
+            }.take(MAX_RESULTS)
         }
 
-        return results
-    }
-
-    private fun searchArabic(
-        query: String
-    ): List<DictionaryEntry> {
-
-        val db = database ?: return emptyList()
-
-        val results = mutableListOf<DictionaryEntry>()
-
+        // البحث ببداية الكلمة
         db.rawQuery(
             """
             SELECT english, arabic
             FROM words
-            WHERE arabic LIKE ?
+            WHERE english LIKE ? COLLATE NOCASE
             ORDER BY english
-            LIMIT 50
+            LIMIT 100
             """.trimIndent(),
-            arrayOf("%$query%")
+            arrayOf("$query%")
         ).use { cursor ->
 
             while (cursor.moveToNext()) {
@@ -303,10 +308,59 @@ private fun loadDictionary() {
             }
         }
 
-        return results
+        return results.distinctBy {
+            it.en.lowercase(Locale.ROOT) + "|" + it.ar
+        }.take(MAX_RESULTS)
     }
 
-    // ---------------- تنفيذ البحث ----------------
+    // ---------------- البحث العربي ----------------
+
+    private fun searchArabic(
+        query: String
+    ): List<DictionaryEntry> {
+
+        val db = database ?: return emptyList()
+        val candidates = mutableListOf<DictionaryEntry>()
+
+        // جلب الكلمات المحتمل ارتباطها بالبحث
+        db.rawQuery(
+            """
+            SELECT english, arabic
+            FROM words
+            WHERE arabic LIKE ?
+            LIMIT 1000
+            """.trimIndent(),
+            arrayOf("%$query%")
+        ).use { cursor ->
+
+            while (cursor.moveToNext()) {
+                candidates.add(
+                    DictionaryEntry(
+                        cursor.getString(0),
+                        cursor.getString(1)
+                    )
+                )
+            }
+        }
+
+        // الاحتفاظ بالنتائج التي تحتوي على العبارة كاملة
+        return candidates
+            .filter {
+                containsArabicPhrase(it.ar, query)
+            }
+            .distinctBy {
+                it.en.lowercase(Locale.ROOT) + "|" + it.ar
+            }
+            .sortedBy {
+                if (
+                    normalizeArabic(it.ar) ==
+                    normalizeArabic(query)
+                ) 0 else 1
+            }
+            .take(MAX_RESULTS)
+    }
+
+    // ---------------- تنفيذ الترجمة ----------------
 
     private fun translate() {
         val query = etWord.text.toString().trim()
@@ -370,7 +424,7 @@ private fun loadDictionary() {
 
                     val word = Word(
                         en = englishMeanings.joinToString("، "),
-                        ar = arabicMeanings.joinToString("، ")
+                        ar = arabicMeanings.joinToString("\n")
                     )
 
                     showWord(word)
